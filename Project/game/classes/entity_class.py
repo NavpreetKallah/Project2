@@ -1,5 +1,4 @@
-import string
-from builtins import int, range
+from builtins import int, string
 
 import pygame
 

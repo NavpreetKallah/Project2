@@ -1,5 +1,4 @@
-from builtins import round
-
+from builtins import int
 import pygame
 
 
@@ -9,3 +8,4 @@ class Hud:
         self.cash = cash
         self.round_number = round_number
         self.total_rounds = total_rounds
+
