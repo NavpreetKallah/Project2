@@ -9,3 +9,6 @@ class Round:
 
     def increaseDifficulty(self):
         return None
+
+    def generateEnemies(self):
+        return None
