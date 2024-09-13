@@ -1,11 +1,14 @@
-from builtins import int, list
-
+from builtins import int, list, super, str
 import pygame
 
+from game.classes.entity_class import Entity
 
-class Enemy:
-    def __init__(self, distanceTravelled: int, health: int, immunities: list, speed: int, value: int):
-        self.distanceTravelled = distanceTravelled
+
+class Enemy(Entity):
+    def __init__(self, position: pygame.Vector2, angle: int, state: str, frame: int, range: int,
+                 distance_travelled: int, health: int, immunities: list, speed: int, value: int,):
+        super().__init__(position, angle, state, frame, range)
+        self.distance_travelled = distance_travelled
         self.health = health
         self.immunities = immunities
         self.speed = speed
@@ -17,7 +20,7 @@ class Enemy:
     def takeDamage(self, damage):
         return None
 
-    def move(self, magnitude, direction, deltaTime):
+    def move(self, magnitude, direction, delta_time):
         return None
 
     def towersInRange(self, int):

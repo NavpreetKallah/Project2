@@ -8,8 +8,8 @@ class Button:
         self.position = position
         self.width = width
         self.height = height
-        self.borderWidth = border_width
-        self.borderColour = border_colour
+        self.border_width = border_width
+        self.border_colour = border_colour
         self.image = image
 
     def onClick(self, delta_time):

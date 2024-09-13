@@ -1,10 +1,10 @@
-from builtins import int, string
+from builtins import int, str
 
 import pygame
 
 
 class Entity:
-    def __init__(self, position: pygame.Vector2, angle: int, state: string, frame: int, range: int):
+    def __init__(self, position: pygame.Vector2, angle: int, state: str, frame: int, range: int):
         self.position = position
         self.angle = angle
         self.state = state
