@@ -12,7 +12,10 @@ from game.classes.round_class import Round
 from game.classes.textbox_class import Textbox
 from game.classes.tower_class import Tower
 
-WIDTH, HEIGHT = 1000,1280
+WIDTH, HEIGHT = 160,120
+
+Renderer = Renderer(WIDTH, HEIGHT)
+Map = Map()
 
 class Game:
     def __init__(self, screen_size):
@@ -26,8 +29,6 @@ class Game:
         title = "Balloons"
         pygame.init()
         pygame.display.set_caption(title)
-
-
 
     def quit(self):
         for event in pygame.event.get():
@@ -44,7 +45,9 @@ class Game:
         self.quit()
         self.reset_display()
         self.game()
-        for surface in self.surfaces:
+        floor = Map.drawMap(Renderer.getLayer("map"))
+        Renderer.updateLayer(floor,"map")
+        for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
         pygame.display.update()
         self.clock.tick(self.fps)
