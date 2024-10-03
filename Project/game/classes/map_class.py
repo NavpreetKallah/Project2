@@ -9,15 +9,15 @@ class Map:
         # self.current_map_end = current_map_end
         # self.current_map_textures = current_map_textures
         # self.path_length = path_length
+        self.tile = pygame.image.load_extended("//BA-SRV-FS-01/18nkallah$/Computer Science/Project/textures/tile.png")
+        self.tile = pygame.transform.scale_by(self.tile, 5)
         pass
 
     def getCoordinate(self,x ,y):
         return None
 
     def drawMap(self, map_layer):
-        tile = pygame.image.load_extended("//BA-SRV-FS-01/18nkallah$/Computer Science/Project/textures/tile.png")
-        for i in range(13):
+        for i in range(12):
             for j in range(12):
-                map_layer.blit(tile, ((i*10)+1, (j*10)+1))
-        return map_layer
+                map_layer.blit(self.tile, ((i*50), (j*50)))
 

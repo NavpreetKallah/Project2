@@ -5,12 +5,14 @@ import pygame
 #layers_to_update: list, top_surface: pygame.Surface
 
 class Renderer:
-    def __init__(self, WIDTH: int, HEIGHT: int):
+    def __init__(self, width: int, height: int):
+        DIMENSIONS = (width, height)
         self.layers = {
-            "map":pygame.Surface((WIDTH,HEIGHT))
-            #"path":pygame.Surface((WIDTH,HEIGHT)),
-            #"entities":pygame.Surface((WIDTH,HEIGHT)),
-            #"HUD":pygame.Surface((WIDTH,HEIGHT))
+            "map":pygame.Surface(DIMENSIONS),
+            "menu":pygame.Surface(DIMENSIONS)
+            #"path":pygame.Surface(DIMENSIONS),
+            #"entities":pygame.Surface(DIMENSIONS),
+            #"HUD":pygame.Surface(DIMENSIONS)
         }
 
     def getLayer(self, layer):
@@ -24,3 +26,6 @@ class Renderer:
 
     def drawLayers(self):
         return None
+
+    def clearLayer(self, layer):
+        self.layers[layer].fill(pygame.Color(0,0,0,0))

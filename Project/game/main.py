@@ -9,12 +9,14 @@ from game.classes.map_class import Map
 from game.classes.projectile_class import Projectile
 from game.classes.renderer_class import Renderer
 from game.classes.round_class import Round
+from game.classes.menu_class import Menu
 from game.classes.textbox_class import Textbox
 from game.classes.tower_class import Tower
 
-WIDTH, HEIGHT = 160,120
+WIDTH, HEIGHT = 800,600
 
 Renderer = Renderer(WIDTH, HEIGHT)
+Menu = Menu()
 Map = Map()
 
 class Game:
@@ -39,16 +41,16 @@ class Game:
         self.screen.fill((0, 0, 0))
 
     def game(self):
-        pass
+        Renderer.clearLayer("menu")
+        Menu.runMenu("main", Renderer.getLayer("menu"))
+        # floor = Map.drawMap(Renderer.getLayer("map"))
+        for surface in Renderer.getLayers():
+            self.screen.blit(surface, (0, 0))
 
     def update(self):
         self.quit()
         self.reset_display()
         self.game()
-        floor = Map.drawMap(Renderer.getLayer("map"))
-        Renderer.updateLayer(floor,"map")
-        for surface in Renderer.getLayers():
-            self.screen.blit(surface, (0, 0))
         pygame.display.update()
         self.clock.tick(self.fps)
 
