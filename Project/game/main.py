@@ -24,6 +24,7 @@ class Game:
         self.screen_size = screen_size
         self.screen = pygame.display.set_mode(self.screen_size)
         self.clock = pygame.time.Clock()
+        self.main_menu_option = None
         self.fps = 60
         self.running = True
         self.surfaces = []
@@ -41,8 +42,9 @@ class Game:
         self.screen.fill((0, 0, 0))
 
     def game(self):
-        Renderer.clearLayer("menu")
-        Menu.runMenu("main", Renderer.getLayer("menu"))
+        if self.main_menu_option not in ["play", "towers", "quit"]:
+            Renderer.clearLayer("menu")
+            self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
         # floor = Map.drawMap(Renderer.getLayer("map"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
