@@ -14,7 +14,7 @@ class Menu:
         self.victory = False
         self.game_over = False
         self.main_menu = False
-        self.main_menu_selector_location = (63 * SCALE, 12 * SCALE)
+        self.main_menu_selector_location = (64 * SCALE, 12 * SCALE)
         self.main_menu_option = None
         self.start_time = time.perf_counter()
         self.direction = 1
@@ -45,6 +45,8 @@ class Menu:
     def runMenu(self, menu, layer):
         if menu == "main":
             return self.runMainMenu(layer)
+        elif menu == "map":
+            return self.runMap(layer)
 
     def runMainMenu(self, layer):
         mouse = pygame.mouse.get_pos()
@@ -62,22 +64,25 @@ class Menu:
 
         if play.collidepoint(mouse):
             if self.chosen != "play":
-                self.main_menu_selector_location = (63 * SCALE, 12 * SCALE)
+                self.main_menu_selector_location = (64 * SCALE, 12 * SCALE)
             self.chosen = "play"
             if pygame.mouse.get_pressed()[0]:
                 return "play"
+
         elif towers.collidepoint(mouse):
             if self.chosen != "towers":
-                self.main_menu_selector_location = (89 * SCALE, 30 * SCALE)
+                self.main_menu_selector_location = (90 * SCALE, 30 * SCALE)
             self.chosen = "towers"
             if pygame.mouse.get_pressed()[0]:
                 return "towers"
+
         elif quit.collidepoint(mouse):
             if self.chosen != "quit":
-                self.main_menu_selector_location = (61 * SCALE, 48 * SCALE)
+                self.main_menu_selector_location = (62 * SCALE, 48 * SCALE)
             self.chosen = "quit"
             if pygame.mouse.get_pressed()[0]:
                 return "quit"
+
         if time.perf_counter() - self.start_time > 0.5:
             self.start_time = time.perf_counter()
             self.direction = -self.direction
@@ -86,3 +91,7 @@ class Menu:
         # pygame.draw.rect(layer, (0, 100, 255), play, 5)
         # pygame.draw.rect(layer, (0, 100, 255), towers, 5)
         # pygame.draw.rect(layer, (0, 100, 255), quit, 5)
+
+    def runMap(self, layer):
+        layer.fill(pygame.Color(70,70,70))
+

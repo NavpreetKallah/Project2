@@ -1,4 +1,5 @@
 import pygame
+import sys
 
 from game.classes.button_class import Button
 from game.classes.enemy_class import Enemy
@@ -25,6 +26,7 @@ class Game:
         self.screen = pygame.display.set_mode(self.screen_size)
         self.clock = pygame.time.Clock()
         self.main_menu_option = None
+        self.map_option = None
         self.fps = 60
         self.running = True
         self.surfaces = []
@@ -45,13 +47,19 @@ class Game:
         if self.main_menu_option not in ["play", "towers", "quit"]:
             Renderer.clearLayer("menu")
             self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
+        elif self.main_menu_option == "quit":
+            pygame.quit()
+            sys.exit()
+        elif self.main_menu_option == "play":
+            Renderer.clearLayer("menu")
+            self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
         # floor = Map.drawMap(Renderer.getLayer("map"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 
     def update(self):
         self.quit()
-        self.reset_display()
+        Renderer.clearLayers()
         self.game()
         pygame.display.update()
         self.clock.tick(self.fps)

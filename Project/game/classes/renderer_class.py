@@ -29,3 +29,7 @@ class Renderer:
 
     def clearLayer(self, layer):
         self.layers[layer].fill(pygame.Color(0,0,0,0))
+
+    def clearLayers(self):
+        for key in self.layers:
+            self.layers[key].fill(pygame.Color(0, 0, 0))
