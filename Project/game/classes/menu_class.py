@@ -3,8 +3,8 @@ import time
 import pygame
 
 from game.classes.renderer_class import Renderer
-SCALE = 5
 
+SCALE = 5
 class Menu:
     def __init__(self):
         self.information = False

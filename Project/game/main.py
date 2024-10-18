@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+
 from game.classes.button_class import Button
 from game.classes.enemy_class import Enemy
 from game.classes.entity_class import Entity
@@ -14,7 +15,8 @@ from game.classes.menu_class import Menu
 from game.classes.textbox_class import Textbox
 from game.classes.tower_class import Tower
 
-WIDTH, HEIGHT = 800,600
+SCALE = 5
+WIDTH, HEIGHT = 160*SCALE,120*SCALE
 
 Renderer = Renderer(WIDTH, HEIGHT)
 Menu = Menu()
