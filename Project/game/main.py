@@ -29,6 +29,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.main_menu_option = None
         self.map_option = None
+        self.difficulty_option = None
         self.fps = 60
         self.running = True
         self.surfaces = []
@@ -53,8 +54,16 @@ class Game:
             pygame.quit()
             sys.exit()
         elif self.main_menu_option == "play":
-            Renderer.clearLayer("menu")
-            self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
+            if self.map_option not in ["meadows","cornfield"]:
+                Renderer.clearLayer("menu")
+                self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
+            elif self.map_option in ["meadows","cornfield"]:
+                if self.difficulty_option not in ["easy","medium","hard"]:
+                    self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
+                else:
+                    pass
+
+
         # floor = Map.drawMap(Renderer.getLayer("map"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
