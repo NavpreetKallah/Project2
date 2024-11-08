@@ -1,5 +1,8 @@
+from builtins import print
+
 import pygame
 import sys
+import os
 
 
 from game.classes.button_class import Button
@@ -21,6 +24,7 @@ WIDTH, HEIGHT = 160*SCALE,120*SCALE
 Renderer = Renderer(WIDTH, HEIGHT)
 Menu = Menu()
 Map = Map()
+
 
 class Game:
     def __init__(self, screen_size):
