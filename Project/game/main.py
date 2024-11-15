@@ -52,23 +52,21 @@ class Game:
 
     def game(self):
         if self.main_menu_option not in ["play", "towers", "quit"]:
-            Renderer.clearLayer("menu")
             self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
         elif self.main_menu_option == "quit":
             pygame.quit()
             sys.exit()
         elif self.main_menu_option == "play":
             if self.map_option not in ["meadows","cornfield"]:
-                Renderer.clearLayer("menu")
                 self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
             elif self.map_option in ["meadows","cornfield"]:
                 if self.difficulty_option not in ["easy","medium","hard"]:
                     self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
-                else:
-                    pass
 
 
-        # floor = Map.drawMap(Renderer.getLayer("map"))
+
+
+        floor = Map.drawMap(Renderer.getLayer("map"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 

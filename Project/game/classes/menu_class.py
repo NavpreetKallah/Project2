@@ -26,43 +26,43 @@ class Menu:
         self.chosen = None
         self.initialised = None
 
-        self.main_menu_play = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu_play.png"), SCALE)
-        self.main_menu_towers = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu_towers.png"), SCALE)
-        self.main_menu_quit = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu_quit.png"), SCALE)
-        self.main_menu_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu_selector.png"), SCALE)
+        self.main_menu_play = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu/main_menu_play.png"), SCALE)
+        self.main_menu_towers = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu/main_menu_towers.png"), SCALE)
+        self.main_menu_quit = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu/main_menu_quit.png"), SCALE)
+        self.main_menu_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/main_menu/main_menu_selector.png"), SCALE)
 
-        self.map_menu_cornfield = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu_cornfield.png"), SCALE)
-        self.map_menu_locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu_locked.png"), SCALE)
-        self.map_menu_select_text = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu_select_text.png"), SCALE)
-        self.map_menu_meadows = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu_meadows.png"), SCALE)
-        self.map_menu_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu_selector.png"), SCALE)
+        self.map_menu_cornfield = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu/map_menu_cornfield.png"), SCALE)
+        self.map_menu_locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu/map_menu_locked.png"), SCALE)
+        self.map_menu_select_text = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu/map_menu_select_text.png"), SCALE)
+        self.map_menu_meadows = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu/map_menu_meadows.png"), SCALE)
+        self.map_menu_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/map_menu/map_menu_selector.png"), SCALE)
 
-        self.difficulty_menu_select_text = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_select_text.png"), SCALE)
-        self.difficulty_menu_easy = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_easy.png"), SCALE)
-        self.difficulty_menu_easy_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_easy_selector.png"), SCALE)
-        self.difficulty_menu_medium = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_medium.png"), SCALE)
-        self.difficulty_menu_medium_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_medium_selector.png"), SCALE)
-        self.difficulty_menu_hard = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_hard.png"), SCALE)
-        self.difficulty_menu_hard_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu_hard_selector.png"), SCALE)
+        self.difficulty_menu_select_text = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_select_text.png"), SCALE)
+        self.difficulty_menu_easy = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_easy.png"), SCALE)
+        self.difficulty_menu_easy_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_easy_selector.png"), SCALE)
+        self.difficulty_menu_medium = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_medium.png"), SCALE)
+        self.difficulty_menu_medium_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_medium_selector.png"), SCALE)
+        self.difficulty_menu_hard = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_hard.png"), SCALE)
+        self.difficulty_menu_hard_selector = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_hard_selector.png"), SCALE)
 
     def selector(self, keyspressed, move=True, colour_change=False):
         if keyspressed[K_RIGHT] or keyspressed[K_DOWN]:
             if time.perf_counter() - self.time_since_selector > 0.25:
                 self.time_since_selector = time.perf_counter()
-                self.selector_index += 1 if self.selector_index != 2 else -2
-                self.selector_location = self.selector_locations[self.selector_index]
+                self.selector_index += 1
+                self.selector_location = self.selector_locations[self.selector_index%3]
 
         elif keyspressed[K_LEFT] or keyspressed[K_UP]:
             if time.perf_counter() - self.time_since_selector > 0.25:
                 self.time_since_selector = time.perf_counter()
-                self.selector_index += -1 if self.selector_index != 0 else 2
-                self.selector_location = self.selector_locations[self.selector_index]
+                self.selector_index += -1
+                self.selector_location = self.selector_locations[self.selector_index%3]
 
         if colour_change:
-            self.selector_image = self.selector_images[self.selector_index]
+            self.selector_image = self.selector_images[self.selector_index%3]
 
         if keyspressed[K_SPACE] or keyspressed[K_RETURN] and time.perf_counter() - self.time_since_loaded > 1:
-            return self.selector_selected[self.selector_index]
+            return self.selector_selected[self.selector_index%3]
 
         if time.perf_counter() - self.start_time > 0.5 and move:
             self.start_time = time.perf_counter()
