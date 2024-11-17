@@ -33,3 +33,6 @@ class Renderer:
     def clearLayers(self):
         for key in self.layers:
             self.layers[key].fill(pygame.Color(0, 0, 0))
+
+    def deleteLayer(self, layer):
+        del(self.layers[layer])

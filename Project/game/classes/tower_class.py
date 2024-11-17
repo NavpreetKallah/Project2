@@ -2,7 +2,7 @@ from builtins import int, super, str
 
 import pygame
 
-from game.classes.entity_class import Entity
+from Project.game.classes.entity_class import Entity
 
 
 class Tower(Entity):

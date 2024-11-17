@@ -5,18 +5,18 @@ import sys
 import os
 
 
-from game.classes.button_class import Button
-from game.classes.enemy_class import Enemy
-from game.classes.entity_class import Entity
-from game.classes.explosion_class import Explosion
-from game.classes.hud_class import Hud
-from game.classes.map_class import Map
-from game.classes.projectile_class import Projectile
-from game.classes.renderer_class import Renderer
-from game.classes.round_class import Round
-from game.classes.menu_class import Menu
-from game.classes.textbox_class import Textbox
-from game.classes.tower_class import Tower
+from Project.game.classes.button_class import Button
+from Project.game.classes.enemy_class import Enemy
+from Project.game.classes.entity_class import Entity
+from Project.game.classes.explosion_class import Explosion
+from Project.game.classes.hud_class import Hud
+from Project.game.classes.map_class import Map
+from Project.game.classes.projectile_class import Projectile
+from Project.game.classes.renderer_class import Renderer
+from Project.game.classes.round_class import Round
+from Project.game.classes.menu_class import Menu
+from Project.game.classes.textbox_class import Textbox
+from Project.game.classes.tower_class import Tower
 
 SCALE = 5
 WIDTH, HEIGHT = 160*SCALE,120*SCALE
@@ -31,9 +31,9 @@ class Game:
         self.screen_size = screen_size
         self.screen = pygame.display.set_mode(self.screen_size)
         self.clock = pygame.time.Clock()
-        self.main_menu_option = None
-        self.map_option = None
-        self.difficulty_option = None
+        self.main_menu_option = "play"
+        self.map_option = "cornfield"
+        self.difficulty_option = "easy"
         self.fps = 60
         self.running = True
         self.surfaces = []
@@ -63,10 +63,11 @@ class Game:
                 if self.difficulty_option not in ["easy","medium","hard"]:
                     self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
 
+        if self.map_option and self.difficulty_option:
+            Map.initialiseMap(self.map_option, Renderer.getLayer("menu"))
+            print(True)
 
 
-
-        floor = Map.drawMap(Renderer.getLayer("map"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 

@@ -6,7 +6,7 @@ import pygame
 from pygame import K_RIGHT, K_LEFT, K_DOWN, K_UP, K_SPACE, K_RETURN
 
 
-from game.classes.renderer_class import Renderer
+from Project.game.classes.renderer_class import Renderer
 path = os.path.dirname(os.getcwd())+"/textures"
 SCALE = 5
 
@@ -87,7 +87,7 @@ class Menu:
                 self.time_since_loaded = time.perf_counter()
                 self.selector_image = self.map_menu_selector
                 self.selector_locations = [(3 * SCALE, 55 * SCALE), (56 * SCALE, 55 * SCALE), (109 * SCALE, 55 * SCALE)]
-                self.selector_selected = ["cornfield", "meadows", "locked"]
+                self.selector_selected = ["meadows", "cornfield", "locked"]
                 self.selector_index = 0
                 self.selector_location = self.selector_locations[0]
                 self.initialised = "map"
