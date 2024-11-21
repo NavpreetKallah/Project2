@@ -31,6 +31,7 @@ class Game:
         self.screen_size = screen_size
         self.screen = pygame.display.set_mode(self.screen_size)
         self.clock = pygame.time.Clock()
+        self.map_initialise = False
         self.main_menu_option = "play"
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
@@ -63,9 +64,9 @@ class Game:
                 if self.difficulty_option not in ["easy","medium","hard"]:
                     self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
 
-        if self.map_option and self.difficulty_option:
-            Map.initialiseMap(self.map_option, Renderer.getLayer("menu"))
-            print(True)
+        if self.map_option and self.difficulty_option and not self.map_initialise:
+            Map.initialiseMap(self.map_option, Renderer.getLayer("map"))
+            self.map_initialise = True
 
 
         for surface in Renderer.getLayers():
@@ -73,7 +74,6 @@ class Game:
 
     def update(self):
         self.quit()
-        Renderer.clearLayers()
         self.game()
         pygame.display.update()
         self.clock.tick(self.fps)
