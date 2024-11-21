@@ -8,7 +8,7 @@ from pygame import K_RIGHT, K_LEFT, K_DOWN, K_UP, K_SPACE, K_RETURN
 
 from Project.game.classes.renderer_class import Renderer
 path = os.path.dirname(os.getcwd())+"/textures"
-SCALE = 5
+from game.config import SCALE
 
 class Menu:
     def __init__(self):

@@ -8,18 +8,24 @@ class Renderer:
     def __init__(self, width: int, height: int):
         DIMENSIONS = (width, height)
         self.layers = {
-            "map":pygame.Surface(DIMENSIONS),
-            "menu":pygame.Surface(DIMENSIONS)
-            #"path":pygame.Surface(DIMENSIONS),
-            #"entities":pygame.Surface(DIMENSIONS),
-            #"HUD":pygame.Surface(DIMENSIONS)
+            "map": pygame.Surface(DIMENSIONS, pygame.SRCALPHA,),
+            "menu": pygame.Surface(DIMENSIONS, pygame.SRCALPHA,),
+            #"entities":pygame.Surface(DIMENSIONS, pygame.SRCALPHA,),
+            "HUD": pygame.Surface(DIMENSIONS, pygame.SRCALPHA,)
         }
 
     def getLayer(self, layer):
         return self.layers[layer]
 
     def getLayers(self):
-        return self.layers.values()
+        layers = []
+        if "map" in self.layers:
+            layers.append(self.layers["map"])
+        if "menu" in self.layers:
+            layers.append(self.layers["menu"])
+        if "HUD" in self.layers:
+            layers.append(self.layers["HUD"])
+        return layers
 
     def updateLayer(self, new_layer, old_layer):
         self.layers[old_layer] = new_layer
@@ -32,7 +38,7 @@ class Renderer:
 
     def clearLayers(self):
         for key in self.layers:
-            self.layers[key].fill(pygame.Color(0, 0, 0))
+            self.layers[key].fill(pygame.Color(0, 0, 0, 0))
 
     def deleteLayer(self, layer):
         del(self.layers[layer])

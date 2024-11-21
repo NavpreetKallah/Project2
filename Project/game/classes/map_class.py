@@ -2,7 +2,7 @@ from builtins import tuple, list, int, range
 import pygame
 import json
 import os
-SCALE = 5
+from game.config import SCALE
 
 json_path = os.path.dirname(os.getcwd()) + "/map/"
 path = os.path.dirname(os.getcwd())+"/textures"
@@ -17,21 +17,21 @@ class Map:
         # self.current_map_textures = current_map_textures
         # self.path_length = path_length
         self.map = None
-        self.scenery = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/scenery.png"), SCALE)
-        self.straight_path = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/straight_path.png"), SCALE)
-        self.connector_path = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/connector_path.png"), SCALE)
+        self.scenery = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/scenery.png").convert_alpha(), SCALE)
+        self.straight_path = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/straight_path.png").convert_alpha(), SCALE)
+        self.connector_path = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/connector_path.png").convert_alpha(), SCALE)
         self.connector_paths = [pygame.transform.rotate(self.connector_path, -theta*90) for theta in range(4)]
 
     def getCoordinate(self,x ,y):
         return None
 
     def initialiseMap(self, map, layer):
-        layer.blit(self.scenery, (0,0))
+        layer.blit(self.scenery, (SCALE,SCALE*11))
         with open(f"{json_path}{map}.json", "r") as file:
             self.map = json.load(file)["map"]
         for i, row in enumerate(self.map):
             for j, cell in enumerate(row):
-                pos = (j*9*SCALE, i*9*SCALE)
+                pos = ((j*9+1)*SCALE, (i*9+11)*SCALE)
                 if 0 < cell[0] < 90:
                     adjacent_cells = self.adjacent_cells(i, j)
 
