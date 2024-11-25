@@ -1,7 +1,7 @@
 from builtins import int, list, super, str
 import pygame
 
-from Project.game.classes.entity_class import Entity
+from game.classes.entity_class import Entity
 
 
 class Enemy(Entity):

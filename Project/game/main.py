@@ -10,6 +10,7 @@ from game.classes.enemy_class import Enemy
 from game.classes.entity_class import Entity
 from game.classes.explosion_class import Explosion
 from game.classes.hud_class import Hud
+from game.classes.temp import Temp
 from game.classes.map_class import Map
 from game.classes.projectile_class import Projectile
 from game.classes.renderer_class import Renderer
@@ -30,6 +31,7 @@ Renderer.clearLayers()
 Menu = Menu()
 Map = Map()
 Hud = Hud()
+Temp = Temp()
 
 class Game:
     def __init__(self, screen):
@@ -85,6 +87,9 @@ class Game:
 
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
+
+        # print(1/(time.perf_counter() - self.timer))
+        # self.timer = time.perf_counter()
 
     def update(self):
         self.clock.tick(self.fps)
