@@ -29,6 +29,7 @@ Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
 Menu = Menu()
 Map = Map()
+Enemy = Enemy()
 Hud = Hud()
 
 class Game:
@@ -48,6 +49,7 @@ class Game:
         self.money = 0
         self.round_number = 0
         self.total_rounds = 0
+        self.done = True
 
         title = "Balloons"
         pygame.init()
@@ -85,6 +87,9 @@ class Game:
 
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
+
+        if self.done:
+            self.done = Enemy.move(Map.pathfind(), Renderer.getLayer("HUD"))
 
     def update(self):
         self.clock.tick(self.fps)

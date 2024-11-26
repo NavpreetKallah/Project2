@@ -53,6 +53,26 @@ class Map:
                     elif second_touching - first_touching != 2:
                         layer.blit(self.connector_paths[second_touching if (second_touching - first_touching) == 1 else 0], pos)
 
+        self.pathfind()
+
+    def pathfind(self):
+        dict = {}
+        direction = []
+        for i, row in enumerate(self.map):
+            for j, cell in enumerate(row):
+                if 0 < cell[0] < 90:
+                    dict[cell[0]] = (i,j)
+        for i in range(1,42):
+            if dict[i][1] + 1 == dict[i+1][1]:
+                direction.append("R")
+            elif dict[i][1] - 1 == dict[i+1][1]:
+                direction.append("L")
+            elif dict[i][0] + 1 == dict[i+1][0]:
+                direction.append("D")
+            elif dict[i][0] - 1 == dict[i+1][0]:
+                direction.append("U")
+        return direction
+
 
     def adjacent_cells(self, j, i):
         up = self.map[j-1][i] if j != 0 else None
