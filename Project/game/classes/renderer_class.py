@@ -8,10 +8,11 @@ class Renderer:
     def __init__(self, width: int, height: int):
         DIMENSIONS = (width, height)
         self.layers = {
-            "map": pygame.Surface(DIMENSIONS, pygame.SRCALPHA,),
-            "menu": pygame.Surface(DIMENSIONS, pygame.SRCALPHA,),
-            #"entities":pygame.Surface(DIMENSIONS, pygame.SRCALPHA,),
-            "HUD": pygame.Surface(DIMENSIONS, pygame.SRCALPHA,)
+            "map": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            "menu": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            #"entities":pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            "HUD": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            "enemy": pygame.Surface(DIMENSIONS, pygame.SRCALPHA)
         }
 
     def getLayer(self, layer):
@@ -23,6 +24,8 @@ class Renderer:
             layers.append(self.layers["map"])
         if "menu" in self.layers:
             layers.append(self.layers["menu"])
+        if "enemy" in self.layers:
+            layers.append(self.layers["enemy"])
         if "HUD" in self.layers:
             layers.append(self.layers["HUD"])
         return layers

@@ -14,10 +14,11 @@ class Enemy():
         # self.health = health
         # self.immunities = immunities
         # self.value = value
-        self.speed = 1*SCALE
+        self.speed = 2*SCALE
         self.count = 0
         self.current = None
-        self.position = pygame.Vector2(SCALE*12,SCALE*14)
+        self.initialised = False
+        self.position = pygame.Vector2(SCALE*12,SCALE*13)
 
     def pathfind(self, end_coordinate):
         return None
@@ -27,25 +28,26 @@ class Enemy():
 
     def move(self, direction, layer):
         distance = 9 * SCALE
-        distance_moved = distance//self.speed
-        if len(direction) == 0:
-            print("DONE")
+        distance_moved = (distance//self.speed)
+        if not self.initialised:
+            self.initialised = True
+            self.path = direction
+        if len(self.path) == 0:
             return False
         if self.count == 0:
-            self.current = direction.pop(0)
-            self.count = distance_moved
+            self.current = self.path.pop(0)
+            self.count = (distance/SCALE - 1)
         if self.count > 0:
             if self.current == "D":
-                self.position.y += self.speed
+                self.position.y += distance_moved
             if self.current == "U":
-                self.position.y -= self.speed
+                self.position.y -= distance_moved
             if self.current == "L":
-                self.position.x -= self.speed
+                self.position.x -= distance_moved
             if self.current == "R":
-                self.position.x += self.speed
+                self.position.x += distance_moved
         self.count -= 1
         self.draw(layer)
-        self.move(direction, layer)
 
     def draw(self, layer):
         pygame.draw.rect(layer, (255,255,255), pygame.Rect(self.position.x, self.position.y, SCALE * 5, SCALE * 5))

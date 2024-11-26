@@ -1,1 +1,1 @@
-SCALE = 1
+SCALE = 8

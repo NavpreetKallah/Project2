@@ -85,11 +85,12 @@ class Game:
             Hud.initialiseHud(self.difficulty_option, Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
+        Enemy.move(Map.pathfind(), Renderer.getLayer("enemy"))
+
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 
-        if self.done:
-            self.done = Enemy.move(Map.pathfind(), Renderer.getLayer("HUD"))
+
 
     def update(self):
         self.clock.tick(self.fps)

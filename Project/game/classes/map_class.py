@@ -69,8 +69,9 @@ class Map:
                 direction.append("L")
             elif dict[i][0] + 1 == dict[i+1][0]:
                 direction.append("D")
-            elif dict[i][0] - 10 == dict[i+1][0]:
+            elif dict[i][0] - 1 == dict[i+1][0]:
                 direction.append("U")
+        direction.append("U")
         return direction
 
 
