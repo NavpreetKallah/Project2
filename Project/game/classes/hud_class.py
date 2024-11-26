@@ -4,7 +4,7 @@ import os
 
 path = os.path.dirname(os.getcwd())+"/textures/HUD"
 
-from Project.game.config import SCALE
+from game.config import SCALE
 
 # , lives: int, cash: int, round_number: int, total_rounds: int
 class Hud:
