@@ -17,7 +17,7 @@ class Enemy():
         self.speed = 1*SCALE
         self.count = 0
         self.current = None
-        self.position = pygame.Vector2(SCALE*12,SCALE*13)
+        self.position = pygame.Vector2(SCALE*12,SCALE*14)
 
     def pathfind(self, end_coordinate):
         return None
