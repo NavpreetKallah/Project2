@@ -14,7 +14,7 @@ class Enemy():
         # self.health = health
         # self.immunities = immunities
         # self.value = value
-        self.speed = 2*SCALE
+        self.speed = 1*SCALE
         self.count = 0
         self.current = None
         self.initialised = False
@@ -28,7 +28,7 @@ class Enemy():
 
     def move(self, direction, layer):
         distance = 9 * SCALE
-        distance_moved = (distance//self.speed)
+        distance_moved = (distance/self.speed)
         if not self.initialised:
             self.initialised = True
             self.path = direction
@@ -36,7 +36,7 @@ class Enemy():
             return False
         if self.count == 0:
             self.current = self.path.pop(0)
-            self.count = (distance/SCALE - 1)
+            self.count = self.speed
         if self.count > 0:
             if self.current == "D":
                 self.position.y += distance_moved

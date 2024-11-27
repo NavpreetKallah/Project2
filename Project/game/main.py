@@ -38,10 +38,11 @@ class Game:
         self.clock = pygame.time.Clock()
         self.hud_initialise = False
         self.map_initialise = False
+        self.round_started = False
         self.main_menu_option = "play"
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
-        self.fps = 60
+        self.fps = 600000
         self.timer = time.perf_counter()
         self.running = True
         self.surfaces = []
@@ -64,6 +65,7 @@ class Game:
         self.screen.fill((0, 0, 0))
 
     def game(self):
+        mouse = pygame.mouse.get_pos()
         if self.main_menu_option not in ["play", "towers", "quit"]:
             self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
         elif self.main_menu_option == "quit":
@@ -85,8 +87,15 @@ class Game:
             Hud.initialiseHud(self.difficulty_option, Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
-        Enemy.move(Map.pathfind(), Renderer.getLayer("enemy"))
+        if not pygame.mouse.get_pressed()[0]:
+            self.round_started = False
+        elif pygame.mouse.get_pressed()[0] and not self.round_started:
+            self.round_started = True
+            print(self.round_started)
 
+
+
+        Enemy.move(Map.pathfind(), Renderer.getLayer("enemy"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 

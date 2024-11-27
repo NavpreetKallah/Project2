@@ -20,8 +20,8 @@ class Hud:
         self.numbers = [self.get_image(self.spritesheet,(4)*SCALE,5*SCALE,i*4*SCALE-SCALE) for i in range(1,11)]
         self.numbers.insert(1, self.get_image(self.spritesheet, (3) * SCALE, 5 * SCALE, 0))
         self.counter = 1
-        self.rgb = [(250,i*5,0) for i in range (1,50)] + [(250-i*5,250,0) for i in range (1,50)] + [(0,250,i*5) for i in range (1,50)] + [(0,250-i*5,250) for i in range (1,50)] + [(i*5,0,250) for i in range (1,50)] + [(250,0,250-i*5) for i in range (1,50)]
-        self.rgb_colours = [self.colour_swap(self.HUD_white, (255,255,255), self.rgb[i%294]) for i in range(0,294)]
+        #self.rgb = [(250,i*5,0) for i in range (1,50)] + [(250-i*5,250,0) for i in range (1,50)] + [(0,250,i*5) for i in range (1,50)] + [(0,250-i*5,250) for i in range (1,50)] + [(i*5,0,250) for i in range (1,50)] + [(250,0,250-i*5) for i in range (1,50)]
+        #self.rgb_colours = [self.colour_swap(self.HUD_white, (255,255,255), self.rgb[i%294]) for i in range(0,294)]
 
     def colour_swap(self, image, old_colour, new_colour):
         color_mask = pygame.mask.from_threshold(image, old_colour, threshold=(1, 1, 1, 255))
@@ -40,11 +40,13 @@ class Hud:
         layer.blit(self.HUD_icons, (0,0))
 
     def updateHud(self, layer):
-        self.counter += 1
-        layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
-        health = self.createNumber(self.counter % 1000,3)
-        money = self.createNumber(self.counter % 9999999, 0)
-        layer.blit(health,(12*SCALE, 3*SCALE))
+        self.counter *= 1.01
+        #layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
+        #health = self.createNumber(self.counter % 1000,3)
+        money = self.createNumber(int(self.counter) % 9999999, 0)
+
+        layer.blit(self.HUD_white, (0,0))
+        #layer.blit(health,(12*SCALE, 3*SCALE))
         layer.blit(money, (39*SCALE, 3*SCALE))
 
     def createNumber(self, number, length):
