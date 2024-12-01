@@ -29,7 +29,7 @@ Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
 Menu = Menu()
 Map = Map()
-Enemy = Enemy()
+Round = Round()
 Hud = Hud()
 
 class Game:
@@ -42,12 +42,14 @@ class Game:
         self.main_menu_option = "play"
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
-        self.fps = 600000
+        self.fps = 60
         self.timer = time.perf_counter()
         self.running = True
         self.surfaces = []
-        self.health = 0
-        self.money = 0
+        self.spawn_list = []
+        self.spawn_queue = None
+        self.health = 100
+        self.money = 100
         self.round_number = 0
         self.total_rounds = 0
         self.done = True
@@ -87,15 +89,32 @@ class Game:
             Hud.initialiseHud(self.difficulty_option, Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
-        if not pygame.mouse.get_pressed()[0]:
+        if pygame.mouse.get_pressed()[0]  and Hud.play(Renderer.getLayer("HUD")):
+            if not self.round_started:
+                self.round_started = True
+                self.spawn_queue = Round.startRound()
+                Hud.updateRound(1)
+            # else:
+            #     self.round_paused = True
+            #     Round.pauseRound()
+
+
+        Renderer.clearLayer("enemy")
+        if self.spawn_queue and time.perf_counter() - self.timer > 0.2:
+            self.timer = time.perf_counter()
+            self.spawn_list.append(self.spawn_queue.pop())
+
+        if self.round_started:
+            for enemy in self.spawn_list:
+                if enemy.move(Map.pathfind(), Renderer.getLayer("enemy")) == "delete":
+                    self.spawn_list.remove(enemy)
+                    Hud.updateMoney(enemy.value)
+
+        if not self.spawn_list and self.round_started:
             self.round_started = False
-        elif pygame.mouse.get_pressed()[0] and not self.round_started:
-            self.round_started = True
-            print(self.round_started)
 
 
-
-        Enemy.move(Map.pathfind(), Renderer.getLayer("enemy"))
+        #Enemy.move(Map.pathfind(), Renderer.getLayer("enemy"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 
