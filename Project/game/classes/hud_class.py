@@ -26,8 +26,8 @@ class Hud:
         self.round_text = self.createNumber(self.round, 0)
         self.money_text = self.createNumber(self.money, 0)
         self.health_text = self.createNumber(self.health, 3)
-        self.rgb = [(250,i*5,0) for i in range (1,50)] + [(250-i*5,250,0) for i in range (1,50)] + [(0,250,i*5) for i in range (1,50)] + [(0,250-i*5,250) for i in range (1,50)] + [(i*5,0,250) for i in range (1,50)] + [(250,0,250-i*5) for i in range (1,50)]
-        self.rgb_colours = [self.colour_swap(self.HUD_white, (255,255,255), self.rgb[i%294]) for i in range(0,294)]
+        #self.rgb = [(250,i*5,0) for i in range (1,50)] + [(250-i*5,250,0) for i in range (1,50)] + [(0,250,i*5) for i in range (1,50)] + [(0,250-i*5,250) for i in range (1,50)] + [(i*5,0,250) for i in range (1,50)] + [(250,0,250-i*5) for i in range (1,50)]
+        #self.rgb_colours = [self.colour_swap(self.HUD_white, (255,255,255), self.rgb[i%294]) for i in range(0,294)]
 
     def colour_swap(self, image, old_colour, new_colour):
         color_mask = pygame.mask.from_threshold(image, old_colour, threshold=(1, 1, 1, 255))
@@ -40,6 +40,8 @@ class Hud:
         image = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
         image.blit(surface, (0,0), (start,0, width, height))
         return image
+
+
     def initialiseHud(self, difficulty, layer):
         layer.blit(self.HUD_black, (0,0))
         layer.blit(self.HUD_white, (0,0))
@@ -56,11 +58,12 @@ class Hud:
     def updateRound(self, round):
         self.round += round
         self.round_text = self.createNumber(self.round, 0)
-    def updateHud(self, layer):
-        self.counter += 1
 
-        layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
-        #layer.blit(self.HUD_white, (0,0))
+    def updateHud(self, layer):
+        #self.counter += 1
+
+        #layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
+        layer.blit(self.HUD_white, (0,0))
         layer.blit(self.round_text, (116*SCALE - self.round_text.get_width(), 3*SCALE))
         layer.blit(self.health_text,(12*SCALE, 3*SCALE))
         layer.blit(self.money_text, (39*SCALE, 3*SCALE))

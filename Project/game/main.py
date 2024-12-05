@@ -5,6 +5,8 @@ import pygame
 import sys
 import os
 
+from pygame import K_KP_0, K_PLUS
+
 from game.classes.button_class import Button
 from game.classes.enemy_class import Enemy
 from game.classes.entity_class import Entity
@@ -43,11 +45,12 @@ class Game:
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
         self.fps = 60
+        self.fps_timer = time.perf_counter()
         self.timer = time.perf_counter()
         self.running = True
         self.surfaces = []
         self.spawn_list = []
-        self.spawn_queue = None
+        self.spawn_queue = []
         self.health = 100
         self.money = 100
         self.round_number = 0
@@ -92,11 +95,12 @@ class Game:
         if pygame.mouse.get_pressed()[0]  and Hud.play(Renderer.getLayer("HUD")):
             if not self.round_started:
                 self.round_started = True
-                self.spawn_queue = Round.startRound()
+                self.spawn_queue += Round.startRound()
                 Hud.updateRound(1)
             # else:
             #     self.round_paused = True
             #     Round.pauseRound()
+
 
 
         Renderer.clearLayer("enemy")
@@ -109,6 +113,10 @@ class Game:
                 if enemy.move(Map.pathfind(), Renderer.getLayer("enemy")) == "delete":
                     self.spawn_list.remove(enemy)
                     Hud.updateMoney(enemy.value)
+
+        if self.spawn_list:
+            for enemy in self.spawn_list:
+                enemy.draw(Renderer.getLayer("enemy"))
 
         if not self.spawn_list and self.round_started:
             self.round_started = False
