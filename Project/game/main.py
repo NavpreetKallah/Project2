@@ -7,6 +7,7 @@ import os
 
 from pygame import K_KP_0, K_PLUS
 
+from classes.enemy_class import EnemyManager
 from game.classes.button_class import Button
 from game.classes.enemy_class import Enemy
 from game.classes.entity_class import Entity
@@ -33,6 +34,7 @@ Menu = Menu()
 Map = Map()
 Round = Round()
 Hud = Hud()
+EnemyManager = EnemyManager()
 
 class Game:
     def __init__(self, screen):
@@ -95,7 +97,7 @@ class Game:
         if pygame.mouse.get_pressed()[0]  and Hud.play(Renderer.getLayer("HUD")):
             if not self.round_started:
                 self.round_started = True
-                self.spawn_queue += Round.startRound()
+                Round.startRound(EnemyManager)
                 Hud.updateRound(1)
             # else:
             #     self.round_paused = True
@@ -104,21 +106,17 @@ class Game:
 
 
         Renderer.clearLayer("enemy")
-        if self.spawn_queue and time.perf_counter() - self.timer > 0.2:
-            self.timer = time.perf_counter()
-            self.spawn_list.append(self.spawn_queue.pop())
+        current_enemy = EnemyManager.load()
+        if current_enemy:
+            self.spawn_list += current_enemy
+
 
         if self.round_started:
-            for enemy in self.spawn_list:
-                if enemy.move(Map.pathfind(), Renderer.getLayer("enemy")) == "delete":
-                    self.spawn_list.remove(enemy)
-                    Hud.updateMoney(enemy.value)
+            EnemyManager.move(Map)
 
-        if self.spawn_list:
-            for enemy in self.spawn_list:
-                enemy.draw(Renderer.getLayer("enemy"))
+        EnemyManager.draw(Renderer.getLayer("enemy"))
 
-        if not self.spawn_list and self.round_started:
+        if not EnemyManager.getEnemies() and self.round_started:
             self.round_started = False
 
 

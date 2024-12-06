@@ -10,7 +10,6 @@ EnemyManager = EnemyManager()
 
 class Round:
     def __init__(self):
-        self.spawnList = []
         self.current_round = 0
         self.roundValue = 30 * self.current_round
         self.valueLeft = self.roundValue
@@ -62,29 +61,25 @@ class Round:
             for i in range(rangeStop):
                 self.probabilities[i] = self.base_probabilities[i]
 
-    def roundWin(self):
+    def roundWin(self, manager):
         self.current_round += 1
-        self.spawnList = []
         self.valueLeft = self.current_round * 10
         for i in range(1):
             self.increaseDifficulty()
-        self.generateEnemies()
+        self.generateEnemies(manager)
 
-    def generateEnemies(self):
+    def generateEnemies(self, manager):
         colour = random.choices(list(self.enemy_weightings.keys()), self.probabilities, k=1)[0]
         enemy = self.enemy_weightings[colour]
         if self.valueLeft - enemy >= 0:
             self.valueLeft -= enemy
-            EnemyManager.create(self.enemies[colour])
-            self.generateEnemies()
-        else:
-            return EnemyManager.enemy_list
+            manager.create(self.enemies[colour])
+            self.generateEnemies(manager)
 
     @property
     def getStarted(self):
         return self.round_started
 
-    def startRound(self):
+    def startRound(self, manager):
         self.round_started = True
-        self.roundWin()
-        return self.spawnList
+        self.roundWin(manager)
