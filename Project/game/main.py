@@ -7,7 +7,7 @@ import os
 
 from pygame import K_KP_0, K_PLUS
 
-from classes.enemy_class import EnemyManager
+from game.classes.enemy_class import EnemyManager
 from game.classes.button_class import Button
 from game.classes.enemy_class import Enemy
 from game.classes.entity_class import Entity
@@ -26,7 +26,7 @@ from game.config import SCALE
 WIDTH, HEIGHT = 160 * SCALE, 120 * SCALE
 
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT), vsync=1)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
@@ -72,7 +72,6 @@ class Game:
         self.screen.fill((0, 0, 0))
 
     def game(self):
-        mouse = pygame.mouse.get_pos()
         if self.main_menu_option not in ["play", "towers", "quit"]:
             self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
         elif self.main_menu_option == "quit":
@@ -88,6 +87,7 @@ class Game:
         if self.map_option and self.difficulty_option and not self.map_initialise:
             Renderer.deleteLayer("menu")
             Map.initialiseMap(self.map_option, Renderer.getLayer("map"))
+            self.path = Map.pathfind()
             self.map_initialise = True
 
         if not self.hud_initialise:
@@ -99,28 +99,14 @@ class Game:
                 self.round_started = True
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)
-            # else:
-            #     self.round_paused = True
-            #     Round.pauseRound()
-
-
 
         Renderer.clearLayer("enemy")
-        current_enemy = EnemyManager.load()
-        if current_enemy:
-            self.spawn_list += current_enemy
-
-
         if self.round_started:
-            EnemyManager.move(Map)
+            EnemyManager.update(Renderer.getLayer("enemy"), self.path[:])
 
-        EnemyManager.draw(Renderer.getLayer("enemy"))
-
-        if not EnemyManager.getEnemies() and self.round_started:
+        if not EnemyManager.getSpawnedEnemies() and self.round_started:
             self.round_started = False
 
-
-        #Enemy.move(Map.pathfind(), Renderer.getLayer("enemy"))
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 

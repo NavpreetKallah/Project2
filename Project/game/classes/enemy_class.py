@@ -18,7 +18,7 @@ class Enemy:
         self.colour = data["colour"]
         self.initialised = False
         self.count = 0
-        self.position = pygame.Vector2(SCALE*12,SCALE*-5)
+        self.position = pygame.Vector2(SCALE*12, SCALE*-5)
 
     def move(self, direction):
         distance = 9 * SCALE
@@ -78,21 +78,14 @@ class EnemyManager():
                         "9lead": {"speed": 2, "value": 9, "colour": (120, 120, 120)},
                         "10zebra": {"speed": 1, "value": 10, "colour": (0, 0, 0)}}
 
-
-
-
-
         for data in self.enemies.values():
             LinkedList.add(data)
-        # self.type = type
-        # self.speed = self.enemies[type]["speed"]
-        # self.value = self.enemies[type]["value"]
-        # self.colour = self.enemies[type]["colour"]
+
         self.enemy_list = []
+        self.spawn_list = []
         self.count = 0
         self.current = None
         self.initialised = False
-        # self.position = pygame.Vector2(SCALE*12,SCALE*-5)
 
     def create(self, type):
         current_node = LinkedList.head
@@ -101,22 +94,31 @@ class EnemyManager():
 
         self.enemy_list.append(Enemy(current_node))
 
-    def move(self, Map):
-        for enemy in self.enemy_list:
-            if enemy.move(Map.pathfind()) == "delete":
-                self.enemy_list.remove(enemy)
+    def move(self, path):
+        for enemy in self.spawn_list:
+            if enemy.move(path) == "delete":
+                self.spawn_list.remove(enemy)
 
     def draw(self, layer):
-        for enemy in self.enemy_list:
+        for enemy in self.spawn_list:
             enemy.draw(layer)
 
     def load(self):
         if self.enemy_list and time.perf_counter() - self.timer > 0.2:
             self.timer = time.perf_counter()
-            return self.enemy_list.pop(0)
+            self.spawn_list.append(self.enemy_list.pop(0))
+
+    def update(self, layer, Map):
+
+        self.load()
+        self.move(Map)
+        self.draw(layer)
 
     def getEnemies(self):
         return self.enemy_list
+
+    def getSpawnedEnemies(self):
+        return self.spawn_list
 
 
     def towersInRange(self, int):
