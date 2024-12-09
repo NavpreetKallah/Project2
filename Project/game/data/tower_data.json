@@ -1,0 +1,236 @@
+{
+  "Engineer": {
+    "cost": 300,
+    "icon": null,
+    "range": 40,
+    "damage": 1,
+    "pierce": 3,
+    "atk_speed": 0.7,
+    "main_atk": "no_frozen no_lead",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "Sentry gun", "first_cost": 425,
+      "second_name": "Faster engineering", "second_cost": 340,
+      "third_name": "Sprockets", "third_cost": 490,
+      "fourth_name": "Sentry expert", "fourth_cost": 2125},
+    "path_two": {
+      "first_name": "Oversized nails", "first_cost": 380,
+      "second_name": "Pin", "second_cost": 185,
+      "third_name": "Double gun", "third_cost": 425,
+      "fourth_name": "Bloon trap", "fourth_cost": 2975}
+  },
+  "Ice": {
+    "cost": 425,
+    "icon": null,
+    "range": 20,
+    "damage": 1,
+    "pierce": 30,
+    "atk_speed": 2.4,
+    "main_atk": "circle no_frozen no_lead",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },
+  "Alchemist": {
+    "cost": 0,
+    "icon": null,
+    "range": 45,
+    "damage": 1,
+    "pierce": 15,
+    "atk_speed": 2,
+    "main_atk": "explosion",
+    "secondary_atk": "acid",
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Druid": {
+    "cost": 340,
+    "icon": null,
+    "range": 35,
+    "damage": 1,
+    "pierce": 1,
+    "atk_speed": 1.1,
+    "main_atk": "burst no_frozen no_lead",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Village": {
+    "cost": 1020,
+    "icon": null,
+    "range": 40,
+    "damage": 0,
+    "pierce": 0,
+    "atk_speed": 0,
+    "main_atk": "circle",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Farm": {
+    "cost": 1060,
+    "icon": null,
+    "range": 40,
+    "damage": 0,
+    "pierce": 0,
+    "atk_speed": 0,
+    "income": 20,
+    "main_atk": "banana",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Mortar": {
+    "cost": 640,
+    "icon": null,
+    "range": 9999,
+    "damage": 2,
+    "pierce": 25,
+    "atk_speed": 2,
+    "atk_radius": 20,
+    "deviation": 0,
+    "main_atk": "explosion no-black",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Dartling gunner": {
+    "cost": 720,
+    "icon": null,
+    "range": 9999,
+    "damage": 1,
+    "pierce": 1,
+    "atk_speed": 0,
+    "main_atk": "normal no-lead",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Sniper": {
+    "cost": 0,
+    "icon": null,
+    "range": 0,
+    "damage": 0,
+    "pierce": 0,
+    "atk_speed": 0,
+    "main_atk": "normal",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Ninja": {
+    "cost": 0,
+    "icon": null,
+    "range": 0,
+    "damage": 0,
+    "pierce": 0,
+    "atk_speed": 0,
+    "main_atk": "normal",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Super": {
+    "cost": 0,
+    "icon": null,
+    "range": 0,
+    "damage": 0,
+    "pierce": 0,
+    "atk_speed": 0,
+    "main_atk": "normal",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  },"Wizard": {
+    "cost": 0,
+    "icon": null,
+    "range": 0,
+    "damage": 0,
+    "pierce": 0,
+    "atk_speed": 0,
+    "main_atk": "normal",
+    "secondary_atk": null,
+    "path_one": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0},
+    "path_two": {
+      "first_name": "", "first_cost": 0,
+      "second_name": "", "second_cost": 0,
+      "third_name": "", "third_cost": 0,
+      "fourth_name": "", "fourth_cost": 0}
+  }
+}

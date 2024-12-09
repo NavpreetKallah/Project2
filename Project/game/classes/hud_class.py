@@ -60,7 +60,7 @@ class Hud:
         self.round_text = self.createNumber(self.round, 0)
 
     def updateHud(self, layer):
-        self.updateMoney(1)
+        # self.updateMoney(1)
 
         #layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
         layer.blit(self.HUD_white, (0,0))
