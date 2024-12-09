@@ -43,6 +43,7 @@ class Game:
         self.hud_initialise = False
         self.map_initialise = False
         self.round_started = False
+        self.clicked = False
         self.main_menu_option = "play"
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
@@ -91,7 +92,7 @@ class Game:
             self.map_initialise = True
 
         if not self.hud_initialise:
-            Hud.initialiseHud(self.difficulty_option, Renderer.getLayer("HUD"))
+            Hud.initialiseHud(Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
         if pygame.mouse.get_pressed()[0]  and Hud.play(Renderer.getLayer("HUD")):
@@ -100,11 +101,33 @@ class Game:
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)
 
+        if pygame.mouse.get_pressed()[2] and not self.clicked:
+            self.clicked = True
+            for enemy in EnemyManager.getSprites():
+                damaged = enemy.take_damage(2)
+                if damaged == "delete":
+                    enemy.kill()
+                self.money += 1
+                Hud.updateMoney(self.money)
+
+        health_change = EnemyManager.getKilled()
+        if health_change:
+            if self.health - health_change < 0:
+                self.health = 0
+            else:
+                self.health = self.health - health_change
+            Hud.updateHealth(self.health)
+
+
+        if not pygame.mouse.get_pressed()[2]:
+            self.clicked = False
+
+
         Renderer.clearLayer("enemy")
         if self.round_started:
             EnemyManager.update(Renderer.getLayer("enemy"), self.path[:])
 
-        if not EnemyManager.getSpawnedEnemies() and self.round_started:
+        if not EnemyManager.getSprites() and self.round_started:
             self.round_started = False
 
         for surface in Renderer.getLayers():

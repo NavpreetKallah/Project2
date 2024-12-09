@@ -13,6 +13,18 @@ class Hud:
         self.cash = 0
         self.round_number = 0
         self.total_rounds = 0
+        self.tower_names = ["Engineer", "Druid", "Sniper", "Wizard", "Ninja", "Alchemist", "Ice", "Mortar", "Dartling", "Village", "Farm", "Super"]
+        self.locked_list = [True, False, False, False, False, False, False, False, False, False, False, False]
+        self.tower_icons = self.seperate_sheet(pygame.transform.scale_by(pygame.image.load_extended(f"{path}/tower_icon_spritesheet.png").convert_alpha(), SCALE), 10*SCALE)
+        self.pos = [(2 * SCALE, 3 * SCALE), (17 * SCALE, 3 * SCALE), (2 * SCALE, 18 * SCALE), (17 * SCALE, 18 * SCALE), (2 * SCALE, 33 * SCALE), (17 * SCALE, 33 * SCALE), (2 * SCALE, 48 * SCALE), (17 * SCALE, 48 * SCALE), (2 * SCALE, 63 * SCALE), (17 * SCALE, 63 * SCALE), (2 * SCALE, 78 * SCALE), (17 * SCALE, 78 * SCALE)]
+        self.tower_dict = {self.tower_names[i]: {"icon_red": self.tower_icons[i],
+                                                 "icon_green": self.colour_swap(self.tower_icons[i], (255, 0, 0), (0, 255, 0)),
+                                                 "pos": self.pos[i],
+                                                 "cost": 108,
+                                                 "locked": self.locked_list[i],
+                                                 "rect": pygame.Rect(self.pos[i][0], self.pos[i][1],10*SCALE,10*SCALE)}
+                           for i in range(12)}
+        self.locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/locked.png").convert_alpha(), SCALE)
         self.HUD_white = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_white.png").convert_alpha(), SCALE)
         self.HUD_black = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_black.png").convert_alpha(), SCALE)
         self.HUD_icons = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_icons.png").convert_alpha(), SCALE)
@@ -36,34 +48,54 @@ class Hud:
         img_copy.blit(color_change_surf, (0, 0))
         return img_copy
 
+    def seperate_sheet(self, sheet, width):
+        images = []
+        amount = sheet.get_width()//width
+        for i in range(amount):
+            image = pygame.Surface((width,width), pygame.SRCALPHA).convert_alpha()
+            image.blit(sheet, (0, 0), (width*i, 0, width, width))
+            images.append(image)
+        return images
+
     def get_image(self, surface, width, height,start):
         image = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
         image.blit(surface, (0,0), (start,0, width, height))
         return image
 
 
-    def initialiseHud(self, difficulty, layer):
+    def initialiseHud(self, layer):
         layer.blit(self.HUD_black, (0,0))
         layer.blit(self.HUD_white, (0,0))
         layer.blit(self.HUD_icons, (0,0))
 
     def updateHealth(self, health):
-        self.health += health
+        self.health = health
         self.health_text = self.createNumber(self.health,3)
 
     def updateMoney(self, money):
-        self.money += money
+        self.money = money
         self.money_text = self.createNumber(self.money, 0)
 
     def updateRound(self, round):
         self.round += round
         self.round_text = self.createNumber(self.round, 0)
 
-    def updateHud(self, layer):
-        self.updateMoney(1)
+    def createTowerSelect(self):
+        surface = pygame.Surface((31*SCALE, 93*SCALE), pygame.SRCALPHA).convert_alpha()
+        for tower in self.tower_dict.values():
+            if tower["locked"]:
+                if tower["cost"] >= self.money:
+                    surface.blit(tower["icon_red"], tower["pos"])
+                else:
+                    surface.blit(tower["icon_green"], tower["pos"])
+            else:
+                surface.blit(self.locked, tower["pos"])
+        return surface
 
+    def updateHud(self, layer):
         #layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
-        layer.blit(self.HUD_white, (0,0))
+        layer.blit(self.createTowerSelect(), (129 * SCALE, 12 * SCALE))
+        layer.blit(self.HUD_white, (0, 0))
         layer.blit(self.round_text, (116*SCALE - self.round_text.get_width(), 3*SCALE))
         layer.blit(self.health_text,(12*SCALE, 3*SCALE))
         layer.blit(self.money_text, (39*SCALE, 3*SCALE))

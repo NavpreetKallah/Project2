@@ -5,8 +5,6 @@ import pygame
 from classes.enemy_class import Enemy
 #, current_round: int, enemy_value: int, enemy_weightings: dict
 
-from game.classes.enemy_class import EnemyManager
-EnemyManager = EnemyManager()
 
 class Round:
     def __init__(self):
@@ -33,10 +31,11 @@ class Round:
                                 "8purple": 8,
                                 "9lead": 9,
                                 "10zebra": 10}
+
         self.probabilities = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.round_started = False
-        self.weighting = [-10,9,1]
-        self.base_probabilities = [90,9,1]
+        self.weighting = [-20,18,2]
+        self.base_probabilities = [100,0,0]
 
     def increaseDifficulty(self):
 
@@ -69,6 +68,7 @@ class Round:
         self.generateEnemies(manager)
 
     def generateEnemies(self, manager):
+        print(self.probabilities)
         colour = random.choices(list(self.enemy_weightings.keys()), self.probabilities, k=1)[0]
         enemy = self.enemy_weightings[colour]
         if self.valueLeft - enemy >= 0:
