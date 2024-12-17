@@ -1,4 +1,5 @@
 from builtins import int
+import json
 import pygame
 import os
 
@@ -7,23 +8,41 @@ path = os.path.dirname(os.getcwd())+"/textures/HUD"
 from game.config import SCALE
 
 # , lives: int, cash: int, round_number: int, total_rounds: int
+json_path = os.path.dirname(os.getcwd()) + "/game/data/tower_data.json"
 class Hud:
     def __init__(self):
+        with open(f"{json_path}", "r") as file:
+            data = json.load(file)
         self.lives = 0
         self.cash = 0
         self.round_number = 0
         self.total_rounds = 0
-        self.tower_names = ["Engineer", "Druid", "Sniper", "Wizard", "Ninja", "Alchemist", "Ice", "Mortar", "Dartling", "Village", "Farm", "Super"]
+        self.tower_names = ["Engineer", "Sniper", "Druid", "Wizard", "Ninja", "Alchemist", "Ice", "Mortar", "Dartling", "Village", "Farm", "Super"]
         self.locked_list = [True, False, False, False, False, False, False, False, False, False, False, False]
-        self.tower_icons = self.seperate_sheet(pygame.transform.scale_by(pygame.image.load_extended(f"{path}/tower_icon_spritesheet.png").convert_alpha(), SCALE), 10*SCALE)
-        self.pos = [(2 * SCALE, 3 * SCALE), (17 * SCALE, 3 * SCALE), (2 * SCALE, 18 * SCALE), (17 * SCALE, 18 * SCALE), (2 * SCALE, 33 * SCALE), (17 * SCALE, 33 * SCALE), (2 * SCALE, 48 * SCALE), (17 * SCALE, 48 * SCALE), (2 * SCALE, 63 * SCALE), (17 * SCALE, 63 * SCALE), (2 * SCALE, 78 * SCALE), (17 * SCALE, 78 * SCALE)]
-        self.tower_dict = {self.tower_names[i]: {"icon_red": self.tower_icons[i],
-                                                 "icon_green": self.colour_swap(self.tower_icons[i], (255, 0, 0), (0, 255, 0)),
-                                                 "pos": self.pos[i],
-                                                 "cost": 108,
-                                                 "locked": self.locked_list[i],
-                                                 "rect": pygame.Rect(self.pos[i][0], self.pos[i][1],10*SCALE,10*SCALE)}
-                           for i in range(12)}
+
+        tower_icons = self.seperate_sheet(pygame.transform.scale_by(pygame.image.load_extended(f"{path}/tower_icon_spritesheet.png").convert_alpha(), SCALE), 10*SCALE)
+        tower_icons = {tower_name: tower_icons[i] for i, tower_name in enumerate(data)}
+        tower_pos = [(2 * SCALE, 3 * SCALE), (17 * SCALE, 3 * SCALE), (2 * SCALE, 18 * SCALE), (17 * SCALE, 18 * SCALE), (2 * SCALE, 33 * SCALE), (17 * SCALE, 33 * SCALE), (2 * SCALE, 48 * SCALE), (17 * SCALE, 48 * SCALE), (2 * SCALE, 63 * SCALE), (17 * SCALE, 63 * SCALE), (2 * SCALE, 78 * SCALE), (17 * SCALE, 78 * SCALE)]
+        tower_pos = {tower_name: tower_pos[i] for i, tower_name in enumerate(dict(sorted(data.items(), key=lambda x: x[1]["cost"])))}
+        for tower_name in data:
+            data[tower_name]["icon"] = tower_icons[tower_name]
+            data[tower_name]["pos"] = tower_pos[tower_name]
+        # self.tower_dict = {self.tower_names[i]: {"icon_red": self.tower_icons[i],
+        #                                          "icon_green": self.colour_swap(self.tower_icons[i], (255, 0, 0), (0, 255, 0)),
+        #                                          "pos": self.pos[i],
+        #                                          "cost": 108,
+        #                                          "locked": self.locked_list[i],
+        #                                          "rect": pygame.Rect(self.pos[i][0], self.pos[i][1],10*SCALE,10*SCALE)}
+        #                    for i in range(12)}
+
+        self.tower_dict = {tower_name: {"icon_red": tower_icons[tower_name],
+                                        "icon_green": self.colour_swap(tower_icons[tower_name], (255, 0, 0), (0, 255, 0)),
+                                        "pos": tower_pos[tower_name],
+                                        "cost": tower_name["cost"],
+                                        "locked": tower_name["locked"],
+                                        "rect": pygame.Rect(tower_pos[tower_name][0], tower_pos[tower_name][1],10*SCALE,10*SCALE)
+                                        }
+                           for tower_name in data}
         self.locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/locked.png").convert_alpha(), SCALE)
         self.HUD_white = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_white.png").convert_alpha(), SCALE)
         self.HUD_black = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_black.png").convert_alpha(), SCALE)

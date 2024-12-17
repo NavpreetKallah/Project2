@@ -10,8 +10,9 @@ from game.config import SCALE
 #                  distance_travelled: int, health: int, immunities: list, speed: int, value: int,
 LinkedList = LinkedList()
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node):
+    def __init__(self, node, spawn_delay):
         pygame.sprite.Sprite.__init__(self)
+        self.spawn_delay = spawn_delay
         self.node = node
         data = self.node.data
         self.speed = data["speed"]
@@ -67,6 +68,9 @@ class Enemy(pygame.sprite.Sprite):
     def getValue(self):
         return self.value
 
+    def getSpawnDelay(self):
+        return self.spawn_delay
+
     #
     # def draw(self, layer):
     #     pygame.draw.rect(layer, self.colour, (self.rect.x, self.rect.y, 5 * SCALE, 5 * SCALE))
@@ -85,7 +89,7 @@ class EnemyManager:
         self.enemies = {"1red": {"speed": 10, "value": 1, "colour": (255, 0, 0)},
                         "2blue": {"speed": 9, "value": 2, "colour": (0, 0, 255)},
                         "3green": {"speed": 8, "value": 3, "colour": (0, 255, 0)},
-                        "4yellow": {"speed": 7, "value": 4, "colour": (255, 255, 0)},
+                        "4yellow": {"speed": 7, "value": 4, "colour": (255, 215, 0)},
                         "5pink": {"speed": 6, "value": 5, "colour": (255, 136, 136)},
                         "6black": {"speed": 5, "value": 6, "colour": (0, 0, 0)},
                         "7white": {"speed": 4, "value": 7, "colour": (255, 255, 255)},
@@ -104,11 +108,11 @@ class EnemyManager:
         self.current = None
         self.initialised = False
 
-    def create(self, data):
+    def create(self, data, delay):
         current_node = LinkedList.head
         while current_node.data != data:
             current_node = current_node.next
-        self.enemy_list.append(Enemy(current_node))
+        self.enemy_list.append(Enemy(current_node,delay))
 
     def move(self, path):
         for enemy in self.sprites:
@@ -120,7 +124,7 @@ class EnemyManager:
     #         enemy.draw(layer)
 
     def load(self):
-        if self.enemy_list and time.perf_counter() - self.timer > 0.2:
+        if self.enemy_list and time.perf_counter() - self.timer > self.enemy_list[0].getSpawnDelay():
             self.timer = time.perf_counter()
             enemy = self.enemy_list.pop(0)
             # self.spawn_list.append(enemy)
