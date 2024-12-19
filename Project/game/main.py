@@ -103,12 +103,13 @@ class Game:
 
         if pygame.mouse.get_pressed()[2] and not self.clicked:
             self.clicked = True
-            for enemy in EnemyManager.getSprites():
-                damaged = enemy.take_damage(2)
-                if damaged == "delete":
-                    enemy.kill()
-                self.money += 1
-                Hud.updateMoney(self.money)
+            # for enemy in EnemyManager.getSprites():
+            #     damaged = enemy.take_damage(2)
+            #     if damaged == "delete":
+            #         enemy.kill()
+            #     self.money += 1
+            #     Hud.updateMoney(self.money)
+            EnemyManager.fastForward()
 
         health_change = EnemyManager.getKilled()
         if health_change:

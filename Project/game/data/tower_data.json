@@ -2,7 +2,7 @@
   "Engineer": {
     "cost": 300,
     "icon": null,
-    "locked": null,
+    "locked": false,
     "pos": null,
     "range": 40,
     "damage": 1,
@@ -24,7 +24,7 @@
   "Ice": {
     "cost": 425,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 20,
     "damage": 1,
@@ -46,7 +46,7 @@
   "Alchemist": {
     "cost": 470,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 45,
     "damage": 1,
@@ -67,7 +67,7 @@
   },"Druid": {
     "cost": 340,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 35,
     "damage": 1,
@@ -89,7 +89,7 @@
     "cost": 1020,
     "icon": null,
     "pos":null,
-    "locked": null,
+    "locked": true,
     "range": 40,
     "damage": 0,
     "pierce": 0,
@@ -109,7 +109,7 @@
   },"Farm": {
     "cost": 1060,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 40,
     "damage": 0,
@@ -131,7 +131,7 @@
   },"Mortar": {
     "cost": 640,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 9999,
     "damage": 2,
@@ -154,7 +154,7 @@
   },"Dartling gunner": {
     "cost": 720,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 9999,
     "damage": 1,
@@ -175,7 +175,7 @@
   },"Sniper": {
     "cost": 320,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 9999,
     "damage": 2,
@@ -196,7 +196,7 @@
   },"Ninja": {
     "cost": 425,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 40,
     "damage": 1,
@@ -217,7 +217,7 @@
   },"Super": {
     "cost": 2125,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 50,
     "damage": 1,
@@ -238,7 +238,7 @@
   },"Wizard": {
     "cost": 320,
     "icon": null,
-    "locked": null,
+    "locked": true,
     "pos": null,
     "range": 40,
     "damage": 1,

@@ -86,16 +86,16 @@ class EnemyManager:
         self.timer = time.perf_counter()
         self.queue = []
         self.kill_list = []
-        self.enemies = {"1red": {"speed": 10, "value": 1, "colour": (255, 0, 0)},
-                        "2blue": {"speed": 9, "value": 2, "colour": (0, 0, 255)},
-                        "3green": {"speed": 8, "value": 3, "colour": (0, 255, 0)},
-                        "4yellow": {"speed": 7, "value": 4, "colour": (255, 215, 0)},
-                        "5pink": {"speed": 6, "value": 5, "colour": (255, 136, 136)},
-                        "6black": {"speed": 5, "value": 6, "colour": (0, 0, 0)},
-                        "7white": {"speed": 4, "value": 7, "colour": (255, 255, 255)},
-                        "8purple": {"speed": 3, "value": 8, "colour": (255, 0, 255)},
-                        "9lead": {"speed": 2, "value": 9, "colour": (120, 120, 120)},
-                        "10zebra": {"speed": 1, "value": 10, "colour": (0, 0, 0)}}
+        self.enemies = {"1red": {"speed": 30, "value": 1, "colour": (255, 0, 0)},
+                        "2blue": {"speed": 27, "value": 2, "colour": (0, 0, 255)},
+                        "3green": {"speed": 24, "value": 3, "colour": (0, 255, 0)},
+                        "4yellow": {"speed": 21, "value": 4, "colour": (255, 215, 0)},
+                        "5pink": {"speed": 18, "value": 5, "colour": (255, 136, 136)},
+                        "6black": {"speed": 15, "value": 6, "colour": (0, 0, 0)},
+                        "7white": {"speed": 12, "value": 7, "colour": (255, 255, 255)},
+                        "8purple": {"speed": 9, "value": 8, "colour": (255, 0, 255)},
+                        "9lead": {"speed": 6, "value": 9, "colour": (120, 120, 120)},
+                        "10zebra": {"speed": 3, "value": 10, "colour": (0, 0, 0)}}
 
         self.sprites = pygame.sprite.Group()
 
@@ -113,6 +113,13 @@ class EnemyManager:
         while current_node.data != data:
             current_node = current_node.next
         self.enemy_list.append(Enemy(current_node,delay))
+
+    def getEnemyStats(self):
+        return self.enemies
+
+    def fastForward(self):
+        for info in self.enemies.values():
+            info["speed"] = info["speed"]//3
 
     def move(self, path):
         for enemy in self.sprites:

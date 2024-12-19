@@ -11,26 +11,17 @@ class Round:
         self.current_round = 0
         self.roundValue = 30 * self.current_round
         self.valueLeft = self.roundValue
-        self.enemies = {"1red": {"speed": 10, "value": 1, "colour": (255, 0, 0)},
-                        "2blue": {"speed": 9, "value": 2, "colour": (0, 0, 255)},
-                        "3green": {"speed": 8, "value": 3, "colour": (0, 255, 0)},
-                        "4yellow": {"speed": 7, "value": 4, "colour": (255, 215, 0)},
-                        "5pink": {"speed": 6, "value": 5, "colour": (255, 136, 136)},
-                        "6black": {"speed": 5, "value": 6, "colour": (0, 0, 0)},
-                        "7white": {"speed": 4, "value": 7, "colour": (255, 255, 255)},
-                        "8purple": {"speed": 3, "value": 8, "colour": (255, 0, 255)},
-                        "9lead": {"speed": 2, "value": 9, "colour": (120, 120, 120)},
-                        "10zebra": {"speed": 1, "value": 10, "colour": (0, 0, 0)}}
-        self.enemy_creator = {"1red":{"weight":1,"min_delay":0.02,"max_delay":0.3},
-                              "2blue": {"weight": 2, "min_delay": 1, "max_delay": 2},
-                              "3green": {"weight": 3, "min_delay": 2, "max_delay": 3},
-                              "4yellow": {"weight": 4, "min_delay": 3, "max_delay": 4},
-                              "5pink": {"weight": 1, "min_delay": 4, "max_delay": 5},
-                              "6black": {"weight": 1, "min_delay": 5, "max_delay": 6},
-                              "7white": {"weight": 1, "min_delay": 6, "max_delay": 7},
-                              "8purple": {"weight": 1, "min_delay": 7, "max_delay": 8},
-                              "9lead": {"weight": 1, "min_delay": 8, "max_delay": 9},
-                              "10zebra": {"weight": 1, "min_delay": 0, "max_delay": 1}
+        self.enemies = None
+        self.enemy_creator = {"1red":{"weight":1,"min_delay":0.3,"max_delay":0.6},
+                              "2blue": {"weight": 2, "min_delay": 0.26, "max_delay": 0.72},
+                              "3green": {"weight": 3, "min_delay": 0.42, "max_delay": 0.84},
+                              "4yellow": {"weight": 4, "min_delay": 0.48, "max_delay": 0.96},
+                              "5pink": {"weight": 5, "min_delay": 0.54, "max_delay": 1.08},
+                              "6black": {"weight": 6, "min_delay": 0.6, "max_delay": 1.2},
+                              "7white": {"weight": 7, "min_delay": 0.66, "max_delay": 1.32},
+                              "8purple": {"weight": 8, "min_delay": 0.72, "max_delay": 1.44},
+                              "9lead": {"weight": 9, "min_delay": 0.78, "max_delay": 1.56},
+                              "10zebra": {"weight": 10, "min_delay": 0.84, "max_delay": 1.68}
                               }
 
         self.probabilities = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -78,13 +69,14 @@ class Round:
 
     def generateDelay(self, colour):
         print(random.uniform(self.enemy_creator[colour]["min_delay"],self.enemy_creator[colour]["max_delay"]))
-        #return random.uniform(self.enemy_creator[colour]["min_delay"],self.enemy_creator[colour]["max_delay"])
-        return 0.1
+        return random.uniform(self.enemy_creator[colour]["min_delay"],self.enemy_creator[colour]["max_delay"])
+        #return 0.1
 
     @property
     def getStarted(self):
         return self.round_started
 
     def startRound(self, manager):
+        self.enemies = manager.getEnemyStats()
         self.round_started = True
         self.roundWin(manager)

@@ -27,22 +27,15 @@ class Hud:
         for tower_name in data:
             data[tower_name]["icon"] = tower_icons[tower_name]
             data[tower_name]["pos"] = tower_pos[tower_name]
-        # self.tower_dict = {self.tower_names[i]: {"icon_red": self.tower_icons[i],
-        #                                          "icon_green": self.colour_swap(self.tower_icons[i], (255, 0, 0), (0, 255, 0)),
-        #                                          "pos": self.pos[i],
-        #                                          "cost": 108,
-        #                                          "locked": self.locked_list[i],
-        #                                          "rect": pygame.Rect(self.pos[i][0], self.pos[i][1],10*SCALE,10*SCALE)}
-        #                    for i in range(12)}
 
         self.tower_dict = {tower_name: {"icon_red": tower_icons[tower_name],
                                         "icon_green": self.colour_swap(tower_icons[tower_name], (255, 0, 0), (0, 255, 0)),
                                         "pos": tower_pos[tower_name],
-                                        "cost": tower_name["cost"],
-                                        "locked": tower_name["locked"],
+                                        "cost": tower_info["cost"],
+                                        "locked": tower_info["locked"],
                                         "rect": pygame.Rect(tower_pos[tower_name][0], tower_pos[tower_name][1],10*SCALE,10*SCALE)
                                         }
-                           for tower_name in data}
+                           for tower_name, tower_info in data.items()}
         self.locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/locked.png").convert_alpha(), SCALE)
         self.HUD_white = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_white.png").convert_alpha(), SCALE)
         self.HUD_black = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_black.png").convert_alpha(), SCALE)
@@ -102,7 +95,7 @@ class Hud:
     def createTowerSelect(self):
         surface = pygame.Surface((31*SCALE, 93*SCALE), pygame.SRCALPHA).convert_alpha()
         for tower in self.tower_dict.values():
-            if tower["locked"]:
+            if not tower["locked"]:
                 if tower["cost"] >= self.money:
                     surface.blit(tower["icon_red"], tower["pos"])
                 else:
