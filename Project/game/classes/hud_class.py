@@ -28,6 +28,7 @@ class Hud:
             data[tower_name]["icon"] = tower_icons[tower_name]
             data[tower_name]["pos"] = tower_pos[tower_name]
 
+        self.speedup = False
         self.tower_dict = {tower_name: {"icon_red": tower_icons[tower_name],
                                         "icon_green": self.colour_swap(tower_icons[tower_name], (255, 0, 0), (0, 255, 0)),
                                         "pos": tower_pos[tower_name],
@@ -37,6 +38,7 @@ class Hud:
                                         }
                            for tower_name, tower_info in data.items()}
         self.locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/locked.png").convert_alpha(), SCALE)
+        self.fast_forward_indicator = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/fast_forward_indicator.png").convert_alpha(), SCALE)
         self.HUD_white = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_white.png").convert_alpha(), SCALE)
         self.HUD_black = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_black.png").convert_alpha(), SCALE)
         self.HUD_icons = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_icons.png").convert_alpha(), SCALE)
@@ -121,10 +123,33 @@ class Hud:
             surface.blit(self.numbers[int(number)],(sum(sizes[0:i]),0))
         return surface
 
-    def play(self, layer):
+    def play(self):
         mouse = pygame.mouse.get_pos()
         play = pygame.Rect(128 * SCALE, 105 * SCALE, 15 * SCALE, 14 * SCALE)
         if play.collidepoint(mouse):
+            return True
+
+    def disableSpeed(self, layer):
+        self.HUD_icons = self.colour_swap(self.HUD_icons,(120,195,0),(60,60,60))
+        self.HUD_icons = self.colour_swap(self.HUD_icons, (180, 255, 0), (180, 180, 180))
+        self.HUD_icons = self.colour_swap(self.HUD_icons, (150, 225, 0), (120, 120, 120))
+        layer.blit(self.HUD_icons, (0,0))
+
+    def enableSpeed(self, layer):
+        self.HUD_icons = self.colour_swap(self.HUD_icons, (60, 60, 60), (120, 195, 0))
+        self.HUD_icons = self.colour_swap(self.HUD_icons, (180, 180, 180), (180, 255, 0))
+        self.HUD_icons = self.colour_swap(self.HUD_icons, (120, 120, 120), (150, 225, 0))
+        layer.blit(self.HUD_icons, (0,0))
+
+    def fastForward(self):
+        mouse = pygame.mouse.get_pos()
+        fast_forward = pygame.Rect(144 * SCALE, 105 * SCALE, 15 * SCALE, 14 * SCALE)
+        #pygame.draw.rect(layer, (50,50,50),fast_forward,SCALE)
+        if fast_forward.collidepoint(mouse):
+            self.speedup = not self.speedup
+            if self.speedup:
+                pass
+            # TODO Add fast forward indication
             return True
 
 

@@ -83,6 +83,7 @@ class EnemyManager:
         # self.health = health
         # self.immunities = immunities
         # self.value = value
+        self.speedup = False
         self.timer = time.perf_counter()
         self.queue = []
         self.kill_list = []
@@ -117,9 +118,18 @@ class EnemyManager:
     def getEnemyStats(self):
         return self.enemies
 
-    def fastForward(self):
+    def getSpeedState(self):
+        return self.speedup
+
+    def speedChange(self):
+        speed = 3 if self.speedup else 1/3
+        self.speedup = not self.speedup
         for info in self.enemies.values():
-            info["speed"] = info["speed"]//3
+            info["speed"] = round(info["speed"]*speed)
+
+    def slowDown(self):
+        for info in self.enemies.values():
+            info["speed"] = info["speed"]*3
 
     def move(self, path):
         for enemy in self.sprites:

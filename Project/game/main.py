@@ -95,21 +95,28 @@ class Game:
             Hud.initialiseHud(Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
-        if pygame.mouse.get_pressed()[0]  and Hud.play(Renderer.getLayer("HUD")):
+        if pygame.mouse.get_pressed()[0] and Hud.play():
             if not self.round_started:
                 self.round_started = True
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)
+                Hud.disableSpeed(Renderer.getLayer("HUD"))
 
-        if pygame.mouse.get_pressed()[2] and not self.clicked:
+        if pygame.mouse.get_pressed()[0] and not self.round_started and not self.clicked:
             self.clicked = True
+            if Hud.fastForward():
+                EnemyManager.speedChange()
+
+
+        # if pygame.mouse.get_pressed()[2] and not self.clicked:
+        #     self.clicked = True
             # for enemy in EnemyManager.getSprites():
             #     damaged = enemy.take_damage(2)
             #     if damaged == "delete":
             #         enemy.kill()
             #     self.money += 1
             #     Hud.updateMoney(self.money)
-            EnemyManager.fastForward()
+            #EnemyManager.fastForward()
 
         health_change = EnemyManager.getKilled()
         if health_change:
@@ -120,7 +127,7 @@ class Game:
             Hud.updateHealth(self.health)
 
 
-        if not pygame.mouse.get_pressed()[2]:
+        if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
 
 
@@ -130,6 +137,7 @@ class Game:
 
         if not EnemyManager.getSprites() and self.round_started:
             self.round_started = False
+            Hud.enableSpeed(Renderer.getLayer("HUD"))
 
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
