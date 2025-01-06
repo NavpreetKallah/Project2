@@ -11,4 +11,3 @@ class Explosion:
 
     def debuff(self, delta_time):
         return None
-

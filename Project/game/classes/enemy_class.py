@@ -1,29 +1,36 @@
-from builtins import int, list, super, str
 import time
-import pygame
 
-from game.classes.entity_class import Entity
+import pygame
+import random
 from game.classes.linked_list import LinkedList
 from game.config import SCALE
 
 # , rect: pygame.Vector2, angle: int, state: str, frame: int, range: int,
 #                  distance_travelled: int, health: int, immunities: list, speed: int, value: int,
 LinkedList = LinkedList()
+
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node, spawn_delay):
+    def __init__(self, node, spawn_delay, enemy_number, pos=None, count=0, path=None):
         pygame.sprite.Sprite.__init__(self)
         self.spawn_delay = spawn_delay
         self.node = node
         data = self.node.data
+        self.number = enemy_number
         self.speed = data["speed"]
         self.value = data["value"]
         self.colour = data["colour"]
         self.initialised = False
-        self.count = 0
-        self.pos = pygame.Vector2(SCALE*12, SCALE*-5)
+        self.count = count
+        if path:
+            self.path = path
+        if not pos:
+            self.pos = pygame.Vector2(SCALE * (12 + [-1,0,1,0][enemy_number%4]), SCALE * (-5- [0,1][enemy_number%2]))
+        else:
+            self.pos = pos
+        self.image = self.colourIn()
         # self.rect = pygame.rect.Rect((self.pos.x, self.pos.y, 5*SCALE,5*SCALE))
-        self.image = pygame.Surface((5*SCALE, 5*SCALE))
-        self.image.fill(self.colour)
+        # self.image.fill((0,0,0),(SCALE,SCALE,1*SCALE,1*SCALE))
+        # self.image.fill((0,0,0),(3*SCALE,SCALE,1*SCALE,1*SCALE))
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.pos.x, self.pos.y)
 
@@ -54,16 +61,29 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.topleft = (self.pos.x, self.pos.y)
         self.count -= 1
 
+    def colourIn(self):
+        image = pygame.Surface((5 * SCALE, 6 * SCALE), pygame.SRCALPHA)
+        image.fill((0,0,0),(0,SCALE,5*SCALE,3*SCALE))
+        image.fill((0,0,0),(SCALE,0,3*SCALE,5*SCALE))
+        image.fill((0,0,0),(2*SCALE,SCALE*5,SCALE,SCALE))
+        image.fill(self.colour,(SCALE,SCALE,3*SCALE,3*SCALE))
+        image.fill(self.colour,(2*SCALE,SCALE*4,SCALE,SCALE))
+        return image
+
     def take_damage(self, damage):
+        money = 0
         for _ in range(damage):
+            money += 1
             if not self.node.next:
-                return "delete"
+                self.kill()
+                return money
             self.node = self.node.next
         data = self.node.data
         self.speed = data["speed"]
         self.value = data["value"]
         self.colour = data["colour"]
-        self.image.fill(self.colour)
+        self.image = self.colourIn()
+        return money
 
     def getValue(self):
         return self.value
@@ -93,10 +113,10 @@ class EnemyManager:
                         "4yellow": {"speed": 21, "value": 4, "colour": (255, 215, 0)},
                         "5pink": {"speed": 18, "value": 5, "colour": (255, 136, 136)},
                         "6black": {"speed": 15, "value": 6, "colour": (0, 0, 0)},
-                        "7white": {"speed": 12, "value": 7, "colour": (255, 255, 255)},
-                        "8purple": {"speed": 9, "value": 8, "colour": (255, 0, 255)},
-                        "9lead": {"speed": 6, "value": 9, "colour": (120, 120, 120)},
-                        "10zebra": {"speed": 3, "value": 10, "colour": (0, 0, 0)}}
+                        "7white": {"speed": 15, "value": 7, "colour": (255, 255, 255)},
+                        "8purple": {"speed": 15, "value": 8, "colour": (255, 0, 255)},
+                        "9lead": {"speed": 18, "value": 9, "colour": (120, 120, 120)},
+                        "10zebra": {"speed": 12, "value": 10, "colour": (0, 0, 0)}}
 
         self.sprites = pygame.sprite.Group()
 
@@ -105,6 +125,7 @@ class EnemyManager:
 
         self.enemy_list = []
         # self.spawn_list = []
+        self.number = 0
         self.count = 0
         self.current = None
         self.initialised = False
@@ -113,7 +134,8 @@ class EnemyManager:
         current_node = LinkedList.head
         while current_node.data != data:
             current_node = current_node.next
-        self.enemy_list.append(Enemy(current_node,delay))
+        self.enemy_list.append(Enemy(current_node, delay, self.number))
+        self.number += 1
 
     def getEnemyStats(self):
         return self.enemies
@@ -122,14 +144,14 @@ class EnemyManager:
         return self.speedup
 
     def speedChange(self):
-        speed = 3 if self.speedup else 1/3
+        speed = 3 if self.speedup else 1 / 3
         self.speedup = not self.speedup
         for info in self.enemies.values():
-            info["speed"] = round(info["speed"]*speed)
+            info["speed"] = round(info["speed"] * speed)
 
     def slowDown(self):
         for info in self.enemies.values():
-            info["speed"] = info["speed"]*3
+            info["speed"] = info["speed"] * 3
 
     def move(self, path):
         for enemy in self.sprites:
@@ -155,12 +177,15 @@ class EnemyManager:
             enemy.kill()
         return health
 
+    def bySpeed(self, sprite):
+        return sprite.speed
     def update(self, layer, Map):
 
         self.load()
         self.move(Map)
         # self.draw(layer)
-        self.sprites.draw(layer)
+        for sprite in sorted(self.sprites, key=lambda sprite: (sprite.speed, sprite.number), reverse=True):
+            layer.blit(sprite.image, sprite.rect)
 
     def getEnemies(self):
         return self.enemy_list
@@ -170,7 +195,6 @@ class EnemyManager:
 
     def getSprites(self):
         return self.sprites
-
 
     def towersInRange(self, int):
         return None

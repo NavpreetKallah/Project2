@@ -14,12 +14,12 @@ from game.classes.entity_class import Entity
 from game.classes.explosion_class import Explosion
 from game.classes.hud_class import Hud
 from game.classes.map_class import Map
-from game.classes.projectile_class import Projectile
 from game.classes.renderer_class import Renderer
 from game.classes.round_class import Round
 from game.classes.menu_class import Menu
 from game.classes.textbox_class import Textbox
-from game.classes.tower_class import Tower
+
+from game.classes.tower_class import TowerManager, ProjectileManager
 from game.config import SCALE
 
 
@@ -35,15 +35,18 @@ Map = Map()
 Round = Round()
 Hud = Hud()
 EnemyManager = EnemyManager()
+TowerManager = TowerManager()
 
 class Game:
     def __init__(self, screen):
+        self.temp = time.perf_counter()
         self.screen = screen
         self.clock = pygame.time.Clock()
         self.hud_initialise = False
         self.map_initialise = False
         self.round_started = False
         self.clicked = False
+        self.fast_forward = False
         self.main_menu_option = "play"
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
@@ -51,14 +54,9 @@ class Game:
         self.fps_timer = time.perf_counter()
         self.timer = time.perf_counter()
         self.running = True
-        self.surfaces = []
-        self.spawn_list = []
-        self.spawn_queue = []
         self.health = 100
-        self.money = 100
-        self.round_number = 0
-        self.total_rounds = 0
-        self.done = True
+        self.money = 1000
+        self.autoplay = False
 
         title = "Balloons"
         pygame.init()
@@ -91,22 +89,35 @@ class Game:
             self.path = Map.pathfind()
             self.map_initialise = True
 
-        if not self.hud_initialise:
+        if not self.hud_initialise and self.difficulty_option and self.map_option:
             Hud.initialiseHud(Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
-        if pygame.mouse.get_pressed()[0] and Hud.play():
+        if pygame.mouse.get_pressed()[0] and Hud.play() or self.autoplay:
             if not self.round_started:
                 self.round_started = True
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)
                 Hud.disableSpeed(Renderer.getLayer("HUD"))
 
-        if pygame.mouse.get_pressed()[0] and not self.round_started and not self.clicked:
-            self.clicked = True
-            if Hud.fastForward():
-                EnemyManager.speedChange()
+        # print(1/(time.perf_counter() - self.temp))
+        # self.temp = time.perf_counter()
 
+        if pygame.mouse.get_pressed()[0] and not self.clicked:
+            self.clicked = True
+            tower_chosen = Hud.tower_chosen()
+            if not self.round_started:
+                if Hud.fastForward(Renderer.getLayer("HUD")):
+                    EnemyManager.speedChange()
+                    Round.speedChange()
+                    self.fast_forward = not self.fast_forward
+            if tower_chosen:
+                TowerManager.placing = True
+                TowerManager.placing_tower = tower_chosen
+
+
+        if TowerManager.getPlacing():
+            TowerManager.place(Renderer.getLayer("tower"), Map.getRects(),TowerManager.getPlacingTower())
 
         # if pygame.mouse.get_pressed()[2] and not self.clicked:
         #     self.clicked = True
@@ -117,6 +128,8 @@ class Game:
             #     self.money += 1
             #     Hud.updateMoney(self.money)
             #EnemyManager.fastForward()
+
+
 
         health_change = EnemyManager.getKilled()
         if health_change:
@@ -129,13 +142,31 @@ class Game:
 
         if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
+            if TowerManager.getPlacing():
+                if TowerManager.getTowerPos():
+                    self.money -= TowerManager.getCost()
+                    TowerManager.create()
+                    Hud.updateMoney(self.money)
+                else:
+                    TowerManager.resetPlacing()
 
 
         Renderer.clearLayer("enemy")
+        TowerManager.getSprites().draw(Renderer.getLayer("tower"))
+        ProjectileManager.update(EnemyManager.getSprites())
+        money_made = ProjectileManager.getMoneyMade()
+        if money_made:
+            self.money += money_made
+            Hud.updateMoney(self.money)
+        ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
+        TowerManager.aim(EnemyManager.getSprites(), self.fast_forward)
+
         if self.round_started:
             EnemyManager.update(Renderer.getLayer("enemy"), self.path[:])
 
-        if not EnemyManager.getSprites() and self.round_started:
+        if not EnemyManager.getSprites() and self.round_started and not EnemyManager.getEnemies():
+            self.money += 100 + Round.getCurrent()
+            Hud.updateMoney(self.money)
             self.round_started = False
             Hud.enableSpeed(Renderer.getLayer("HUD"))
 
@@ -143,12 +174,17 @@ class Game:
             self.screen.blit(surface, (0, 0))
 
 
+        Renderer.clearLayer("tower")
+        Renderer.clearLayer("projectile")
+
+
 
     def update(self):
         self.clock.tick(self.fps)
         self.quit()
         self.game()
-        Hud.updateHud(Renderer.getLayer("HUD"))
+        if self.hud_initialise:
+            Hud.updateHud(Renderer.getLayer("HUD"))
         pygame.display.update()
 
     def run(self):

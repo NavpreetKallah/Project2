@@ -1,8 +1,9 @@
-from builtins import dict, list, int
+from builtins import int
 
 import pygame
 
-#layers_to_update: list, top_surface: pygame.Surface
+
+# layers_to_update: list, top_surface: pygame.Surface
 
 class Renderer:
     def __init__(self, width: int, height: int):
@@ -10,9 +11,11 @@ class Renderer:
         self.layers = {
             "map": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
             "menu": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
-            #"entities":pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            # "entities":pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            "tower": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
             "HUD": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
-            "enemy": pygame.Surface(DIMENSIONS, pygame.SRCALPHA)
+            "enemy": pygame.Surface(DIMENSIONS, pygame.SRCALPHA),
+            "projectile": pygame.Surface(DIMENSIONS, pygame.SRCALPHA)
         }
 
     def getLayer(self, layer):
@@ -26,6 +29,10 @@ class Renderer:
             layers.append(self.layers["menu"])
         if "enemy" in self.layers:
             layers.append(self.layers["enemy"])
+        if "tower" in self.layers:
+            layers.append(self.layers["tower"])
+        if "projectile" in self.layers:
+            layers.append(self.layers["projectile"])
         if "HUD" in self.layers:
             layers.append(self.layers["HUD"])
         return layers
@@ -37,11 +44,11 @@ class Renderer:
         return None
 
     def clearLayer(self, layer):
-        self.layers[layer].fill(pygame.Color(0,0,0,0))
+        self.layers[layer].fill(pygame.Color(0, 0, 0, 0))
 
     def clearLayers(self):
         for key in self.layers:
             self.layers[key].fill(pygame.Color(0, 0, 0, 0))
 
     def deleteLayer(self, layer):
-        del(self.layers[layer])
+        del (self.layers[layer])

@@ -1,9 +1,8 @@
-from builtins import property
 import random
-import pygame
+from builtins import property
 
-from classes.enemy_class import Enemy
-#, current_round: int, enemy_value: int, enemy_weightings: dict
+
+# , current_round: int, enemy_value: int, enemy_weightings: dict
 
 
 class Round:
@@ -12,22 +11,29 @@ class Round:
         self.roundValue = 30 * self.current_round
         self.valueLeft = self.roundValue
         self.enemies = None
-        self.enemy_creator = {"1red":{"weight":1,"min_delay":0.3,"max_delay":0.6},
-                              "2blue": {"weight": 2, "min_delay": 0.26, "max_delay": 0.72},
-                              "3green": {"weight": 3, "min_delay": 0.42, "max_delay": 0.84},
-                              "4yellow": {"weight": 4, "min_delay": 0.48, "max_delay": 0.96},
-                              "5pink": {"weight": 5, "min_delay": 0.54, "max_delay": 1.08},
-                              "6black": {"weight": 6, "min_delay": 0.6, "max_delay": 1.2},
-                              "7white": {"weight": 7, "min_delay": 0.66, "max_delay": 1.32},
-                              "8purple": {"weight": 8, "min_delay": 0.72, "max_delay": 1.44},
-                              "9lead": {"weight": 9, "min_delay": 0.78, "max_delay": 1.56},
-                              "10zebra": {"weight": 10, "min_delay": 0.84, "max_delay": 1.68}
+        min_delay = 0.12
+        change = 0.01
+        max_delay = 0.12
+        self.enemy_creator = {"1red": {"weight": 1, "min_delay": min_delay + change*9, "max_delay": max_delay + change*9},
+                              "2blue": {"weight": 2, "min_delay": min_delay + change*8, "max_delay": max_delay + change*8},
+                              "3green": {"weight": 3, "min_delay": min_delay + change*7, "max_delay": max_delay + change*7},
+                              "4yellow": {"weight": 4, "min_delay": min_delay + change*6, "max_delay": max_delay + change*6},
+                              "5pink": {"weight": 5, "min_delay": min_delay + change*5, "max_delay": max_delay + change*5},
+                              "6black": {"weight": 6, "min_delay": min_delay + change*4, "max_delay": max_delay + change*4},
+                              "7white": {"weight": 7, "min_delay": min_delay + change*3, "max_delay": max_delay + change*3},
+                              "8purple": {"weight": 8, "min_delay": min_delay + change*2, "max_delay": max_delay + change*2},
+                              "9lead": {"weight": 9, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
+                              "10zebra": {"weight": 10, "min_delay": min_delay, "max_delay": max_delay}
                               }
 
         self.probabilities = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.round_started = False
-        self.weighting = [-20,18,2]
-        self.base_probabilities = [100,0,0]
+        self.speedup = False
+        self.weighting = [-20, 18, 2]
+        self.base_probabilities = [100, 0, 0]
+
+    def getCurrent(self):
+        return self.current_round
 
     def increaseDifficulty(self):
 
@@ -52,6 +58,13 @@ class Round:
             for i in range(rangeStop):
                 self.probabilities[i] = self.base_probabilities[i]
 
+    def speedChange(self):
+        speed = 3 if self.speedup else 1 / 3
+        self.speedup = not self.speedup
+        for info in self.enemy_creator.values():
+            info["min_delay"] = info["min_delay"] * speed
+            info["max_delay"] = info["max_delay"] * speed
+
     def roundWin(self, manager):
         for _ in range(1):
             self.current_round += 1
@@ -64,13 +77,12 @@ class Round:
         enemy = self.enemy_creator[colour]["weight"]
         if self.valueLeft - enemy >= 0:
             self.valueLeft -= enemy
-            manager.create(self.enemies[colour],self.generateDelay(colour))
+            manager.create(self.enemies[colour], self.generateDelay(colour))
             self.generateEnemies(manager)
 
     def generateDelay(self, colour):
-        print(random.uniform(self.enemy_creator[colour]["min_delay"],self.enemy_creator[colour]["max_delay"]))
-        return random.uniform(self.enemy_creator[colour]["min_delay"],self.enemy_creator[colour]["max_delay"])
-        #return 0.1
+        return random.uniform(self.enemy_creator[colour]["min_delay"], self.enemy_creator[colour]["max_delay"])
+        # return 0.1
 
     @property
     def getStarted(self):

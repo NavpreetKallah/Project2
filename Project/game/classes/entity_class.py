@@ -16,4 +16,3 @@ class Entity:
 
     def debuff(self, delta_time):
         return None
-
