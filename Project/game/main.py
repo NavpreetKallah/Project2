@@ -6,6 +6,7 @@ import sys
 import os
 
 from pygame import K_KP_0, K_PLUS
+from pygame.mixer_music import queue
 
 from game.classes.enemy_class import EnemyManager
 from game.classes.button_class import Button
@@ -50,6 +51,7 @@ class Game:
         self.main_menu_option = "play"
         self.map_option = "cornfield"
         self.difficulty_option = "easy"
+        self.fps_counter = 0
         self.fps = 60
         self.fps_timer = time.perf_counter()
         self.timer = time.perf_counter()
@@ -102,6 +104,11 @@ class Game:
 
         # print(1/(time.perf_counter() - self.temp))
         # self.temp = time.perf_counter()
+        self.fps_counter += self.clock.get_fps()
+        if time.perf_counter() - self.fps_timer > 5:
+            print(round(self.fps_counter/(5*self.fps)))
+            self.fps_timer = time.perf_counter()
+            self.fps_counter = 0
 
         if pygame.mouse.get_pressed()[0] and not self.clicked:
             self.clicked = True
@@ -130,7 +137,7 @@ class Game:
             #EnemyManager.fastForward()
 
 
-
+        Hud.updateHealth(round(self.clock.get_fps()))
         health_change = EnemyManager.getKilled()
         if health_change:
             if self.health - health_change < 0:

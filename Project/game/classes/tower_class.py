@@ -29,6 +29,7 @@ class Tower(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.pos)
         self.image_copy = self.image
         self.timer = time.perf_counter()
+        self.images = [pygame.transform.rotate(self.image, i) for i in range(1,361)]
 
     def attack(self, fast_forward, angle):
         if time.perf_counter() - self.timer > (self.atk_speed if not fast_forward else self.atk_speed/3):
@@ -40,9 +41,9 @@ class Tower(pygame.sprite.Sprite):
     def aim(self, enemies, fast_forward):
         enemy_info = sorted([(number,int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.center))//SCALE),enemy) for number, enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.center))//SCALE) < self.range])
         if enemy_info:
-            angle = self.getAngle(enemy_info[0][2])
+            angle = round(self.getAngle(enemy_info[0][2]))
             self.attack(fast_forward, angle)
-            self.image = pygame.transform.rotate(self.image_copy, angle)
+            self.image = self.images[angle%360]
             self.rect = self.image.get_rect(center=self.pos)
 
     def getAngle(self, target):
@@ -117,9 +118,9 @@ class TowerManager:
         return self.tower_dict[self.placing_tower]["cost"]
 
     def resetPlacing(self):
-        self.placing_tower = None
-        self.placing = False
-        self.tower_pos = None
+        self.placing_tower = "Engineer"
+        self.placing = True
+        #self.tower_pos = None
 
     def getTowerPos(self):
         return self.tower_pos

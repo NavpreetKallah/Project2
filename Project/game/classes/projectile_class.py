@@ -1,3 +1,4 @@
+import time
 from builtins import int
 
 import pygame
@@ -25,6 +26,8 @@ class Projectile(pygame.sprite.Sprite):
         self.image.fill((0,0,0))
         self.rect = self.image.get_rect(center=pos)
         self.collided = []
+        self.life_time = 2
+        self.life_timer = time.perf_counter()
 
 
     def onHit(self):
@@ -45,6 +48,8 @@ class Projectile(pygame.sprite.Sprite):
         return None
 
     def move(self):
+        if time.perf_counter() - self.life_timer > self.life_time:
+            self.kill()
         self.rect.x += sin(self.angle) * self.speed
         self.rect.y += cos(self.angle) * self.speed
 
