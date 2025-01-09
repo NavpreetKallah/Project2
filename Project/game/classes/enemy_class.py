@@ -19,6 +19,7 @@ class Enemy(pygame.sprite.Sprite):
         self.speed = data["speed"]
         self.value = data["value"]
         self.colour = data["colour"]
+        self.health = data["health"]
         self.initialised = False
         self.count = count
         if path:
@@ -73,16 +74,19 @@ class Enemy(pygame.sprite.Sprite):
     def take_damage(self, damage):
         money = 0
         for _ in range(damage):
-            money += 1
-            if not self.node.next:
-                self.kill()
-                return money
-            self.node = self.node.next
-        data = self.node.data
-        self.speed = data["speed"]
-        self.value = data["value"]
-        self.colour = data["colour"]
-        self.image = self.colourIn()
+            self.health -= 1
+            if self.health == 0:
+                money += 1
+                if not self.node.next:
+                    self.kill()
+                    return money
+                self.node = self.node.next
+                data = self.node.data
+                self.speed = data["speed"]
+                self.value = data["value"]
+                self.colour = data["colour"]
+                self.health = data["health"]
+                self.image = self.colourIn()
         return money
 
     def getValue(self):
@@ -107,16 +111,16 @@ class EnemyManager:
         self.timer = time.perf_counter()
         self.queue = []
         self.kill_list = []
-        self.enemies = {"1red": {"speed": 30, "value": 1, "colour": (255, 0, 0)},
-                        "2blue": {"speed": 27, "value": 2, "colour": (0, 0, 255)},
-                        "3green": {"speed": 24, "value": 3, "colour": (0, 255, 0)},
-                        "4yellow": {"speed": 21, "value": 4, "colour": (255, 215, 0)},
-                        "5pink": {"speed": 18, "value": 5, "colour": (255, 136, 136)},
-                        "6black": {"speed": 15, "value": 6, "colour": (0, 0, 0)},
-                        "7white": {"speed": 15, "value": 7, "colour": (255, 255, 255)},
-                        "8purple": {"speed": 15, "value": 8, "colour": (255, 0, 255)},
-                        "9lead": {"speed": 18, "value": 9, "colour": (120, 120, 120)},
-                        "10zebra": {"speed": 12, "value": 10, "colour": (0, 0, 0)}}
+        self.enemies = {"1red": {"speed": 30, "value": 1, "health": 1, "colour": (255, 0, 0)},
+                        "2blue": {"speed": 27, "value": 2,"health": 2, "colour": (0, 0, 255)},
+                        "3green": {"speed": 24, "value": 3, "health": 3,"colour": (0, 255, 0)},
+                        "4yellow": {"speed": 21, "value": 4, "health": 4,"colour": (255, 215, 0)},
+                        "5pink": {"speed": 18, "value": 5, "health": 5,"colour": (255, 136, 136)},
+                        "6black": {"speed": 15, "value": 7, "health": 6,"colour": (0, 0, 0)},
+                        "7white": {"speed": 15, "value": 7, "health": 7,"colour": (255, 255, 255)},
+                        "8purple": {"speed": 15, "value": 8, "health": 8,"colour": (255, 0, 255)},
+                        "9lead": {"speed": 18, "value": 10, "health": 9,"colour": (120, 120, 120)},
+                        "10ceramic": {"speed": 12, "value": 20, "health": 10,"colour": (0, 0, 0)}}
 
         self.sprites = pygame.sprite.Group()
 
