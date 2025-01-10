@@ -9,6 +9,7 @@ from game.config import SCALE
 #                  distance_travelled: int, health: int, immunities: list, speed: int, value: int,
 LinkedList = LinkedList()
 
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, node, spawn_delay, enemy_number, pos=None, count=0, path=None):
         pygame.sprite.Sprite.__init__(self)
@@ -16,6 +17,9 @@ class Enemy(pygame.sprite.Sprite):
         self.node = node
         data = self.node.data
         self.number = enemy_number
+        self.frozen = False
+        self.camo = False
+        self.name = data["name"]
         self.speed = data["speed"]
         self.value = data["value"]
         self.colour = data["colour"]
@@ -25,7 +29,8 @@ class Enemy(pygame.sprite.Sprite):
         if path:
             self.path = path
         if not pos:
-            self.pos = pygame.Vector2(SCALE * (12 + [-1,0,1,0][enemy_number%4]), SCALE * (-5- [0,1][enemy_number%2]))
+            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][enemy_number % 4]),
+                                      SCALE * (-5 - [0, 1][enemy_number % 2]))
         else:
             self.pos = pos
         self.image = self.colourIn()
@@ -64,15 +69,17 @@ class Enemy(pygame.sprite.Sprite):
 
     def colourIn(self):
         image = pygame.Surface((5 * SCALE, 6 * SCALE), pygame.SRCALPHA)
-        image.fill((0,0,0),(0,SCALE,5*SCALE,3*SCALE))
-        image.fill((0,0,0),(SCALE,0,3*SCALE,5*SCALE))
-        image.fill((0,0,0),(2*SCALE,SCALE*5,SCALE,SCALE))
-        image.fill(self.colour,(SCALE,SCALE,3*SCALE,3*SCALE))
-        image.fill(self.colour,(2*SCALE,SCALE*4,SCALE,SCALE))
+        image.fill((0, 0, 0), (0, SCALE, 5 * SCALE, 3 * SCALE))
+        image.fill((0, 0, 0), (SCALE, 0, 3 * SCALE, 5 * SCALE))
+        image.fill((0, 0, 0), (2 * SCALE, SCALE * 5, SCALE, SCALE))
+        image.fill(self.colour, (SCALE, SCALE, 3 * SCALE, 3 * SCALE))
+        image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
         return image
 
-    def take_damage(self, damage):
+    def take_damage(self, damage, targets, camo):
         money = 0
+        if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
+            return 0
         for _ in range(damage):
             self.health -= 1
             if self.health == 0:
@@ -82,6 +89,7 @@ class Enemy(pygame.sprite.Sprite):
                     return money
                 self.node = self.node.next
                 data = self.node.data
+                self.name = data["name"]
                 self.speed = data["speed"]
                 self.value = data["value"]
                 self.colour = data["colour"]
@@ -111,19 +119,18 @@ class EnemyManager:
         self.timer = time.perf_counter()
         self.queue = []
         self.kill_list = []
-        self.enemies = {"1red": {"speed": 30, "value": 1, "health": 1, "colour": (255, 0, 0)},
-                        "2blue": {"speed": 27, "value": 2,"health": 2, "colour": (0, 0, 255)},
-                        "3green": {"speed": 24, "value": 3, "health": 3,"colour": (0, 255, 0)},
-                        "4yellow": {"speed": 21, "value": 4, "health": 4,"colour": (255, 215, 0)},
-                        "5pink": {"speed": 18, "value": 5, "health": 5,"colour": (255, 136, 136)},
-                        "6black": {"speed": 15, "value": 7, "health": 6,"colour": (0, 0, 0)},
-                        "7white": {"speed": 15, "value": 7, "health": 7,"colour": (255, 255, 255)},
-                        "8purple": {"speed": 15, "value": 8, "health": 8,"colour": (255, 0, 255)},
-                        "9lead": {"speed": 18, "value": 10, "health": 9,"colour": (120, 120, 120)},
-                        "10ceramic": {"speed": 12, "value": 20, "health": 10,"colour": (0, 0, 0)}}
+        self.enemies = {"red": {"name": "red", "speed": 30, "value": 1, "health": 1, "colour": (255, 0, 0)},
+                        "blue": {"name": "blue", "speed": 27, "value": 2, "health": 1, "colour": (0, 0, 255)},
+                        "green": {"name": "green", "speed": 24, "value": 3, "health": 1, "colour": (0, 255, 0)},
+                        "yellow": {"name": "yellow", "speed": 21, "value": 4, "health": 1, "colour": (255, 215, 0)},
+                        "pink": {"name": "pink", "speed": 18, "value": 5, "health": 1, "colour": (255, 136, 136)},
+                        "black": {"name": "black", "speed": 15, "value": 7, "health": 1, "colour": (0, 0, 0)},
+                        "white": {"name": "white", "speed": 15, "value": 7, "health": 1, "colour": (255, 255, 255)},
+                        "purple": {"name": "purple", "speed": 15, "value": 8, "health": 1, "colour": (255, 0, 255)},
+                        "lead": {"name": "lead", "speed": 18, "value": 10, "health": 50, "colour": (120, 120, 120)},
+                        "ceramic": {"name": "ceramic", "speed": 12, "value": 20, "health": 100, "colour": (0, 0, 0)}}
 
         self.sprites = pygame.sprite.Group()
-
         for data in reversed(self.enemies.values()):
             LinkedList.add(data)
 
@@ -183,6 +190,7 @@ class EnemyManager:
 
     def bySpeed(self, sprite):
         return sprite.speed
+
     def update(self, layer, Map):
 
         self.load()

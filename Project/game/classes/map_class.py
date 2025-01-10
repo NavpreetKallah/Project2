@@ -27,6 +27,7 @@ class Map:
         self.connector_path = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/connector_path.png").convert_alpha(), SCALE)
         self.connector_paths = [pygame.transform.rotate(self.connector_path, -theta * 90) for theta in range(4)]
+        self.image_list = []
         self.rect_list = []
         self.mask_list = []
 
@@ -37,7 +38,14 @@ class Map:
         return self.rect_list
 
     def getMasks(self):
+        for image in self.image_list:
+            image.set_colorkey((169, 173, 16))
+            image = pygame.mask.from_surface(image)
+            self.mask_list.append(image)
         return self.mask_list
+
+    def getImages(self):
+        return self.image_list
 
     def initialiseMap(self, map, layer):
         layer.blit(self.scenery, (SCALE, SCALE * 11))
@@ -51,6 +59,7 @@ class Map:
                     self.rect_list.append(pygame.Rect(pos[0],pos[1],SCALE*9,SCALE*9))
                     if adjacent_cells.count(0) == 3:
                         layer.blit(self.straight_path, pos)
+                        self.image_list.append(self.straight_path)
                         continue
 
                     first_touching = adjacent_cells.index(1)
@@ -60,14 +69,17 @@ class Map:
                     if second_touching - first_touching == 2:
                         if first_touching != 1:
                             layer.blit(self.straight_path, pos)
+                            self.image_list.append(self.straight_path)
                         else:
                             layer.blit(pygame.transform.rotate(self.straight_path, 90), pos)
+                            self.image_list.append(pygame.transform.rotate(self.straight_path, 90))
 
                     # This code rotates the connectors within the paths to be the correct orientation
                     elif second_touching - first_touching != 2:
                         layer.blit(
                             self.connector_paths[second_touching if (second_touching - first_touching) == 1 else 0],
                             pos)
+                        self.image_list.append(self.connector_paths[((second_touching if (second_touching - first_touching) == 1 else 0)+2)%4])
 
         self.pathfind()
 

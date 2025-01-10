@@ -57,7 +57,7 @@ class Game:
         self.timer = time.perf_counter()
         self.running = True
         self.health = 100
-        self.money = 1000
+        self.money = 10000
         self.autoplay = False
 
         title = "Balloons"
@@ -124,7 +124,7 @@ class Game:
 
 
         if TowerManager.getPlacing():
-            TowerManager.place(Renderer.getLayer("tower"), Map.getRects(),TowerManager.getPlacingTower())
+            TowerManager.place(Renderer.getLayer("tower"), Map.getRects(), Map.getMasks(),TowerManager.getPlacingTower())
 
         # if pygame.mouse.get_pressed()[2] and not self.clicked:
         #     self.clicked = True

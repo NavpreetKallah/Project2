@@ -22,11 +22,10 @@ class Hud:
         self.total_rounds = 0
         self.tower_names = ["Engineer", "Sniper", "Druid", "Wizard", "Ninja", "Alchemist", "Ice", "Mortar", "Dartling",
                             "Village", "Farm", "Super"]
-        self.locked_list = [True, False, False, False, False, False, False, False, False, False, False, False]
-
         tower_icons = self.seperate_sheet(
             pygame.transform.scale_by(pygame.image.load_extended(f"{path}/tower_icon_spritesheet.png").convert_alpha(),
                                       SCALE), 10 * SCALE)
+        print(data)
         tower_icons = {tower_name: tower_icons[i] for i, tower_name in enumerate(data)}
         tower_pos = [(2 * SCALE, 3 * SCALE), (17 * SCALE, 3 * SCALE), (2 * SCALE, 18 * SCALE), (17 * SCALE, 18 * SCALE),
                      (2 * SCALE, 33 * SCALE), (17 * SCALE, 33 * SCALE), (2 * SCALE, 48 * SCALE),
@@ -49,6 +48,7 @@ class Hud:
                                                             10 * SCALE, 10 * SCALE)
                                         }
                            for tower_name, tower_info in data.items()}
+        print(self.tower_dict)
         self.locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/locked.png").convert_alpha(), SCALE)
         # self.fast_forward_indicator = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/fast_forward_indicator.png").convert_alpha(), SCALE)
         self.HUD_white = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_white.png").convert_alpha(),

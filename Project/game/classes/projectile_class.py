@@ -18,6 +18,8 @@ class Projectile(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.damage = data["damage"]
         self.pierce = data["pierce"]
+        self.targets = data["main_atk_targets"]
+        self.camo = data["camo"]
         self.speed = SCALE*3
         self.money = 0
         self.speed = self.speed* 3 if fast_forward else self.speed
@@ -40,12 +42,8 @@ class Projectile(pygame.sprite.Sprite):
                 self.pierce -= 1
                 if self.pierce == 0:
                     self.kill()
-                self.money += enemy.take_damage(self.damage)
+                self.money += enemy.take_damage(self.damage, self.targets, self.camo)
         return self.money
-
-
-    def collisionDetect(self):
-        return None
 
     def move(self):
         if time.perf_counter() - self.life_timer > self.life_time:

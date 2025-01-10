@@ -24,6 +24,9 @@ class Tower(pygame.sprite.Sprite):
         self.data = data
         self.image = data["icon"]
         self.range = data["range"]
+        self.main_atk = data["main_atk"]
+        self.main_atk_targets = data["main_atk_targets"]
+        self.camo = data["camo"]
         self.atk_speed = data["atk_speed"]
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
@@ -36,9 +39,22 @@ class Tower(pygame.sprite.Sprite):
             self.timer = time.perf_counter()
             ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
 
+    def action(self, enemies, fast_forward):
+        if self.main_atk == "normal":
+            self.normal_aim(enemies, fast_forward)
+        if self.main_atk == "mouse":
+            self.mouse_aim(fast_forward)
+
+    def mouse_aim(self, fast_forward):
+        angle = round(self.getAngle(pygame.mouse.get_pos()))
+        self.attack(fast_forward, angle)
+        self.image = self.images[angle % 360]
+        self.rect = self.image.get_rect(center=self.pos)
 
 
-    def aim(self, enemies, fast_forward):
+    def normal_aim(self, enemies, fast_forward):
+        if self.atk_speed == 0:
+            return
         enemy_info = sorted([(number,int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.center))//SCALE),enemy) for number, enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.center))//SCALE) < self.range])
         if enemy_info:
             angle = round(self.getAngle(enemy_info[0][2]))
@@ -48,7 +64,10 @@ class Tower(pygame.sprite.Sprite):
 
     def getAngle(self, target):
         x1,y1 = self.rect.center
-        x2,y2 = target.center
+        if isinstance(target, type(self.rect)):
+            x2,y2 = target.center
+        else:
+            x2,y2 = target
         dx = x2 - x1
         dy = y2 - y1
         rads = atan2(-dy, dx)
@@ -70,6 +89,9 @@ class TowerManager:
                                       SCALE), 8 * SCALE)
         tower_icons = {tower_name: tower_icons[i] for i, tower_name in enumerate(data)}
         self.tower_dict = {tower_name: {
+            "main_atk": tower_info["main_atk"],
+            "main_atk_targets": tower_info["main_atk_targets"],
+            "camo": tower_info["camo"],
             "icon": tower_icons[tower_name],
             "range": tower_info["range"],
             "cost": tower_info["cost"],
@@ -82,31 +104,41 @@ class TowerManager:
         self.placing = False
         self.placing_tower = None
         self.tower_pos = None
+        self.tower_mask = None
         self.sprites = pygame.sprite.Group()
         self.rects = []
+        self.images = []
 
     def create(self):
         if self.placing_tower and self.tower_pos:
             self.sprites.add(Tower(self.tower_dict[self.placing_tower], self.tower_pos))
             self.rects.append(self.tower_dict[self.placing_tower]["icon"].get_rect(center=self.tower_pos))
+            self.images.append(self.tower_dict[self.placing_tower]["icon"])
             self.placing_tower = None
             self.placing = False
             self.tower_pos = None
 
-    def place(self, layer, path, tower):
+    def place(self, layer, paths, path_masks, tower):
         mouse = pygame.mouse.get_pos()
         corrected_mouse = ((mouse[0] // SCALE) * SCALE, (mouse[1] // SCALE) * SCALE)
         rect = pygame.Rect(1 * SCALE, 11 * SCALE, 126 * SCALE, 108 * SCALE)
         valid = True
+        if not self.tower_mask:
+            self.tower_mask = pygame.mask.from_surface(self.tower_dict[tower]["icon"])
         if rect.contains(self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse)):
-            if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist(path) == -1:
-                if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist(self.rects) != -1:
-                    tower_mask = pygame.mask.from_surface(self.tower_dict[tower]["icon"])
-                    for rect in self.rects:
-                        if tower_mask.overlap(tower_mask, (corrected_mouse[0]-rect.center[0],corrected_mouse[1]-rect.center[1])):
-                            valid = False
+            if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist(paths) != -1:
+                for i, path in enumerate(paths):
+                    path_x, path_y = (path.center[0]//SCALE)*SCALE, (path.center[1]//SCALE)*SCALE
+                    layer.blit(path_masks[i].to_surface(), (corrected_mouse[0]-path.center[0]+SCALE,corrected_mouse[1]-path.center[1]))
+                    if self.tower_mask.overlap(path_masks[i], (corrected_mouse[0]-path_x-SCALE,corrected_mouse[1]-path_y-SCALE)):
+                        valid = False
+
             else:
-                valid = False
+                if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist(self.rects) != -1:
+                    for i, rect in enumerate(self.rects):
+                        if self.tower_mask.overlap(pygame.mask.from_surface(self.images[i]), (corrected_mouse[0]-rect.center[0],corrected_mouse[1]-rect.center[1])):
+                            valid = False
+
         else:
             valid = False
 
@@ -118,9 +150,10 @@ class TowerManager:
         return self.tower_dict[self.placing_tower]["cost"]
 
     def resetPlacing(self):
-        self.placing_tower = "Engineer"
-        self.placing = True
-        #self.tower_pos = None
+        self.placing_tower = None
+        self.placing = False
+        self.tower_pos = None
+        self.tower_mask = None
 
     def getTowerPos(self):
         return self.tower_pos
@@ -129,7 +162,7 @@ class TowerManager:
         if enemies and self.sprites:
             enemy_positions = [(sprite.number, sprite.rect) for sprite in enemies]
             for tower in self.sprites:
-                tower.aim(enemy_positions, fast_forward)
+                tower.action(enemy_positions, fast_forward)
 
     def attack(self):
         for tower in self.sprites:
