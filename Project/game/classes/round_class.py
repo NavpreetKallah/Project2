@@ -66,7 +66,7 @@ class Round:
             info["max_delay"] = info["max_delay"] * speed
 
     def roundWin(self, manager):
-        for _ in range(1):
+        for _ in range(40):
             self.current_round += 1
             self.valueLeft = self.current_round * 30
             self.increaseDifficulty()

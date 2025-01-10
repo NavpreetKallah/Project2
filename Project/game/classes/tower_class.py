@@ -2,7 +2,7 @@ import json
 import os
 import time
 
-import pygame
+import pygame, random
 
 from config import SCALE
 from math import atan2, degrees, pi
@@ -28,6 +28,7 @@ class Tower(pygame.sprite.Sprite):
         self.main_atk_targets = data["main_atk_targets"]
         self.camo = data["camo"]
         self.atk_speed = data["atk_speed"]
+        self.spread = data["spread"]
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
         self.image_copy = self.image
@@ -47,9 +48,10 @@ class Tower(pygame.sprite.Sprite):
 
     def mouse_aim(self, fast_forward):
         angle = round(self.getAngle(pygame.mouse.get_pos()))
-        self.attack(fast_forward, angle)
         self.image = self.images[angle % 360]
         self.rect = self.image.get_rect(center=self.pos)
+        angle += random.randint(-self.spread,self.spread)
+        self.attack(fast_forward, angle)
 
 
     def normal_aim(self, enemies, fast_forward):
@@ -91,6 +93,7 @@ class TowerManager:
         self.tower_dict = {tower_name: {
             "main_atk": tower_info["main_atk"],
             "main_atk_targets": tower_info["main_atk_targets"],
+            "spread": tower_info["spread"],
             "camo": tower_info["camo"],
             "icon": tower_icons[tower_name],
             "range": tower_info["range"],

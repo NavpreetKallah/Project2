@@ -1,1 +1,1 @@
-SCALE = 7
+SCALE = 5

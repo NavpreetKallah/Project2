@@ -127,8 +127,8 @@ class EnemyManager:
                         "black": {"name": "black", "speed": 15, "value": 7, "health": 1, "colour": (0, 0, 0)},
                         "white": {"name": "white", "speed": 15, "value": 7, "health": 1, "colour": (255, 255, 255)},
                         "purple": {"name": "purple", "speed": 15, "value": 8, "health": 1, "colour": (255, 0, 255)},
-                        "lead": {"name": "lead", "speed": 18, "value": 10, "health": 50, "colour": (120, 120, 120)},
-                        "ceramic": {"name": "ceramic", "speed": 12, "value": 20, "health": 100, "colour": (0, 0, 0)}}
+                        "lead": {"name": "lead", "speed": 18, "value": 10, "health": 1, "colour": (120, 120, 120)},
+                        "ceramic": {"name": "ceramic", "speed": 12, "value": 20, "health": 1, "colour": (0, 0, 0)}}
 
         self.sprites = pygame.sprite.Group()
         for data in reversed(self.enemies.values()):
