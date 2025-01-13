@@ -4,7 +4,8 @@ from builtins import int
 import pygame
 
 from config import SCALE
-from math import sin,cos, radians
+from math import sin,cos, radians, degrees
+import os
 
 # self.position = position
 # self.angle = angle
@@ -13,22 +14,26 @@ from math import sin,cos, radians
 # self.expire = expire
 # self.velocity = velocity
 # self.projectile_image = projectile_image
+path = os.path.dirname(os.getcwd()) + "/textures/projectiles"
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, data, angle, pos, fast_forward):
         pygame.sprite.Sprite.__init__(self)
-        self.damage = data["damage"]
+        self.main_atk = data["main_atk"]
+        self.damage = data["damage"] if self.main_atk != "sniper" else 0
         self.pierce = data["pierce"]
         self.targets = data["main_atk_targets"]
         self.camo = data["camo"]
-        self.speed = SCALE*3
+        self.speed = SCALE * 3 if self.main_atk != "sniper" else 20 * SCALE
         self.money = 0
-        self.speed = self.speed* 3 if fast_forward else self.speed
+        self.speed = self.speed * 3 if fast_forward else self.speed
         self.angle = radians(angle)
-        self.image = pygame.Surface((SCALE, SCALE))
-        self.image.fill((0,0,0))
+        # self.image = pygame.Surface((SCALE, SCALE*5))
+        # self.image.fill((0,0,0))
+        self.image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/default.png"),SCALE)
+        self.image = pygame.transform.rotate(self.image, degrees(self.angle)+90)
         self.rect = self.image.get_rect(center=pos)
         self.collided = []
-        self.life_time = 2
+        self.life_time = data["main_atk_lifespan"] if not fast_forward else data["main_atk_lifespan"]/3
         self.life_timer = time.perf_counter()
 
 

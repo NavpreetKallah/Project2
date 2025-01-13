@@ -12,8 +12,8 @@ class Round:
         self.valueLeft = self.roundValue
         self.enemies = None
         min_delay = 0
-        change = 0.05
-        max_delay = 0.5
+        change = 0.01
+        max_delay = 0.1
         self.enemy_creator = {"red": {"weight": 1, "min_delay": min_delay + change*9, "max_delay": max_delay + change*9},
                               "blue": {"weight": 2, "min_delay": min_delay + change*8, "max_delay": max_delay + change*8},
                               "green": {"weight": 3, "min_delay": min_delay + change*7, "max_delay": max_delay + change*7},
@@ -66,7 +66,7 @@ class Round:
             info["max_delay"] = info["max_delay"] * speed
 
     def roundWin(self, manager):
-        for _ in range(40):
+        for _ in range(5):
             self.current_round += 1
             self.valueLeft = self.current_round * 30
             self.increaseDifficulty()

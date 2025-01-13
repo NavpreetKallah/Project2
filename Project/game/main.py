@@ -56,6 +56,7 @@ class Game:
         self.fps_timer = time.perf_counter()
         self.timer = time.perf_counter()
         self.running = True
+        self.round = 0
         self.health = 100
         self.money = 10000
         self.autoplay = False
@@ -93,6 +94,9 @@ class Game:
 
         if not self.hud_initialise and self.difficulty_option and self.map_option:
             Hud.initialiseHud(Renderer.getLayer("HUD"))
+            Hud.updateMoney(self.money)
+            Hud.updateRound(self.round)
+            Hud.updateHealth(self.health)
             self.hud_initialise = True
 
         if pygame.mouse.get_pressed()[0] and Hud.play() or self.autoplay:
@@ -106,13 +110,13 @@ class Game:
         # self.temp = time.perf_counter()
         self.fps_counter += self.clock.get_fps()
         if time.perf_counter() - self.fps_timer > 5:
-            print(round(self.fps_counter/(5*self.fps)))
             self.fps_timer = time.perf_counter()
             self.fps_counter = 0
 
         if pygame.mouse.get_pressed()[0] and not self.clicked:
             self.clicked = True
             tower_chosen = Hud.tower_chosen()
+            tower_upgrading = TowerManager.getTowerClicked()
             if not self.round_started:
                 if Hud.fastForward(Renderer.getLayer("HUD")):
                     EnemyManager.speedChange()
@@ -121,6 +125,18 @@ class Game:
             if tower_chosen:
                 TowerManager.placing = True
                 TowerManager.placing_tower = tower_chosen
+            if Hud.getUpgrading():
+                upgrade_chosen = Hud.upgradeChosen(Renderer.getLayer("HUD"))
+                if upgrade_chosen:
+                    if upgrade_chosen != "main":
+                        upgrade_cost = TowerManager.getUpgradingTower().upgrade(upgrade_chosen, self.money)
+                        self.money -= upgrade_cost
+                        Hud.updateMoney(self.money)
+                else:
+                    Hud.setUpgrading(False)
+            if tower_upgrading:
+                Hud.createTowerUpgrade(tower_upgrading, Renderer.getLayer("tower"))
+                Hud.setUpgrading(True)
 
 
         if TowerManager.getPlacing():
@@ -135,7 +151,6 @@ class Game:
             #     self.money += 1
             #     Hud.updateMoney(self.money)
             #EnemyManager.fastForward()
-
 
         Hud.updateHealth(round(self.clock.get_fps()))
         health_change = EnemyManager.getKilled()
@@ -156,14 +171,20 @@ class Game:
                     Hud.updateMoney(self.money)
                 else:
                     TowerManager.resetPlacing()
+            else:
+                TowerManager.resetPlacing()
 
 
         Renderer.clearLayer("enemy")
         TowerManager.getSprites().draw(Renderer.getLayer("tower"))
         ProjectileManager.update(EnemyManager.getSprites())
         money_made = ProjectileManager.getMoneyMade()
+        money_made_two = TowerManager.getMoneyMade()
         if money_made:
             self.money += money_made
+            Hud.updateMoney(self.money)
+        if money_made_two:
+            self.money += money_made_two
             Hud.updateMoney(self.money)
         ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
         TowerManager.aim(EnemyManager.getSprites(), self.fast_forward)

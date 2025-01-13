@@ -79,7 +79,7 @@ class Map:
                         layer.blit(
                             self.connector_paths[second_touching if (second_touching - first_touching) == 1 else 0],
                             pos)
-                        self.image_list.append(self.connector_paths[((second_touching if (second_touching - first_touching) == 1 else 0)+2)%4])
+                        self.image_list.append(self.connector_paths[((second_touching if (second_touching - first_touching) == 1 else 0))%4])
 
         self.pathfind()
 
@@ -90,6 +90,12 @@ class Map:
             for j, cell in enumerate(row):
                 if 0 < cell[0] < 90:
                     dict[cell[0]] = (i, j)
+
+                    # y = i * 9 * SCALE + 11 * SCALE
+                    # x = j * 9 * SCALE + SCALE
+                    # layer.blit(pygame.Surface((9*SCALE,9*SCALE)),(x, y))
+                    # temp.append((x,y))
+
         for i in range(1, 42):
             if dict[i][1] + 1 == dict[i + 1][1]:
                 direction.append("R")
@@ -103,6 +109,7 @@ class Map:
         direction.append(direction[-1])
         direction.insert(0, direction[0])
         direction.insert(0, direction[0])
+
         return direction
 
     def adjacent_cells(self, j, i):

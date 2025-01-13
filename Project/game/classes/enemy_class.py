@@ -1,4 +1,5 @@
 import time
+import copy
 
 import pygame
 import random
@@ -11,12 +12,13 @@ LinkedList = LinkedList()
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node, spawn_delay, enemy_number, pos=None, count=0, path=None):
+    def __init__(self, node, spawn_delay, enemy_number, pos=None, count=0, path=None, current=None, initialised=False):
         pygame.sprite.Sprite.__init__(self)
         self.spawn_delay = spawn_delay
         self.node = node
         data = self.node.data
         self.number = enemy_number
+        self.dupe = False
         self.frozen = False
         self.camo = False
         self.name = data["name"]
@@ -24,8 +26,10 @@ class Enemy(pygame.sprite.Sprite):
         self.value = data["value"]
         self.colour = data["colour"]
         self.health = data["health"]
-        self.initialised = False
+        self.initialised = initialised
         self.count = count
+        if current:
+            self.current = current
         if path:
             self.path = path
         if not pos:
@@ -58,11 +62,11 @@ class Enemy(pygame.sprite.Sprite):
             # I can not update the rect position directly here as it will round the value of distance moved causing the enemies to not follow the path
             if self.current == "D":
                 self.pos.y += distance_moved
-            if self.current == "U":
+            elif self.current == "U":
                 self.pos.y -= distance_moved
-            if self.current == "L":
+            elif self.current == "L":
                 self.pos.x -= distance_moved
-            if self.current == "R":
+            elif self.current == "R":
                 self.pos.x += distance_moved
             self.rect.topleft = (self.pos.x, self.pos.y)
         self.count -= 1
@@ -95,6 +99,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.colour = data["colour"]
                 self.health = data["health"]
                 self.image = self.colourIn()
+                self.dupe = True
         return money
 
     def getValue(self):
@@ -103,9 +108,8 @@ class Enemy(pygame.sprite.Sprite):
     def getSpawnDelay(self):
         return self.spawn_delay
 
-    #
-    # def draw(self, layer):
-    #     pygame.draw.rect(layer, self.colour, (self.rect.x, self.rect.y, 5 * SCALE, 5 * SCALE))
+    def setDupe(self, value):
+        self.dupe = value
 
 
 class EnemyManager:
@@ -131,10 +135,13 @@ class EnemyManager:
                         "ceramic": {"name": "ceramic", "speed": 12, "value": 20, "health": 1, "colour": (0, 0, 0)}}
 
         self.sprites = pygame.sprite.Group()
+        self.duped_sprites = pygame.sprite.Group()
         for data in reversed(self.enemies.values()):
             LinkedList.add(data)
 
         self.enemy_list = []
+
+        self.duped_list = []
         # self.spawn_list = []
         self.number = 0
         self.count = 0
@@ -147,6 +154,16 @@ class EnemyManager:
             current_node = current_node.next
         self.enemy_list.append(Enemy(current_node, delay, self.number))
         self.number += 1
+
+    def duplicate(self, original_enemy):
+        self.number += 1
+        pos = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
+        path = copy.deepcopy(original_enemy.path)
+        count = copy.deepcopy(original_enemy.count)
+        current = copy.deepcopy(original_enemy.current)
+        duplicate = Enemy(original_enemy.node, 0, self.number, pos=pos, count=count, path=path, current=current, initialised=True)
+        return duplicate
+
 
     def getEnemyStats(self):
         return self.enemies
@@ -168,7 +185,6 @@ class EnemyManager:
         for enemy in self.sprites:
             if enemy.move(path) == "delete":
                 self.kill_list.append(enemy)
-
     # def draw(self, layer):
     #     for enemy in self.spawn_list:
     #         enemy.draw(layer)
@@ -191,11 +207,17 @@ class EnemyManager:
     def bySpeed(self, sprite):
         return sprite.speed
 
-    def update(self, layer, Map):
+    def dupe(self):
+        for sprite in self.sprites:
+            if sprite.dupe:
+                duplicate = self.duplicate(sprite)
+                self.sprites.add(duplicate)
+                sprite.setDupe(False)
 
+    def update(self, layer, Map):
         self.load()
         self.move(Map)
-        # self.draw(layer)
+        self.dupe()
         for sprite in sorted(self.sprites, key=lambda sprite: (sprite.speed, sprite.number), reverse=True):
             layer.blit(sprite.image, sprite.rect)
 

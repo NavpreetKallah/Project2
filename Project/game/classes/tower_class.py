@@ -1,12 +1,14 @@
 import json
 import os
 import time
+from math import atan2, degrees, pi
 
-import pygame, random
+import pygame
+import random
 
 from config import SCALE
-from math import atan2, degrees, pi
 from game.classes.projectile_class import ProjectileManager
+
 ProjectileManager = ProjectileManager()
 
 
@@ -22,59 +24,82 @@ class Tower(pygame.sprite.Sprite):
     def __init__(self, data, pos):
         pygame.sprite.Sprite.__init__(self)
         self.data = data
+        self.upgrades = {"path_one":3,"path_two":3}
         self.image = data["icon"]
-        self.range = data["range"]
-        self.main_atk = data["main_atk"]
-        self.main_atk_targets = data["main_atk_targets"]
-        self.camo = data["camo"]
-        self.atk_speed = data["atk_speed"]
-        self.spread = data["spread"]
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
         self.image_copy = self.image
         self.timer = time.perf_counter()
-        self.images = [pygame.transform.rotate(self.image, i) for i in range(1,361)]
+        self.images = [pygame.transform.rotate(self.image, i) for i in range(1, 361)]
 
     def attack(self, fast_forward, angle):
-        if time.perf_counter() - self.timer > (self.atk_speed if not fast_forward else self.atk_speed/3):
+        if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
             self.timer = time.perf_counter()
             ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
 
+    def upgrade(self, path, money):
+        upgrade_info = self.data[path][str(self.upgrades[path]+1)]
+        if upgrade_info["cost"] > money:
+            return 0
+        print(upgrade_info)
+        if upgrade_info["name"] is None:
+            for change in upgrade_info["stat_change"]:
+                if change["type"] == "add":
+                    self.data[change["stat"]] += change["value"]
+                elif change["type"] == "set":
+                    self.data[change["stat"]] = change["value"]
+                else:
+                    self.data[change["stat"]] *= change["value"]
+        return upgrade_info["cost"]
+
     def action(self, enemies, fast_forward):
-        if self.main_atk == "normal":
+        if self.data["main_atk"] == "normal":
             self.normal_aim(enemies, fast_forward)
-        if self.main_atk == "mouse":
+            return 0
+        if self.data["main_atk"] == "mouse":
             self.mouse_aim(fast_forward)
+            return 0
+        if self.data["main_atk"] == "sniper":
+            return self.sniper(enemies, fast_forward)
+    def sniper(self, enemies, fast_forward):
+        enemies = sorted(enemies, key=lambda enemy: enemy.value, reverse=True)
+        angle = round(self.getAngle(enemies[0].rect.center))
+        self.image = self.images[angle % 360]
+        self.rect = self.image.get_rect(center=self.pos)
+        if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
+            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
+            self.timer = time.perf_counter() + random.uniform(-0.01,0.01)
+            return enemies[0].take_damage(self.data["damage"], self.data["main_atk_targets"], self.data["camo"])
+        return 0
 
     def mouse_aim(self, fast_forward):
         angle = round(self.getAngle(pygame.mouse.get_pos()))
         self.image = self.images[angle % 360]
         self.rect = self.image.get_rect(center=self.pos)
-        angle += random.randint(-self.spread,self.spread)
+        angle += random.randint(-self.data["spread"], self.data["spread"])
         self.attack(fast_forward, angle)
 
-
     def normal_aim(self, enemies, fast_forward):
-        if self.atk_speed == 0:
+        if self.data["main_atk_speed"] == 0:
             return
-        enemy_info = sorted([(number,int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.center))//SCALE),enemy) for number, enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.center))//SCALE) < self.range])
+        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
         if enemy_info:
-            angle = round(self.getAngle(enemy_info[0][2]))
+            angle = round(self.getAngle(enemy_info[0].rect.center))
             self.attack(fast_forward, angle)
-            self.image = self.images[angle%360]
+            self.image = self.images[angle % 360]
             self.rect = self.image.get_rect(center=self.pos)
 
     def getAngle(self, target):
-        x1,y1 = self.rect.center
+        x1, y1 = self.rect.center
         if isinstance(target, type(self.rect)):
-            x2,y2 = target.center
+            x2, y2 = target.center
         else:
-            x2,y2 = target
+            x2, y2 = target
         dx = x2 - x1
         dy = y2 - y1
         rads = atan2(-dy, dx)
         rads %= 2 * pi
-        return degrees(rads)+90
+        return degrees(rads) + 90
 
 
 json_path = os.path.dirname(os.getcwd()) + "/game/data/tower_data.json"
@@ -93,6 +118,7 @@ class TowerManager:
         self.tower_dict = {tower_name: {
             "main_atk": tower_info["main_atk"],
             "main_atk_targets": tower_info["main_atk_targets"],
+            "main_atk_lifespan": tower_info["main_atk_lifespan"],
             "spread": tower_info["spread"],
             "camo": tower_info["camo"],
             "icon": tower_icons[tower_name],
@@ -100,22 +126,23 @@ class TowerManager:
             "cost": tower_info["cost"],
             "damage": tower_info["damage"],
             "pierce": tower_info["pierce"],
-            "atk_speed": tower_info["atk_speed"]
+            "path_one": tower_info["path_one"],
+            "path_two": tower_info["path_two"],
+            "main_atk_speed": tower_info["main_atk_speed"]
 
         }
-                           for tower_name, tower_info in data.items()}
+            for tower_name, tower_info in data.items()}
+        self.money = 0
         self.placing = False
         self.placing_tower = None
         self.tower_pos = None
         self.tower_mask = None
         self.sprites = pygame.sprite.Group()
-        self.rects = []
         self.images = []
 
     def create(self):
         if self.placing_tower and self.tower_pos:
             self.sprites.add(Tower(self.tower_dict[self.placing_tower], self.tower_pos))
-            self.rects.append(self.tower_dict[self.placing_tower]["icon"].get_rect(center=self.tower_pos))
             self.images.append(self.tower_dict[self.placing_tower]["icon"])
             self.placing_tower = None
             self.placing = False
@@ -131,21 +158,24 @@ class TowerManager:
         if rect.contains(self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse)):
             if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist(paths) != -1:
                 for i, path in enumerate(paths):
-                    path_x, path_y = (path.center[0]//SCALE)*SCALE, (path.center[1]//SCALE)*SCALE
-                    layer.blit(path_masks[i].to_surface(), (corrected_mouse[0]-path.center[0]+SCALE,corrected_mouse[1]-path.center[1]))
-                    if self.tower_mask.overlap(path_masks[i], (corrected_mouse[0]-path_x-SCALE,corrected_mouse[1]-path_y-SCALE)):
+                    path_x, path_y = (path.center[0] // SCALE) * SCALE, (path.center[1] // SCALE) * SCALE
+                    offset = corrected_mouse[0] - path_x, corrected_mouse[1] - path_y
+                    if path_masks[i].overlap(self.tower_mask, offset):
                         valid = False
-
-            else:
-                if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist(self.rects) != -1:
-                    for i, rect in enumerate(self.rects):
-                        if self.tower_mask.overlap(pygame.mask.from_surface(self.images[i]), (corrected_mouse[0]-rect.center[0],corrected_mouse[1]-rect.center[1])):
-                            valid = False
+                        break
+            if self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse).collidelist([sprite.rect for sprite in self.sprites]) != -1:
+                for i, sprite in enumerate(self.sprites):
+                    rect_x, rect_y = (sprite.rect.center[0] // SCALE) * SCALE, (sprite.rect.center[1] // SCALE) * SCALE
+                    offset = (corrected_mouse[0] - rect_x, corrected_mouse[1] - rect_y)
+                    if pygame.mask.from_surface(self.images[i]).overlap(self.tower_mask, offset):
+                        valid = False
+                        break
 
         else:
             valid = False
 
-        pygame.draw.circle(layer,(50,50,50,20) if valid else (200,50,50,120), corrected_mouse, self.tower_dict[tower]["range"]*SCALE)
+        pygame.draw.circle(layer, (50, 50, 50, 20) if valid else (200, 50, 50, 120), corrected_mouse,
+                           self.tower_dict[tower]["range"]*SCALE)
         layer.blit(self.tower_dict[tower]["icon"], self.tower_dict[tower]["icon"].get_rect(center=corrected_mouse))
         self.tower_pos = corrected_mouse if valid else None
 
@@ -162,10 +192,10 @@ class TowerManager:
         return self.tower_pos
 
     def aim(self, enemies, fast_forward):
+        enemies = sorted(enemies, key=lambda enemy: enemy.number)
         if enemies and self.sprites:
-            enemy_positions = [(sprite.number, sprite.rect) for sprite in enemies]
             for tower in self.sprites:
-                tower.action(enemy_positions, fast_forward)
+                self.money += tower.action(enemies, fast_forward)
 
     def attack(self):
         for tower in self.sprites:
@@ -176,6 +206,11 @@ class TowerManager:
 
     def getSprites(self):
         return self.sprites
+
+    def getMoneyMade(self):
+        temp = self.money
+        self.money = 0
+        return temp
     def getPlacingTower(self):
         return self.placing_tower
 
@@ -187,3 +222,13 @@ class TowerManager:
             image.blit(sheet, (0, 0), (width * i, 0, width, width))
             images.append(image)
         return images
+
+    def getUpgradingTower(self):
+        return self.upgrading_tower
+    def getTowerClicked(self):
+        mouse = pygame.mouse.get_pos()
+        for tower in self.sprites:
+            if tower.rect.collidepoint(mouse):
+                self.upgrading_tower = tower
+                return tower
+        return False
