@@ -15,8 +15,7 @@
     "camo": false,
     "main_atk": "normal",
     "main_atk_targets": [
-      "frozen",
-      "lead"
+      "frozen"
     ],
     "secondary_atk": null,
     "secondary_atk_targets": [],
@@ -92,9 +91,9 @@
         "cost": 530,
         "stat_change": [
           {
-            "stat": "range",
-            "value": 4,
-            "type": "add"
+            "stat": "damage",
+            "value": 3,
+            "type": "set"
           },
           {
             "stat": "pierce",
@@ -102,9 +101,9 @@
             "type": "add"
           },
           {
-            "stat": "damage",
-            "value": 3,
-            "type": "set"
+            "stat": "range",
+            "value": 4,
+            "type": "add"
           }
         ]
       },
@@ -113,9 +112,9 @@
         "cost": 1700,
         "stat_change": [
           {
-            "stat": "range",
-            "value": 2,
-            "type": "add"
+            "stat": "damage",
+            "value": 6,
+            "type": "set"
           },
           {
             "stat": "main_atk_speed",
@@ -123,9 +122,9 @@
             "type": "set"
           },
           {
-            "stat": "damage",
-            "value": 6,
-            "type": "set"
+            "stat": "range",
+            "value": 2,
+            "type": "add"
           }
         ]
       }

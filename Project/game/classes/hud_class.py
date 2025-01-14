@@ -45,6 +45,15 @@ class Hud:
                                                             10 * SCALE, 10 * SCALE)
                                         }
                            for tower_name, tower_info in data.items()}
+
+        self.upgrade_icons = {"range": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/range.png").convert_alpha(),SCALE),
+                              "damage": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/damage.png").convert_alpha(),SCALE),
+                              "main_atk_speed": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/atk_speed.png").convert_alpha(),SCALE),
+                              "secondary_atk_speed": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/atk_speed.png").convert_alpha(),SCALE),
+                              "camo": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/camo.png").convert_alpha(),SCALE),
+                              "pierce": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/pierce.png").convert_alpha(),SCALE),
+                              "max": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/max.png").convert_alpha(),SCALE),
+                              "ability": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/ability.png").convert_alpha(),SCALE)}
         self.locked = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/locked.png").convert_alpha(), SCALE)
 
         self.HUD_upgrading = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/HUD_upgrading.png").convert_alpha(),
@@ -142,17 +151,26 @@ class Hud:
         if not self.tower_layer:
             self.tower_layer = layer
         self.Tower = Tower
-        surface = self.HUD_upgrading
+        surface = pygame.surface.Surface((self.HUD_upgrading.get_width(),self.HUD_upgrading.get_height()))
+        surface.blit(self.HUD_upgrading, (0,0))
         path_one = self.Tower.upgrades["path_one"]
         path_two = self.Tower.upgrades["path_two"]
         for path_name, upgrade, y_pos in [("path_one",path_one,11),("path_two",path_two,45)]:
-            cost = self.Tower.data[path_name][str(upgrade+1)]["cost"]
-            text = self.createNumber(cost, 0)
-            length = len(str(cost))
-            surface.blit(self.upgrade_backgrounds[length-3], (round(self.upgrade_cost_positions[length-3]*SCALE),y_pos*SCALE))
-            surface.blit(text, (self.upgrade_cost_positions[length-3]*SCALE+2*SCALE,(y_pos+1)*SCALE))
-        pygame.draw.circle(layer, (50, 50, 50, 20), Tower.rect.center,
-                           self.Tower.data["range"] * SCALE)
+            icon_position = (6*SCALE,20*SCALE) if path_name == "path_one" else (6*SCALE, 54*SCALE)
+            if upgrade == 4:
+                surface.blit(self.upgrade_icons["max"], icon_position)
+            else:
+                upgrade_info = self.Tower.data[path_name][str(upgrade+1)]
+                cost = upgrade_info["cost"]
+                text = self.createNumber(cost, 0)
+                length = len(str(cost))
+                surface.blit(self.upgrade_backgrounds[length-3], (round(self.upgrade_cost_positions[length-3]*SCALE),y_pos*SCALE))
+                surface.blit(text, (self.upgrade_cost_positions[length-3]*SCALE+2*SCALE,(y_pos+1)*SCALE))
+                if upgrade_info["name"]:
+                    surface.blit(self.upgrade_icons["ability"], icon_position)
+                else:
+                    surface.blit(self.upgrade_icons[upgrade_info["stat_change"][0]["stat"]], icon_position)
+        pygame.draw.circle(layer, (50, 50, 50, 20), Tower.rect.center, self.Tower.data["range"] * SCALE)
         return surface
 
 

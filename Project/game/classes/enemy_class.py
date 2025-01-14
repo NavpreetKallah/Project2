@@ -30,8 +30,7 @@ class Enemy(pygame.sprite.Sprite):
         self.count = count
         if current:
             self.current = current
-        if path:
-            self.path = path
+        self.path = path
         if not pos:
             self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][enemy_number % 4]),
                                       SCALE * (-5 - [0, 1][enemy_number % 2]))
@@ -76,9 +75,24 @@ class Enemy(pygame.sprite.Sprite):
         image.fill((0, 0, 0), (0, SCALE, 5 * SCALE, 3 * SCALE))
         image.fill((0, 0, 0), (SCALE, 0, 3 * SCALE, 5 * SCALE))
         image.fill((0, 0, 0), (2 * SCALE, SCALE * 5, SCALE, SCALE))
-        image.fill(self.colour, (SCALE, SCALE, 3 * SCALE, 3 * SCALE))
-        image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
-        return image
+        if self.name == "rainbow":
+            image.fill((255,0,0), (SCALE,SCALE,SCALE*3,SCALE))
+            image.fill((255,122,0), (SCALE,SCALE*2,SCALE*3,SCALE))
+            image.fill((255,255,0), (SCALE,SCALE*3,SCALE*3,SCALE))
+            image.fill((0,255,0), (SCALE*2,SCALE*4,SCALE,SCALE))
+            return image
+        elif self.name == "zebra":
+            image.fill((255,255,255), (SCALE, SCALE, 3 * SCALE, 3 * SCALE))
+            image.fill((255,255,255), (2 * SCALE, SCALE * 4, SCALE, SCALE))
+            image.fill((0,0,0), (2*SCALE,SCALE,SCALE,SCALE))
+            image.fill((0,0,0), (SCALE,2*SCALE,SCALE,SCALE))
+            image.fill((0,0,0), (3*SCALE,2*SCALE,SCALE,SCALE))
+            image.fill((0,0,0), (2*SCALE,3*SCALE,SCALE,SCALE))
+            return image
+        else:
+            image.fill(self.colour, (SCALE, SCALE, 3 * SCALE, 3 * SCALE))
+            image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
+            return image
 
     def take_damage(self, damage, targets, camo):
         money = 0
@@ -91,19 +105,30 @@ class Enemy(pygame.sprite.Sprite):
                 if not self.node.next:
                     self.kill()
                     return money
-                self.node = self.node.next
-                data = self.node.data
-                self.name = data["name"]
-                self.speed = data["speed"]
-                self.value = data["value"]
-                self.colour = data["colour"]
-                self.health = data["health"]
-                self.image = self.colourIn()
-                self.dupe = True
+
+                self.new_node()
+
         return money
+
+    def new_node(self):
+        self.children()
+        self.node = self.node.next if self.name != "rainbow" else self.node.next.next.next
+        data = self.node.data
+        self.name = data["name"]
+        self.speed = data["speed"]
+        self.value = data["value"]
+        self.colour = data["colour"]
+        self.health = data["health"]
+        self.image = self.colourIn()
 
     def getValue(self):
         return self.value
+
+    def children(self):
+        if self.name in ["rainbow", "zebra","ceramic","moab","bfb","zomg"]:
+            self.duper = copy.deepcopy(self.name)
+            self.dupe = True
+            self.dupe_amount = 1 if self.name in ["rainbow", "zebra","ceramic"] else 3
 
     def getSpawnDelay(self):
         return self.spawn_delay
@@ -130,9 +155,14 @@ class EnemyManager:
                         "pink": {"name": "pink", "speed": 18, "value": 5, "health": 1, "colour": (255, 136, 136)},
                         "black": {"name": "black", "speed": 15, "value": 7, "health": 1, "colour": (0, 0, 0)},
                         "white": {"name": "white", "speed": 15, "value": 7, "health": 1, "colour": (255, 255, 255)},
-                        "purple": {"name": "purple", "speed": 15, "value": 8, "health": 1, "colour": (255, 0, 255)},
-                        "lead": {"name": "lead", "speed": 18, "value": 10, "health": 1, "colour": (120, 120, 120)},
-                        "ceramic": {"name": "ceramic", "speed": 12, "value": 20, "health": 1, "colour": (0, 0, 0)}}
+                        "zebra": {"name": "zebra", "speed": 15, "value": 8, "health": 1, "colour": "zebra"},
+                        "purple": {"name": "purple", "speed": 15, "value": 9, "health": 1, "colour": (255, 0, 255)},
+                        "lead": {"name": "lead", "speed": 120, "value": 10, "health": 1, "colour": (120, 120, 120)},
+                        "rainbow": {"name": "rainbow", "speed": 12, "value": 11, "health": 1, "colour": "rainbow"},
+                        "ceramic": {"name": "ceramic", "speed": 120, "value": 12, "health": 200, "colour": (0, 0, 0)},
+                        "moab": {"name": "moab", "speed": 120, "value": 12, "health": 200, "colour": "moab"},
+                        "bfb": {"name": "bfb", "speed": 120, "value": 13, "health": 700, "colour": "bfb"},
+                        "zomg": {"name": "zomg", "speed": 168, "value": 14, "health": 4000, "colour": "zomg"}}
 
         self.sprites = pygame.sprite.Group()
         self.duped_sprites = pygame.sprite.Group()
@@ -158,6 +188,8 @@ class EnemyManager:
     def duplicate(self, original_enemy):
         self.number += 1
         pos = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
+        pos.x += [-1, 1][self.number % 2] * SCALE
+        pos.y += [-1, 1][self.number % 2] * SCALE
         path = copy.deepcopy(original_enemy.path)
         count = copy.deepcopy(original_enemy.count)
         current = copy.deepcopy(original_enemy.current)
@@ -210,15 +242,18 @@ class EnemyManager:
     def dupe(self):
         for sprite in self.sprites:
             if sprite.dupe:
-                duplicate = self.duplicate(sprite)
-                self.sprites.add(duplicate)
+                for i in range(sprite.dupe_amount):
+                    if sprite.duper == "rainbow":
+                        duplicate = self.duplicate(sprite)
+                        print(duplicate.name)
+                        self.sprites.add(duplicate)
                 sprite.setDupe(False)
 
     def update(self, layer, Map):
         self.load()
         self.move(Map)
         self.dupe()
-        for sprite in sorted(self.sprites, key=lambda sprite: (sprite.speed, sprite.number), reverse=True):
+        for sprite in sorted(self.sprites, key=lambda sprite: (sprite.value, sprite.number), reverse=True):
             layer.blit(sprite.image, sprite.rect)
 
     def getEnemies(self):

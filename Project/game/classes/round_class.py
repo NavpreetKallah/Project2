@@ -19,14 +19,19 @@ class Round:
                               "green": {"weight": 3, "min_delay": min_delay + change*7, "max_delay": max_delay + change*7},
                               "yellow": {"weight": 4, "min_delay": min_delay + change*6, "max_delay": max_delay + change*6},
                               "pink": {"weight": 5, "min_delay": min_delay + change*5, "max_delay": max_delay + change*5},
-                              "black": {"weight": 6, "min_delay": min_delay + change*4, "max_delay": max_delay + change*4},
-                              "white": {"weight": 7, "min_delay": min_delay + change*3, "max_delay": max_delay + change*3},
-                              "purple": {"weight": 8, "min_delay": min_delay + change*2, "max_delay": max_delay + change*2},
-                              "lead": {"weight": 9, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
-                              "ceramic": {"weight": 10, "min_delay": min_delay, "max_delay": max_delay}
+                              "black": {"weight": 10, "min_delay": min_delay + change*4, "max_delay": max_delay + change*4},
+                              "white": {"weight": 10, "min_delay": min_delay + change*3, "max_delay": max_delay + change*3},
+                              "zebra": {"weight": 20, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
+                              "purple": {"weight": 10, "min_delay": min_delay + change*2, "max_delay": max_delay + change*2},
+                              "lead": {"weight": 12, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
+                              "rainbow": {"weight": 40, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
+                              "ceramic": {"weight": 80, "min_delay": min_delay, "max_delay": max_delay},
+                              "moab": {"weight": 320, "min_delay": min_delay, "max_delay": max_delay},
+                              "bfb": {"weight": 1280, "min_delay": min_delay, "max_delay": max_delay},
+                              "zomg": {"weight": 5120, "min_delay": min_delay, "max_delay": max_delay},
                               }
 
-        self.probabilities = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.probabilities = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.round_started = False
         self.speedup = False
         self.weighting = [-20, 18, 2]
@@ -66,7 +71,7 @@ class Round:
             info["max_delay"] = info["max_delay"] * speed
 
     def roundWin(self, manager):
-        for _ in range(5):
+        for _ in range(50):
             self.current_round += 1
             self.valueLeft = self.current_round * 30
             self.increaseDifficulty()

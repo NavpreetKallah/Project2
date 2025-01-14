@@ -1,5 +1,6 @@
 import json
 import os
+import abc
 import time
 from math import atan2, degrees, pi
 
@@ -20,11 +21,110 @@ ProjectileManager = ProjectileManager()
 
 # self.size = size
 # self.attack_speed = attack_speed
+
+class DefaultTower(pygame.sprite.Sprite):
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, data, pos):
+        pygame.sprite.Sprite.__init__(self)
+        self.data = data
+        self.upgrades = {"path_one":0,"path_two":0}
+        self.image = data["icon"]
+        self.pos = pos
+        self.rect = self.image.get_rect(center=self.pos)
+        self.image_copy = self.image
+        self.timer = time.perf_counter()
+        self.images = [pygame.transform.rotate(self.image, i) for i in range(1, 361)]
+
+    @abc.abstractmethod
+    def action(self, enemies, fast_forward):
+        return
+
+    @abc.abstractmethod
+    def abilityUpgrades(self, upgrade_name):
+        return
+
+    def attack(self, fast_forward, angle):
+        if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
+            self.timer = time.perf_counter()
+            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
+
+    def getAngle(self, target):
+        x1, y1 = self.rect.center
+        if isinstance(target, type(self.rect)):
+            x2, y2 = target.center
+        else:
+            x2, y2 = target
+        dx = x2 - x1
+        dy = y2 - y1
+        rads = atan2(-dy, dx)
+        rads %= 2 * pi
+        return degrees(rads) + 90
+
+    def upgrade(self, path, money):
+
+        if self.upgrades[path] == 4:
+            return 0
+
+        upgrade_info = self.data[path][str(self.upgrades[path] + 1)]
+        if upgrade_info["cost"] > money:
+            return 0
+
+        if upgrade_info["stat_change"] is not None:
+            for change in upgrade_info["stat_change"]:
+                if change["type"] == "add":
+                    self.data[change["stat"]] += change["value"]
+                elif change["type"] == "set":
+                    self.data[change["stat"]] = change["value"]
+                else:
+                    self.data[change["stat"]] *= change["value"]
+        if upgrade_info["name"] is not None:
+            self.abilityUpgrades(upgrade_info["name"])
+
+        self.upgrades[path] += 1
+
+        return upgrade_info["cost"]
+
+class Dart(DefaultTower):
+    def __init__(self, data, pos):
+        super().__init__(data, pos)
+        data["projectile_image"] = "default"
+    def action(self, enemies, fast_forward):
+        if self.data["main_atk_speed"] == 0:
+            return
+        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
+        if enemy_info:
+            angle = round(self.getAngle(enemy_info[0].rect.center))
+            self.attack(fast_forward, angle)
+            self.image = self.images[angle % 360]
+            self.rect = self.image.get_rect(center=self.pos)
+        return 0
+
+    def abilityUpgrades(self, upgrade_name):
+        print(upgrade_name)
+
+class Sniper(DefaultTower):
+    def __init__(self, data, pos):
+        super().__init__(data, pos)
+        data["projectile_image"] = "default"
+    def action(self, enemies, fast_forward):
+        if self.data["main_atk_speed"] == 0:
+            return
+        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
+        if enemy_info:
+            angle = round(self.getAngle(enemy_info[0].rect.center))
+            self.attack(fast_forward, angle)
+            self.image = self.images[angle % 360]
+            self.rect = self.image.get_rect(center=self.pos)
+        return 0
+
+    def abilityUpgrades(self, upgrade_name):
+        print(upgrade_name)
+
 class Tower(pygame.sprite.Sprite):
     def __init__(self, data, pos):
         pygame.sprite.Sprite.__init__(self)
         self.data = data
-        self.upgrades = {"path_one":3,"path_two":3}
+        self.upgrades = {"path_one":0,"path_two":0}
         self.image = data["icon"]
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
@@ -41,7 +141,8 @@ class Tower(pygame.sprite.Sprite):
         upgrade_info = self.data[path][str(self.upgrades[path]+1)]
         if upgrade_info["cost"] > money:
             return 0
-        print(upgrade_info)
+
+        print(self.upgrades[path])
         if upgrade_info["name"] is None:
             for change in upgrade_info["stat_change"]:
                 if change["type"] == "add":
@@ -115,23 +216,10 @@ class TowerManager:
             pygame.transform.scale_by(pygame.image.load_extended(f"{path}/spritesheet2.png").convert_alpha(),
                                       SCALE), 8 * SCALE)
         tower_icons = {tower_name: tower_icons[i] for i, tower_name in enumerate(data)}
-        self.tower_dict = {tower_name: {
-            "main_atk": tower_info["main_atk"],
-            "main_atk_targets": tower_info["main_atk_targets"],
-            "main_atk_lifespan": tower_info["main_atk_lifespan"],
-            "spread": tower_info["spread"],
-            "camo": tower_info["camo"],
-            "icon": tower_icons[tower_name],
-            "range": tower_info["range"],
-            "cost": tower_info["cost"],
-            "damage": tower_info["damage"],
-            "pierce": tower_info["pierce"],
-            "path_one": tower_info["path_one"],
-            "path_two": tower_info["path_two"],
-            "main_atk_speed": tower_info["main_atk_speed"]
-
-        }
-            for tower_name, tower_info in data.items()}
+        for tower_name, tower_info in data.items():
+            data[tower_name]["icon"] = tower_icons[tower_name]
+        self.tower_dict = data
+        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper}
         self.money = 0
         self.placing = False
         self.placing_tower = None
@@ -142,7 +230,8 @@ class TowerManager:
 
     def create(self):
         if self.placing_tower and self.tower_pos:
-            self.sprites.add(Tower(self.tower_dict[self.placing_tower], self.tower_pos))
+            print(self.placing_tower)
+            self.sprites.add(self.tower_class_dict[self.placing_tower](self.tower_dict[self.placing_tower], self.tower_pos))
             self.images.append(self.tower_dict[self.placing_tower]["icon"])
             self.placing_tower = None
             self.placing = False

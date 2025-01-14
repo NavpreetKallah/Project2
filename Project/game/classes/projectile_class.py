@@ -29,7 +29,7 @@ class Projectile(pygame.sprite.Sprite):
         self.angle = radians(angle)
         # self.image = pygame.Surface((SCALE, SCALE*5))
         # self.image.fill((0,0,0))
-        self.image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/default.png"),SCALE)
+        self.image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{data['projectile_image']}.png"),SCALE)
         self.image = pygame.transform.rotate(self.image, degrees(self.angle)+90)
         self.rect = self.image.get_rect(center=pos)
         self.collided = []
