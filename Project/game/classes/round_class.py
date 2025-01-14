@@ -71,7 +71,7 @@ class Round:
             info["max_delay"] = info["max_delay"] * speed
 
     def roundWin(self, manager):
-        for _ in range(50):
+        for _ in range(55):
             self.current_round += 1
             self.valueLeft = self.current_round * 30
             self.increaseDifficulty()
@@ -83,6 +83,7 @@ class Round:
         if self.valueLeft - enemy >= 0:
             self.valueLeft -= enemy
             manager.create(self.enemies[colour], self.generateDelay(colour))
+            return
             self.generateEnemies(manager)
 
     def generateDelay(self, colour):
