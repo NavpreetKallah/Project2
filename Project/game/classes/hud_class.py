@@ -147,9 +147,7 @@ class Hud:
                 surface.blit(self.locked, tower["pos"])
         return surface
 
-    def createTowerUpgrade(self, Tower, layer):
-        if not self.tower_layer:
-            self.tower_layer = layer
+    def createTowerUpgrade(self, Tower):
         self.Tower = Tower
         surface = pygame.surface.Surface((self.HUD_upgrading.get_width(),self.HUD_upgrading.get_height()))
         surface.blit(self.HUD_upgrading, (0,0))
@@ -170,7 +168,7 @@ class Hud:
                     surface.blit(self.upgrade_icons["ability"], icon_position)
                 else:
                     surface.blit(self.upgrade_icons[upgrade_info["stat_change"][0]["stat"]], icon_position)
-        pygame.draw.circle(layer, (50, 50, 50, 20), Tower.rect.center, self.Tower.data["range"] * SCALE)
+
         return surface
 
 
@@ -180,16 +178,22 @@ class Hud:
         # surface.blit(self.upgrade_backgrounds[path_two_text_length-3], (round(self.upgrade_cost_positions[path_two_text_length-3]*SCALE),y_pos*SCALE))
         # surface.blit(path_two_text, (self.upgrade_cost_positions[path_two_text_length-3]*SCALE+2*SCALE,(y_pos+1)*SCALE))
 
+    def drawRange(self, layer):
+        pygame.draw.circle(layer, (50, 50, 50, 20), self.Tower.rect.center, self.Tower.data["range"] * SCALE)
 
     def updateHud(self, layer):
+        layer.fill((255,255,255,0))
+        if self.upgrade and self.Tower:
+            self.drawRange(layer)
+        self.initialiseHud(layer)
         self.counter += 1
-        layer.blit(self.HUD_white, (0, 0))
+
         # layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
         if not self.upgrade:
             layer.blit(self.HUD_black, (0,0))
             layer.blit(self.createTowerSelect(), (129 * SCALE, 12 * SCALE))
         else:
-            layer.blit(self.createTowerUpgrade(self.Tower, self.tower_layer), (128 * SCALE, 11 * SCALE))
+            layer.blit(self.createTowerUpgrade(self.Tower), (128 * SCALE, 11 * SCALE))
         if self.speedup:
             layer.blit(self.fast_forward_indicator, (145 * SCALE, 106 * SCALE))
         layer.blit(self.round_text, (116 * SCALE - self.round_text.get_width(), 3 * SCALE))
