@@ -42,6 +42,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.image = self.image_list[self.directions.index(self.current)]
             else:
                 self.image = self.colourIn()
+        else:
+            self.image = self.colourIn()
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.pos.x, self.pos.y)
