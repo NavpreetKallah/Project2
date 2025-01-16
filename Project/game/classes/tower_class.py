@@ -84,6 +84,24 @@ class DefaultTower(pygame.sprite.Sprite):
 
         return upgrade_info["cost"]
 
+class Wizard(DefaultTower):
+    def __init__(self, data, pos):
+        super().__init__(data, pos)
+        data["projectile_image"] = "default"
+    def action(self, enemies, fast_forward):
+        if self.data["main_atk_speed"] == 0:
+            return
+        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
+        if enemy_info:
+            angle = round(self.getAngle(enemy_info[0].rect.center))
+            self.attack(fast_forward, angle)
+            self.image = self.images[angle % 360]
+            self.rect = self.image.get_rect(center=self.pos)
+        return 0
+
+    def abilityUpgrades(self, upgrade_name):
+        print(upgrade_name)
+
 class Dart(DefaultTower):
     def __init__(self, data, pos):
         super().__init__(data, pos)
@@ -106,15 +124,17 @@ class Sniper(DefaultTower):
     def __init__(self, data, pos):
         super().__init__(data, pos)
         data["projectile_image"] = "default"
+
     def action(self, enemies, fast_forward):
-        if self.data["main_atk_speed"] == 0:
-            return
-        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
-        if enemy_info:
-            angle = round(self.getAngle(enemy_info[0].rect.center))
-            self.attack(fast_forward, angle)
-            self.image = self.images[angle % 360]
-            self.rect = self.image.get_rect(center=self.pos)
+        enemies = sorted(enemies, key=lambda enemy: enemy.value, reverse=True)
+        angle = round(self.getAngle(enemies[0].rect.center))
+        self.image = self.images[angle % 360]
+        self.rect = self.image.get_rect(center=self.pos)
+        if time.perf_counter() - self.timer > (
+        self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
+            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
+            self.timer = time.perf_counter() + random.uniform(-0.01, 0.01)
+            return enemies[0].take_damage(self.data["damage"], self.data["main_atk_targets"], self.data["camo"])
         return 0
 
     def abilityUpgrades(self, upgrade_name):
@@ -219,7 +239,7 @@ class TowerManager:
         for tower_name, tower_info in data.items():
             data[tower_name]["icon"] = tower_icons[tower_name]
         self.tower_dict = data
-        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper}
+        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard}
         self.money = 0
         self.placing = False
         self.placing_tower = None
@@ -281,7 +301,7 @@ class TowerManager:
         return self.tower_pos
 
     def aim(self, enemies, fast_forward):
-        enemies = sorted(enemies, key=lambda enemy: enemy.number)
+        enemies = sorted(enemies, key=lambda enemy: enemy.distance_travelled)
         if enemies and self.sprites:
             for tower in self.sprites:
                 self.money += tower.action(enemies, fast_forward)

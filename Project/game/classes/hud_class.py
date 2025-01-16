@@ -48,6 +48,7 @@ class Hud:
 
         self.upgrade_icons = {"range": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/range.png").convert_alpha(),SCALE),
                               "damage": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/damage.png").convert_alpha(),SCALE),
+                              "secondary_damage": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/damage.png").convert_alpha(),SCALE),
                               "main_atk_speed": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/atk_speed.png").convert_alpha(),SCALE),
                               "secondary_atk_speed": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/atk_speed.png").convert_alpha(),SCALE),
                               "camo": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/camo.png").convert_alpha(),SCALE),

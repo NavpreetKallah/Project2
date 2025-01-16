@@ -58,7 +58,7 @@ class Game:
         self.running = True
         self.round = 0
         self.health = 100
-        self.money = 10000
+        self.money = 100000
         self.autoplay = False
 
         title = "Balloons"
@@ -110,7 +110,7 @@ class Game:
 
         # print(1/(time.perf_counter() - self.temp))
         # self.temp = time.perf_counter()
-        print(self.clock.get_fps())
+        #print(self.clock.get_fps())
         self.fps_counter += self.clock.get_fps()
         if time.perf_counter() - self.fps_timer > 1:
             print(self.fps_counter//(self.fps*5))

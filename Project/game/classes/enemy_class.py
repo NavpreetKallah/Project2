@@ -2,7 +2,7 @@ import time
 import copy
 
 import pygame
-import random
+import random, os
 from game.classes.linked_list import LinkedList
 from game.config import SCALE
 
@@ -10,7 +10,7 @@ from game.config import SCALE
 #                  distance_travelled: int, health: int, immunities: list, speed: int, value: int,
 LinkedList = LinkedList()
 
-
+path = os.path.dirname(os.getcwd()) + "/textures/enemies"
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, node, spawn_delay, enemy_number, pos=None, count=0, path=None, current=None, initialised=False, distance_travelled=None):
         pygame.sprite.Sprite.__init__(self)
@@ -76,6 +76,12 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.topleft = (self.pos.x, self.pos.y)
 
     def colourIn(self):
+
+        if self.name in ["moab","bfb","zomg"]:
+            image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{self.name}.png").convert_alpha(),SCALE)
+            return image
+
+
         image = pygame.Surface((5 * SCALE, 6 * SCALE), pygame.SRCALPHA)
         image.fill((0, 0, 0), (0, SCALE, 5 * SCALE, 3 * SCALE))
         image.fill((0, 0, 0), (SCALE, 0, 3 * SCALE, 5 * SCALE))
@@ -165,7 +171,7 @@ class EnemyManager:
                         "lead": {"name": "lead", "speed": 120, "value": 10, "health": 1, "colour": (120, 120, 120)},
                         "rainbow": {"name": "rainbow", "speed": 12, "value": 11, "health": 1, "colour": "rainbow"},
                         "ceramic": {"name": "ceramic", "speed": 9, "value": 12, "health": 1, "colour": (150, 100, 50)},
-                        "moab": {"name": "moab", "speed": 120, "value": 12, "health": 200, "colour": "moab"},
+                        "moab": {"name": "moab", "speed": 120, "value": 150, "health": 200, "colour": "moab"},
                         "bfb": {"name": "bfb", "speed": 150, "value": 13, "health": 700, "colour": "bfb"},
                         "zomg": {"name": "zomg", "speed": 180, "value": 14, "health": 4000, "colour": "zomg"}}
 

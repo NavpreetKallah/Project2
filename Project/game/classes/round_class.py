@@ -11,9 +11,9 @@ class Round:
         self.roundValue = 30 * self.current_round
         self.valueLeft = self.roundValue
         self.enemies = None
-        min_delay = 0
+        min_delay = 0.1
         change = 0.01
-        max_delay = 0.1
+        max_delay = 0.2
         self.enemy_creator = {"red": {"weight": 1, "min_delay": min_delay + change*9, "max_delay": max_delay + change*9},
                               "blue": {"weight": 2, "min_delay": min_delay + change*8, "max_delay": max_delay + change*8},
                               "green": {"weight": 3, "min_delay": min_delay + change*7, "max_delay": max_delay + change*7},
@@ -26,9 +26,9 @@ class Round:
                               "lead": {"weight": 12, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
                               "rainbow": {"weight": 40, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
                               "ceramic": {"weight": 80, "min_delay": min_delay, "max_delay": max_delay},
-                              "moab": {"weight": 320, "min_delay": min_delay, "max_delay": max_delay},
-                              "bfb": {"weight": 1280, "min_delay": min_delay, "max_delay": max_delay},
-                              "zomg": {"weight": 5120, "min_delay": min_delay, "max_delay": max_delay},
+                              "moab": {"weight": 80, "min_delay": min_delay*10, "max_delay": max_delay*10},
+                              "bfb": {"weight": 80, "min_delay": min_delay, "max_delay": max_delay},
+                              "zomg": {"weight": 80, "min_delay": min_delay*10, "max_delay": max_delay*10},
                               }
 
         self.probabilities = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -71,7 +71,7 @@ class Round:
             info["max_delay"] = info["max_delay"] * speed
 
     def roundWin(self, manager):
-        for _ in range(55):
+        for _ in range(60):
             self.current_round += 1
             self.valueLeft = self.current_round * 30
             self.increaseDifficulty()
@@ -83,7 +83,6 @@ class Round:
         if self.valueLeft - enemy >= 0:
             self.valueLeft -= enemy
             manager.create(self.enemies[colour], self.generateDelay(colour))
-            return
             self.generateEnemies(manager)
 
     def generateDelay(self, colour):
