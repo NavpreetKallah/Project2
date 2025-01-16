@@ -27,7 +27,7 @@ class Round:
                               "rainbow": {"weight": 40, "min_delay": min_delay + change*1, "max_delay": max_delay + change*1},
                               "ceramic": {"weight": 80, "min_delay": min_delay, "max_delay": max_delay},
                               "moab": {"weight": 80, "min_delay": min_delay*10, "max_delay": max_delay*10},
-                              "bfb": {"weight": 80, "min_delay": min_delay, "max_delay": max_delay},
+                              "bfb": {"weight": 80, "min_delay": min_delay*10, "max_delay": max_delay*10},
                               "zomg": {"weight": 80, "min_delay": min_delay*10, "max_delay": max_delay*10},
                               }
 
@@ -71,7 +71,7 @@ class Round:
             info["max_delay"] = info["max_delay"] * speed
 
     def roundWin(self, manager):
-        for _ in range(60):
+        for _ in range(5):
             self.current_round += 1
             self.valueLeft = self.current_round * 30
             self.increaseDifficulty()

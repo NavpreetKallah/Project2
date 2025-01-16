@@ -1,6 +1,6 @@
 import json
 import os
-import abc
+import abc, copy
 import time
 from math import atan2, degrees, pi
 
@@ -87,7 +87,7 @@ class DefaultTower(pygame.sprite.Sprite):
 class Wizard(DefaultTower):
     def __init__(self, data, pos):
         super().__init__(data, pos)
-        data["projectile_image"] = "default"
+        data["projectile_image"] = "wizard_main"
     def action(self, enemies, fast_forward):
         if self.data["main_atk_speed"] == 0:
             return
@@ -109,7 +109,7 @@ class Dart(DefaultTower):
     def action(self, enemies, fast_forward):
         if self.data["main_atk_speed"] == 0:
             return
-        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
+        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"] + (1*SCALE if enemy.name in ["moab","bfb","zomg"] else 0)]
         if enemy_info:
             angle = round(self.getAngle(enemy_info[0].rect.center))
             self.attack(fast_forward, angle)
@@ -250,8 +250,8 @@ class TowerManager:
 
     def create(self):
         if self.placing_tower and self.tower_pos:
-            print(self.placing_tower)
-            self.sprites.add(self.tower_class_dict[self.placing_tower](self.tower_dict[self.placing_tower], self.tower_pos))
+            tower_data = {info: (value if isinstance(value, pygame.Surface) else copy.deepcopy(value)) for info, value in self.tower_dict[self.placing_tower].items()}
+            self.sprites.add(self.tower_class_dict[self.placing_tower](tower_data, self.tower_pos))
             self.images.append(self.tower_dict[self.placing_tower]["icon"])
             self.placing_tower = None
             self.placing = False
@@ -301,7 +301,7 @@ class TowerManager:
         return self.tower_pos
 
     def aim(self, enemies, fast_forward):
-        enemies = sorted(enemies, key=lambda enemy: enemy.distance_travelled)
+        enemies = sorted(enemies, key=lambda enemy: enemy.distance_travelled_total, reverse=True)
         if enemies and self.sprites:
             for tower in self.sprites:
                 self.money += tower.action(enemies, fast_forward)

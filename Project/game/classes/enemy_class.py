@@ -12,7 +12,7 @@ LinkedList = LinkedList()
 
 path = os.path.dirname(os.getcwd()) + "/textures/enemies"
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node, spawn_delay, enemy_number, pos=None, count=0, path=None, current=None, initialised=False, distance_travelled=None):
+    def __init__(self, node, spawn_delay, enemy_number, dupe_values=None):
         pygame.sprite.Sprite.__init__(self)
         self.spawn_delay = spawn_delay
         self.node = node
@@ -26,31 +26,49 @@ class Enemy(pygame.sprite.Sprite):
         self.value = data["value"]
         self.colour = data["colour"]
         self.health = data["health"]
-        self.initialised = initialised
-        self.count = count
-        if distance_travelled:
-            self.distance_travelled = distance_travelled
+        self.directions = ["D","R","U","L"]
+
+        if dupe_values:
+            self.duped_enemy(dupe_values)
         else:
             self.distance_travelled = 0
-        if current:
-            self.current = current
-        self.path = path
-        if not pos:
-            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][enemy_number % 4]),
-                                      SCALE * (-5 - [0, 1][enemy_number % 2]))
-        else:
-            self.pos = pos
-        self.image = self.colourIn()
-        # self.rect = pygame.rect.Rect((self.pos.x, self.pos.y, 5*SCALE,5*SCALE))
-        # self.image.fill((0,0,0),(SCALE,SCALE,1*SCALE,1*SCALE))
-        # self.image.fill((0,0,0),(3*SCALE,SCALE,1*SCALE,1*SCALE))
+            self.distance_travelled_total = 0
+            self.initialised = False
+            self.set_position()
+
+        if self.name in ["moab", "bfb", "zomg"]:
+            self.image_list = [pygame.transform.rotate(self.image, i*90) for i in range(4)]
+            if self.current:
+                self.image = self.image_list[self.directions.index(self.current)]
+            else:
+                self.image = self.colourIn()
+
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.pos.x, self.pos.y)
 
+    def duped_enemy(self, dupe_values):
+        self.initialised = True
+        self.count = dupe_values["count"]
+        self.distance_travelled_total = dupe_values["distance_travelled_total"]
+        self.path = dupe_values["path"]
+        self.distance_travelled = dupe_values["distance_travelled"]
+        self.current = dupe_values["current"]
+        self.pos = dupe_values["pos"]
+
+    def set_position(self):
+        if not self.name in ["moab","bfb","zomg"]:
+            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-4 - [0, 1][self.number % 2]))
+        elif self.name == "moab":
+            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-7 - [0, 1][self.number % 2]))
+        elif self.name == "bfb":
+            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-10 - [0, 1][self.number % 2]))
+        elif self.name == "zomg":
+            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-8 - [0, 1][self.number % 2]))
     def move(self, direction):
         distance = 9 * SCALE
         distance_moved = (distance / self.speed)
         self.distance_travelled += distance_moved
+        self.distance_travelled_total += distance_moved
 
         if not self.initialised:
             self.initialised = True
@@ -61,10 +79,19 @@ class Enemy(pygame.sprite.Sprite):
             return "delete"
 
         if self.distance_travelled >= distance:
-            self.current = self.path.pop(0)
-            self.distance_travelled = 0
 
-          # I can not update the rect position directly here as it will round the value of distance moved causing the enemies to not follow the path
+            old = copy.deepcopy(self.current)
+            self.current = self.path.pop(0)
+            if self.speed >= 120:
+                self.distance_travelled = distance - self.distance_travelled
+            self.distance_travelled = 0
+            if old != self.current and self.name in ["moab", "bfb", "zomg"]:
+                self.pos.x, self.pos.y = (self.pos.x // SCALE) * SCALE, (self.pos.y // SCALE) * SCALE
+                self.image = self.image_list[self.directions.index(self.current)]
+
+        # if self.distance_travelled + distance_moved >= distance:
+        #     distance_moved = self.distance_travelled - distance
+
         if self.current == "D":
             self.pos.y += distance_moved
         elif self.current == "U":
@@ -77,7 +104,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def colourIn(self):
 
-        if self.name in ["moab","bfb","zomg"]:
+        if self.name in ["moab", "bfb", "zomg"]:
             image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{self.name}.png").convert_alpha(),SCALE)
             return image
 
@@ -116,8 +143,10 @@ class Enemy(pygame.sprite.Sprite):
                 if not self.node.next:
                     self.kill()
                     return money
-
+                original_name = copy.deepcopy(self.name)
                 self.new_node()
+                if original_name in ["moab","bfb","zomg"]:
+                    return money
 
         return money
 
@@ -199,13 +228,14 @@ class EnemyManager:
     def duplicate(self, original_enemy):
         self.number += 1
         pos = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
-        pos.x += random.randint(-1,1) * SCALE
-        pos.y += random.randint(-1,1) * SCALE
+        # pos.x += random.randint(-1,1) * SCALE
+        # pos.y += random.randint(-1,1) * SCALE
         path = copy.deepcopy(original_enemy.path)
         count = copy.deepcopy(original_enemy.count)
         current = copy.deepcopy(original_enemy.current)
         distance_travelled = copy.deepcopy(original_enemy.distance_travelled)
-        duplicate = Enemy(original_enemy.node, 0, self.number, pos=pos, count=count, path=path, current=current, initialised=True, distance_travelled=distance_travelled)
+        dupe_values = {"pos":pos, "count": count, "path": path, "current": current, "distance_travelled": distance_travelled}
+        duplicate = Enemy(original_enemy.node, 0, self.number, dupe_values=dupe_values)
         return duplicate
 
 

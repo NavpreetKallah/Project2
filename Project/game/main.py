@@ -100,8 +100,9 @@ class Game:
             Hud.updateHud(Renderer.getLayer("HUD"))
             self.hud_initialise = True
 
-        if pygame.mouse.get_pressed()[0] and Hud.play() or self.autoplay:
+        if (pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites():
             if not self.round_started:
+                self.autoplay = True
                 self.round_started = True
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)
@@ -113,7 +114,7 @@ class Game:
         #print(self.clock.get_fps())
         self.fps_counter += self.clock.get_fps()
         if time.perf_counter() - self.fps_timer > 1:
-            print(self.fps_counter//(self.fps*5))
+            #print(self.fps_counter//(self.fps*5))
             self.fps_timer = time.perf_counter()
             self.fps_counter = 0
 
