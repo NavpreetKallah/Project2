@@ -29,10 +29,11 @@ class DefaultTower(pygame.sprite.Sprite):
         self.data = data
         self.upgrades = {"path_one":0,"path_two":0}
         self.image = data["icon"]
+        self._total_cost = data["cost"]
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
         self.image_copy = self.image
-        self.timer = time.perf_counter()
+        self.timers = {"main": time.perf_counter(), "secondary": time.perf_counter()}
         self.images = [pygame.transform.rotate(self.image, i) for i in range(1, 361)]
 
     @abc.abstractmethod
@@ -42,10 +43,13 @@ class DefaultTower(pygame.sprite.Sprite):
     @abc.abstractmethod
     def abilityUpgrades(self, upgrade_name):
         return
+    @property
+    def total_cost(self):
+        return self._total_cost
 
     def attack(self, fast_forward, angle, type):
-        if time.perf_counter() - self.timer > (self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3):
-            self.timer = time.perf_counter()
+        if time.perf_counter() - self.timers[type] > ((self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3) * random.uniform(0.9,1.1)):
+            self.timers[type] = time.perf_counter()
             ProjectileManager.create(self.data[type], angle, self.rect.center, fast_forward)
 
     def getAngle(self, target):
@@ -71,36 +75,43 @@ class DefaultTower(pygame.sprite.Sprite):
 
         if upgrade_info["stat_change"] is not None:
             for change in upgrade_info["stat_change"]:
-                if change["type"] == "add":
-                    self.data[change["stat"][0]][change["stat"][1]] += change["value"]
+                attack = change["attack"]
+                stat = change["stat"]
+                value = change["value"]
+
+                if change["stat"] == "range":
+                    self.data[stat] += value
+                elif change["type"] == "add":
+                    self.data[attack][stat] += value
                 elif change["type"] == "set":
-                    self.data[change["stat"][0]][change["stat"][1]] = change["value"]
+                    self.data[attack][stat] = value
                 else:
-                    self.data[change["stat"][0]][change["stat"][1]] *= change["value"]
+                    self.data[attack][stat] *= value
+
         if upgrade_info["name"] is not None:
             self.abilityUpgrades(upgrade_info["name"])
 
         self.upgrades[path] += 1
-
+        self._total_cost += upgrade_info["cost"]
         return upgrade_info["cost"]
 
 class Wizard(DefaultTower):
     def __init__(self, data, pos):
         super().__init__(data, pos)
         data["main"]["projectile"] = "wizard_main"
-        data["secondary"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "wizard_fireball"
 
     def action(self, enemies, fast_forward):
         for type in ["main", "secondary"]:
             if self.data[type]["speed"] == 0:
-                return
+                return 0
             enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
             if enemy_info:
                 angle = round(self.getAngle(enemy_info[0].rect.center))
                 self.attack(fast_forward, angle, type)
                 self.image = self.images[angle % 360]
                 self.rect = self.image.get_rect(center=self.pos)
-            return 0
+        return 0
 
     def abilityUpgrades(self, upgrade_name):
         print(upgrade_name)
@@ -126,18 +137,18 @@ class Dart(DefaultTower):
 class Sniper(DefaultTower):
     def __init__(self, data, pos):
         super().__init__(data, pos)
-        data["projectile_image"] = "default"
+        data["main"]["projectile"] = "default"
 
     def action(self, enemies, fast_forward):
         enemies = sorted(enemies, key=lambda enemy: enemy.value, reverse=True)
         angle = round(self.getAngle(enemies[0].rect.center))
         self.image = self.images[angle % 360]
         self.rect = self.image.get_rect(center=self.pos)
-        if time.perf_counter() - self.timer > (
-        self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
-            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
-            self.timer = time.perf_counter() + random.uniform(-0.01, 0.01)
-            return enemies[0].take_damage(self.data["damage"], self.data["main_atk_targets"], self.data["camo"])
+        if time.perf_counter() - self.timers["main"] > (
+        self.data["main"]["speed"] if not fast_forward else self.data["main"]["speed"] / 3):
+            ProjectileManager.create(self.data["main"], angle, self.rect.center, fast_forward)
+            self.timers["main"] = time.perf_counter() + random.uniform(-0.01, 0.01)
+            return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["main"]["camo"])
         return 0
 
     def abilityUpgrades(self, upgrade_name):
@@ -193,7 +204,7 @@ class Tower(pygame.sprite.Sprite):
         if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
             ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
             self.timer = time.perf_counter() + random.uniform(-0.01,0.01)
-            return enemies[0].take_damage(self.data["damage"], self.data["main_atk_targets"], self.data["camo"])
+            return enemies[0].take_damage(self.data["damage"], self.data["main"]["extra_damage"], self.data["main_atk_targets"], self.data["camo"])
         return 0
 
     def mouse_aim(self, fast_forward):
@@ -305,6 +316,7 @@ class TowerManager:
 
     def aim(self, enemies, fast_forward):
         enemies = sorted(enemies, key=lambda enemy: enemy.distance_travelled_total, reverse=True)
+        enemies = [enemy for enemy in enemies if enemy.distance_travelled_total > 10*SCALE]
         if enemies and self.sprites:
             for tower in self.sprites:
                 self.money += tower.action(enemies, fast_forward)

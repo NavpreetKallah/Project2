@@ -122,21 +122,28 @@ class Game:
             self.clicked = True
             tower_chosen = Hud.tower_chosen()
             tower_upgrading = TowerManager.getTowerClicked()
+            sell_active = Hud.sellClicked() or Hud.getSell()
             if not self.round_started:
                 if Hud.fastForward(Renderer.getLayer("HUD")):
                     EnemyManager.speedChange()
                     Round.speedChange()
                     self.fast_forward = not self.fast_forward
                     Hud.updateHud(Renderer.getLayer("HUD"))
-            if tower_chosen:
+            if sell_active:
+                sold = Hud.sellMenu()
+                if sold != "main" and sold:
+                    self.money += sold
+                    Hud.updateMoney(self.money)
+                Hud.updateHud(Renderer.getLayer("HUD"))
+            elif tower_chosen:
                 TowerManager.placing = True
                 TowerManager.placing_tower = tower_chosen
-            if Hud.getUpgrading():
-                upgrade_chosen = Hud.upgradeChosen(Renderer.getLayer("HUD"))
+            elif Hud.getUpgrading():
+                option_chosen = Hud.upgradeChosen(Renderer.getLayer("HUD"))
                 Hud.updateHud(Renderer.getLayer("HUD"))
-                if upgrade_chosen:
-                    if upgrade_chosen != "main":
-                        upgrade_cost = TowerManager.getUpgradingTower().upgrade(upgrade_chosen, self.money)
+                if option_chosen:
+                    if option_chosen not in ["main", "sell"]:
+                        upgrade_cost = TowerManager.getUpgradingTower().upgrade(option_chosen, self.money)
                         self.money -= upgrade_cost
                         Hud.updateMoney(self.money)
                         Hud.updateHud(Renderer.getLayer("HUD"))
@@ -144,7 +151,7 @@ class Game:
                     Hud.setUpgrading(False)
                     Hud.updateHud(Renderer.getLayer("HUD"))
 
-            if tower_upgrading:
+            elif tower_upgrading:
                 Hud.createTowerUpgrade(tower_upgrading)
                 Hud.setUpgrading(True)
                 Hud.updateHud(Renderer.getLayer("HUD"))

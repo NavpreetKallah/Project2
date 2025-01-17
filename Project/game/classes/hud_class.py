@@ -68,6 +68,9 @@ class Hud:
         self.fast_forward_indicator = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/fast_forward.png").convert_alpha(),
             SCALE)
+        self.sell_screen = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/sell.png").convert_alpha(),
+            SCALE)
         self.upgrade_background_3 = self.createBackground(pygame.Surface((17 * SCALE, 7 * SCALE), pygame.SRCALPHA).convert_alpha(),(255,205,0))
         self.upgrade_background_4 = self.createBackground(pygame.Surface((22 * SCALE, 7 * SCALE), pygame.SRCALPHA).convert_alpha(),(255,205,0))
         self.upgrade_background_5 = self.createBackground(pygame.Surface((27 * SCALE, 7 * SCALE), pygame.SRCALPHA).convert_alpha(),(255,205,0))
@@ -81,6 +84,7 @@ class Hud:
         self.money = 0
         self.health = 0
         self.round = 0
+        self.sell = False
         self.round_text = self.createNumber(self.round, 0)
         self.money_text = self.createNumber(self.money, 0)
         self.health_text = self.createNumber(self.health, 3)
@@ -166,7 +170,7 @@ class Hud:
                 if upgrade_info["name"]:
                     surface.blit(self.upgrade_icons["ability"], icon_position)
                 else:
-                    surface.blit(self.upgrade_icons[upgrade_info["stat_change"][0]["stat"][1]], icon_position)
+                    surface.blit(self.upgrade_icons[upgrade_info["stat_change"][0]["stat"]], icon_position)
 
         return surface
 
@@ -180,6 +184,33 @@ class Hud:
     def drawRange(self, layer):
         pygame.draw.circle(layer, (50, 50, 50, 20), self.Tower.rect.center, self.Tower.data["range"] * SCALE)
 
+    def setSell(self, value):
+        self.sell = value
+    def sellMenu(self):
+        mouse = pygame.mouse.get_pos()
+        main_box = pygame.Rect(127*SCALE,10*SCALE,33*SCALE,110*SCALE)
+        sell = pygame.Rect(131*SCALE,77*SCALE,25*SCALE,11*SCALE)
+        if main_box.collidepoint(mouse):
+            if sell.collidepoint(mouse):
+                self.sell = False
+                total_cost = round(self.Tower.total_cost * 0.7)
+                self.Tower.kill()
+                self.upgrade = False
+                return total_cost
+        else:
+            self.upgrade = False
+            self.sell = False
+            return "main"
+    def createSell(self):
+        cost = round(self.Tower.total_cost * 0.7)
+        surface = self.sell_screen
+        text = self.createNumber(cost, 0)
+        length = len(str(cost))
+        surface.blit(self.upgrade_backgrounds[length - 3],
+                     (round(self.upgrade_cost_positions[length - 3] * SCALE), 40 * SCALE))
+        surface.blit(text, (self.upgrade_cost_positions[length - 3] * SCALE + 2 * SCALE, (40 + 1) * SCALE))
+        return surface
+
     def updateHud(self, layer):
         layer.fill((255,255,255,0))
         if self.upgrade and self.Tower:
@@ -188,7 +219,9 @@ class Hud:
         self.counter += 1
 
         # layer.blit(self.rgb_colours[round(self.counter/3) % 294], (0, 0))
-        if not self.upgrade:
+        if self.sell:
+            layer.blit(self.createSell(), (128 * SCALE, 11 * SCALE))
+        elif not self.upgrade:
             layer.blit(self.HUD_black, (0,0))
             layer.blit(self.createTowerSelect(), (129 * SCALE, 12 * SCALE))
         else:
@@ -210,6 +243,16 @@ class Hud:
         for i, number in enumerate(padded_number):
             surface.blit(self.numbers[int(number)], (sum(sizes[0:i]), 0))
         return surface
+
+    def sellClicked(self):
+        mouse = pygame.mouse.get_pos()
+        sell = pygame.Rect(131*SCALE,90*SCALE,25*SCALE,11*SCALE)
+        if sell.collidepoint(mouse):
+            self.sell = True
+            return "sell"
+
+    def getSell(self):
+        return self.sell
 
     def upgradeChosen(self, layer):
         mouse = pygame.mouse.get_pos()

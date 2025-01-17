@@ -53,9 +53,11 @@ class Enemy(pygame.sprite.Sprite):
         self.distance_travelled = dupe_values["distance_travelled"]
         self.current = dupe_values["current"]
         self.pos = dupe_values["pos"]
-        self.image = self.colourIn()
+        self.image_list = [pygame.transform.rotate(self.image, i * 90) for i in range(4)]
         if self.name in ["moab", "bfb", "zomg"]:
             self.image = self.image_list[self.directions.index(self.current)]
+        else:
+            self.image = self.colourIn()
 
     def set_position(self):
         if not self.name in ["moab","bfb","zomg"]:
@@ -93,8 +95,6 @@ class Enemy(pygame.sprite.Sprite):
                 self.pos.x, self.pos.y = (self.pos.x // SCALE) * SCALE, (self.pos.y // SCALE) * SCALE
                 self.image = self.image_list[self.directions.index(self.current)]
 
-        # if self.distance_travelled + distance_moved >= distance:
-        #     distance_moved = self.distance_travelled - distance
 
         if self.current == "D":
             self.pos.y += distance_moved
@@ -136,10 +136,12 @@ class Enemy(pygame.sprite.Sprite):
             image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
             return image
 
-    def take_damage(self, damage, targets, camo):
+    def take_damage(self, damage, extra, targets, camo):
         money = 0
         if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
             return 0
+        if self.name in ["moab","bfb","zomg"]:
+            damage += extra
         for _ in range(damage):
             self.health -= 1
             if self.health == 0:
@@ -149,7 +151,7 @@ class Enemy(pygame.sprite.Sprite):
                     return money
                 original_name = copy.deepcopy(self.name)
                 self.new_node()
-                if original_name in ["moab","bfb","zomg"]:
+                if original_name in ["moab","bfb","zomg","rainbow","ceramic"]:
                     return money
 
         return money

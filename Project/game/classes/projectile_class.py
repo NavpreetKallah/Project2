@@ -19,22 +19,25 @@ class Projectile(pygame.sprite.Sprite):
     def __init__(self, data, angle, pos, fast_forward):
         pygame.sprite.Sprite.__init__(self)
         # TODO fix this
-        self.main_atk = data["main_atk"]
-        self.damage = data["damage"] if self.main_atk != "sniper" else 0
+
+        self.type = data["type"]
+        self.damage = data["damage"] if self.type != "sniper" else 0
         self.pierce = data["pierce"]
-        self.targets = data["main_atk_targets"]
+        self.targets = data["targets"]
         self.camo = data["camo"]
-        self.speed = SCALE * 3 if self.main_atk != "sniper" else 20 * SCALE
-        self.money = 0
+        self.extra_damage = data["extra_damage"]
+        self.life_time = data["lifespan"] if not fast_forward else data["lifespan"]/3
+        self.speed = SCALE * 1 if self.type != "sniper" else 20 * SCALE
         self.speed = self.speed * 3 if fast_forward else self.speed
+
+        self.money = 0
         self.angle = radians(angle)
         # self.image = pygame.Surface((SCALE, SCALE*5))
         # self.image.fill((0,0,0))
-        self.image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{data['projectile_image']}.png"),SCALE)
+        self.image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{data['projectile']}.png"),SCALE)
         self.image = pygame.transform.rotate(self.image, degrees(self.angle)+90)
         self.rect = self.image.get_rect(center=pos)
         self.collided = []
-        self.life_time = data["main_atk_lifespan"] if not fast_forward else data["main_atk_lifespan"]/3
         self.life_timer = time.perf_counter()
 
 
@@ -48,7 +51,7 @@ class Projectile(pygame.sprite.Sprite):
                 self.pierce -= 1
                 if self.pierce == 0:
                     self.kill()
-                self.money += enemy.take_damage(self.damage, self.targets, self.camo)
+                self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo)
         return self.money
 
     def move(self):
