@@ -1,5 +1,6 @@
 import time
 import copy
+from builtins import range
 
 import pygame
 import random, os
@@ -36,26 +37,25 @@ class Enemy(pygame.sprite.Sprite):
             self.initialised = False
             self.set_position()
 
-        if self.name in ["moab", "bfb", "zomg"]:
-            self.image_list = [pygame.transform.rotate(self.image, i*90) for i in range(4)]
-            if self.current:
-                self.image = self.image_list[self.directions.index(self.current)]
-            else:
-                self.image = self.colourIn()
-        else:
-            self.image = self.colourIn()
+        self.image = self.colourIn()
+
+        self.image_list = [pygame.transform.rotate(self.image, i*90) for i in range(4)]
+        if dupe_values and self.name in ["moab", "bfb", "zomg"]:
+            self.image = self.image_list[self.directions.index(self.current)]
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.pos.x, self.pos.y)
 
     def duped_enemy(self, dupe_values):
         self.initialised = True
-        self.count = dupe_values["count"]
         self.distance_travelled_total = dupe_values["distance_travelled_total"]
         self.path = dupe_values["path"]
         self.distance_travelled = dupe_values["distance_travelled"]
         self.current = dupe_values["current"]
         self.pos = dupe_values["pos"]
+        self.image = self.colourIn()
+        if self.name in ["moab", "bfb", "zomg"]:
+            self.image = self.image_list[self.directions.index(self.current)]
 
     def set_position(self):
         if not self.name in ["moab","bfb","zomg"]:
@@ -66,6 +66,8 @@ class Enemy(pygame.sprite.Sprite):
             self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-10 - [0, 1][self.number % 2]))
         elif self.name == "zomg":
             self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-8 - [0, 1][self.number % 2]))
+
+
     def move(self, direction):
         distance = 9 * SCALE
         distance_moved = (distance / self.speed)
@@ -84,7 +86,7 @@ class Enemy(pygame.sprite.Sprite):
 
             old = copy.deepcopy(self.current)
             self.current = self.path.pop(0)
-            if self.speed >= 120:
+            if self.name in ["moab", "bfb", "zomg", "lead"]:
                 self.distance_travelled = distance - self.distance_travelled
             self.distance_travelled = 0
             if old != self.current and self.name in ["moab", "bfb", "zomg"]:
@@ -161,7 +163,11 @@ class Enemy(pygame.sprite.Sprite):
         self.value = data["value"]
         self.colour = data["colour"]
         self.health = data["health"]
-        self.image = self.colourIn()
+
+        if self.name in ["moab", "bfb", "zomg"]:
+            self.image = self.image_list[self.directions.index(self.current)]
+        else:
+            self.image = self.colourIn()
 
     def getValue(self):
         return self.value
@@ -202,9 +208,9 @@ class EnemyManager:
                         "lead": {"name": "lead", "speed": 120, "value": 10, "health": 1, "colour": (120, 120, 120)},
                         "rainbow": {"name": "rainbow", "speed": 12, "value": 11, "health": 1, "colour": "rainbow"},
                         "ceramic": {"name": "ceramic", "speed": 9, "value": 12, "health": 1, "colour": (150, 100, 50)},
-                        "moab": {"name": "moab", "speed": 120, "value": 150, "health": 200, "colour": "moab"},
-                        "bfb": {"name": "bfb", "speed": 150, "value": 13, "health": 700, "colour": "bfb"},
-                        "zomg": {"name": "zomg", "speed": 180, "value": 14, "health": 4000, "colour": "zomg"}}
+                        "moab": {"name": "moab", "speed": 120, "value": 13, "health": 200, "colour": "moab"},
+                        "bfb": {"name": "bfb", "speed": 150, "value": 14, "health": 700, "colour": "bfb"},
+                        "zomg": {"name": "zomg", "speed": 180, "value": 15, "health": 4000, "colour": "zomg"}}
 
         self.sprites = pygame.sprite.Group()
         self.duped_sprites = pygame.sprite.Group()
@@ -233,10 +239,10 @@ class EnemyManager:
         # pos.x += random.randint(-1,1) * SCALE
         # pos.y += random.randint(-1,1) * SCALE
         path = copy.deepcopy(original_enemy.path)
-        count = copy.deepcopy(original_enemy.count)
         current = copy.deepcopy(original_enemy.current)
         distance_travelled = copy.deepcopy(original_enemy.distance_travelled)
-        dupe_values = {"pos":pos, "count": count, "path": path, "current": current, "distance_travelled": distance_travelled}
+        distance_travelled_total = copy.deepcopy(original_enemy.distance_travelled_total)
+        dupe_values = {"pos":pos, "path": path, "current": current, "distance_travelled": distance_travelled, "distance_travelled_total": distance_travelled_total}
         duplicate = Enemy(original_enemy.node, 0, self.number, dupe_values=dupe_values)
         return duplicate
 

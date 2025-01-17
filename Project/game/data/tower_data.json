@@ -14,7 +14,8 @@
     "camo": false,
     "main_atk": "normal",
     "main_atk_targets": [
-      "frozen"
+      "frozen",
+      "lead"
     ],
     "secondary_atk": null,
     "secondary_atk_targets": [],
