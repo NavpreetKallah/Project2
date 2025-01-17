@@ -43,10 +43,10 @@ class DefaultTower(pygame.sprite.Sprite):
     def abilityUpgrades(self, upgrade_name):
         return
 
-    def attack(self, fast_forward, angle):
-        if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
+    def attack(self, fast_forward, angle, type):
+        if time.perf_counter() - self.timer > (self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3):
             self.timer = time.perf_counter()
-            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
+            ProjectileManager.create(self.data[type], angle, self.rect.center, fast_forward)
 
     def getAngle(self, target):
         x1, y1 = self.rect.center
@@ -72,11 +72,11 @@ class DefaultTower(pygame.sprite.Sprite):
         if upgrade_info["stat_change"] is not None:
             for change in upgrade_info["stat_change"]:
                 if change["type"] == "add":
-                    self.data[change["stat"]] += change["value"]
+                    self.data[change["stat"][0]][change["stat"][1]] += change["value"]
                 elif change["type"] == "set":
-                    self.data[change["stat"]] = change["value"]
+                    self.data[change["stat"][0]][change["stat"][1]] = change["value"]
                 else:
-                    self.data[change["stat"]] *= change["value"]
+                    self.data[change["stat"][0]][change["stat"][1]] *= change["value"]
         if upgrade_info["name"] is not None:
             self.abilityUpgrades(upgrade_info["name"])
 
@@ -87,17 +87,20 @@ class DefaultTower(pygame.sprite.Sprite):
 class Wizard(DefaultTower):
     def __init__(self, data, pos):
         super().__init__(data, pos)
-        data["projectile_image"] = "wizard_main"
+        data["main"]["projectile"] = "wizard_main"
+        data["secondary"]["projectile"] = "default"
+
     def action(self, enemies, fast_forward):
-        if self.data["main_atk_speed"] == 0:
-            return
-        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
-        if enemy_info:
-            angle = round(self.getAngle(enemy_info[0].rect.center))
-            self.attack(fast_forward, angle)
-            self.image = self.images[angle % 360]
-            self.rect = self.image.get_rect(center=self.pos)
-        return 0
+        for type in ["main", "secondary"]:
+            if self.data[type]["speed"] == 0:
+                return
+            enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
+            if enemy_info:
+                angle = round(self.getAngle(enemy_info[0].rect.center))
+                self.attack(fast_forward, angle, type)
+                self.image = self.images[angle % 360]
+                self.rect = self.image.get_rect(center=self.pos)
+            return 0
 
     def abilityUpgrades(self, upgrade_name):
         print(upgrade_name)

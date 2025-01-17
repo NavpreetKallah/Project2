@@ -18,6 +18,7 @@ path = os.path.dirname(os.getcwd()) + "/textures/projectiles"
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, data, angle, pos, fast_forward):
         pygame.sprite.Sprite.__init__(self)
+        # TODO fix this
         self.main_atk = data["main_atk"]
         self.damage = data["damage"] if self.main_atk != "sniper" else 0
         self.pierce = data["pierce"]

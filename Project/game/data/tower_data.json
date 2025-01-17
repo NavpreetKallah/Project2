@@ -138,36 +138,28 @@
       "range": 10,
       "damage": 2,
       "pierce": 1,
-      "main_atk_speed": 1.6,
-      "main_atk_lifespan": 1,
-      "camo": false,
-      "main_atk": "sniper",
-      "main_atk_targets": [
-        "frozen",
-        "lead"
-      ],
-      "secondary_atk": null,
-      "secondary_atk_targets": [],
+      "main" : {"speed": 1.6, "damage": 2,"extra_damage": 0, "lifespan": 1, "type": "sniper", "targets": ["frozen", "lead"], "camo": false},
+      "secondary" : {"speed": null, "damage": null,"extra_damage": null, "lifespan": null, "type": null, "targets": null, "camo": false},
     "path_one": {
       "1": {"name": null,"cost": 295,"stat_change": [
-          {"stat": "damage","value": 4,"type": "set"},
-          {"stat": "main_atk_targets","value": [],"type": "set"}]},
+          {"stat": ["main","damage"],"value": 4,"type": "set"},
+          {"stat": ["main","targets"],"value": [],"type": "set"}]},
       "2": {"name": null,"cost": 1105,"stat_change": [
-          {"stat": "damage","value": 7,"type": "set"}]},
+          {"stat": ["main","damage"],"value": 7,"type": "set"}]},
       "3": {"name": null,"cost": 2550,"stat_change": [
-          {"stat": "damage","value": 20,"type": "set"}]},
+          {"stat": ["main","damage"],"value": 20,"type": "set"}]},
       "4": {"name": null,"cost": 4800,"stat_change": [
-          {"stat": "damage","value": 30,"type": "set"}]}
+          {"stat": ["main","damage"],"value": 30,"type": "set"}]}
     },
     "path_two": {
       "1": {"name": null,"cost": 380,"stat_change": [
-          {"stat": "main_atk_speed","value": 0.7,"type": "multiply"}]},
+          {"stat": ["main","speed"],"value": 0.7,"type": "multiply"}]},
       "2": {"name": null,"cost": 380,"stat_change": [
-          {"stat": "main_atk_speed","value": 0.7,"type": "multiply"}]},
+          {"stat": ["main","speed"],"value": 0.7,"type": "multiply"}]},
       "3": {"name": null,"cost": 2465,"stat_change": [
-          {"stat": "main_atk_speed","value": 0.33,"type": "multiply"}]},
+          {"stat": ["main","speed"],"value": 0.33,"type": "multiply"}]},
       "4": {"name": null,"cost": 3485,"stat_change": [
-          {"stat": "main_atk_speed","value": 0.5,"type": "multiply"}]}
+          {"stat": ["main","speed"],"value": 0.5,"type": "multiply"}]}
     }
     },
     "Druid": {
