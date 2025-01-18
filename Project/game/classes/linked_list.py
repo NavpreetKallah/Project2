@@ -1,6 +1,7 @@
 class Cell:
     def __init__(self, data):
         self.data = data
+        self.prev = None
         self.next = None
 
 
@@ -19,3 +20,4 @@ class LinkedList:
             current_cell = current_cell.next
 
         current_cell.next = new_cell
+        new_cell.prev = current_cell

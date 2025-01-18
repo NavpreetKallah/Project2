@@ -82,13 +82,23 @@ class Round:
         enemy = self.enemy_creator[colour]["weight"]
         if self.valueLeft - enemy >= 0:
             self.valueLeft -= enemy
-            manager.create(self.enemies[colour], self.generateDelay(colour))
+            manager.create(self.enemies[colour], self.generateDelay(colour), self.generateProperties(colour))
             self.generateEnemies(manager)
 
     def generateDelay(self, colour):
         return random.uniform(self.enemy_creator[colour]["min_delay"], self.enemy_creator[colour]["max_delay"])
         # return 0.1
 
+    def generateProperties(self, colour):
+        properties = {"camo": False, "regen": False}
+        if colour not in ["moab","bfb","zomg"]:
+            if self.current_round > 20:
+                if random.randint(self.current_round,max(50,self.current_round)) == max(50,self.current_round):
+                    properties["regen"] = True
+            if self.current_round > 30:
+                if random.randint(self.current_round,max(50,self.current_round)) == max(50,self.current_round):
+                    properties["regen"] = True
+        return properties
     @property
     def getStarted(self):
         return self.round_started

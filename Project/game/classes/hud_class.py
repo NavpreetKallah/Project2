@@ -98,6 +98,14 @@ class Hud:
         img_copy.blit(color_change_surf, (0, 0))
         return img_copy
 
+    def setDifficulty(self, difficulty):
+        if difficulty == "easy":
+            self.difficulty_multiplier = 1
+        elif difficulty == "medium":
+            self.difficulty_multiplier = 1.15
+        else:
+            self.difficulty_multiplier = 1.3
+
     def seperate_sheet(self, sheet, width):
         images = []
         amount = sheet.get_width() // width
@@ -142,7 +150,7 @@ class Hud:
         surface = pygame.Surface((31 * SCALE, 93 * SCALE), pygame.SRCALPHA).convert_alpha()
         for tower in self.tower_dict.values():
             if not tower["locked"]:
-                if tower["cost"] > self.money:
+                if round(tower["cost"] * self.difficulty_multiplier) > self.money:
                     surface.blit(tower["icon_red"], tower["pos"])
                 else:
                     surface.blit(tower["icon_green"], tower["pos"])
@@ -162,7 +170,7 @@ class Hud:
                 surface.blit(self.upgrade_icons["max"], icon_position)
             else:
                 upgrade_info = self.Tower.data[path_name][str(upgrade+1)]
-                cost = upgrade_info["cost"]
+                cost = round(upgrade_info["cost"] * self.difficulty_multiplier)
                 text = self.createNumber(cost, 0)
                 length = len(str(cost))
                 surface.blit(self.upgrade_backgrounds[length-3], (round(self.upgrade_cost_positions[length-3]*SCALE),y_pos*SCALE))
@@ -281,7 +289,7 @@ class Hud:
         for tower, info in self.tower_dict.items():
             if not info["locked"] and info["rect"].collidepoint(
                     (mouse[0] - 129 * SCALE, mouse[1] - 12 * SCALE)) and not self.upgrade:
-                if self.money >= info["cost"]:
+                if self.money >= round(info["cost"] * self.difficulty_multiplier):
                     return tower
 
     # TODO rename disable and enable speed

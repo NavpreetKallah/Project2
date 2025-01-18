@@ -24,8 +24,9 @@ ProjectileManager = ProjectileManager()
 
 class DefaultTower(pygame.sprite.Sprite):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, data, pos):
+    def __init__(self, data, pos, difficulty_multiplier):
         pygame.sprite.Sprite.__init__(self)
+        self.difficulty_multiplier = difficulty_multiplier
         self.data = data
         self.upgrades = {"path_one":0,"path_two":0}
         self.image = data["icon"]
@@ -50,7 +51,7 @@ class DefaultTower(pygame.sprite.Sprite):
     def attack(self, fast_forward, angle, type):
         if time.perf_counter() - self.timers[type] > ((self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3) * random.uniform(0.9,1.1)):
             self.timers[type] = time.perf_counter()
-            ProjectileManager.create(self.data[type], angle, self.rect.center, fast_forward)
+            ProjectileManager.create(self.data[type], self.data["camo"], angle, self.rect.center, fast_forward)
 
     def getAngle(self, target):
         x1, y1 = self.rect.center
@@ -70,7 +71,7 @@ class DefaultTower(pygame.sprite.Sprite):
             return 0
 
         upgrade_info = self.data[path][str(self.upgrades[path] + 1)]
-        if upgrade_info["cost"] > money:
+        if round(upgrade_info["cost"] * self.difficulty_multiplier) > money:
             return 0
 
         if upgrade_info["stat_change"] is not None:
@@ -81,6 +82,8 @@ class DefaultTower(pygame.sprite.Sprite):
 
                 if change["stat"] == "range":
                     self.data[stat] += value
+                elif change["stat"] == "camo":
+                    self.data[stat] = value
                 elif change["type"] == "add":
                     self.data[attack][stat] += value
                 elif change["type"] == "set":
@@ -92,12 +95,12 @@ class DefaultTower(pygame.sprite.Sprite):
             self.abilityUpgrades(upgrade_info["name"])
 
         self.upgrades[path] += 1
-        self._total_cost += upgrade_info["cost"]
+        self._total_cost += round(upgrade_info["cost"]  * self.difficulty_multiplier)
         return upgrade_info["cost"]
 
 class Wizard(DefaultTower):
-    def __init__(self, data, pos):
-        super().__init__(data, pos)
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "wizard_main"
         data["secondary"]["projectile"] = "wizard_fireball"
 
@@ -105,7 +108,7 @@ class Wizard(DefaultTower):
         for type in ["main", "secondary"]:
             if self.data[type]["speed"] == 0:
                 return 0
-            enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
+            enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"] and (not enemy.camo or self.data["camo"])]
             if enemy_info:
                 angle = round(self.getAngle(enemy_info[0].rect.center))
                 self.attack(fast_forward, angle, type)
@@ -117,8 +120,8 @@ class Wizard(DefaultTower):
         print(upgrade_name)
 
 class Dart(DefaultTower):
-    def __init__(self, data, pos):
-        super().__init__(data, pos)
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
         data["projectile_image"] = "default"
     def action(self, enemies, fast_forward):
         if self.data["main_atk_speed"] == 0:
@@ -135,28 +138,31 @@ class Dart(DefaultTower):
         print(upgrade_name)
 
 class Sniper(DefaultTower):
-    def __init__(self, data, pos):
-        super().__init__(data, pos)
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "default"
 
     def action(self, enemies, fast_forward):
-        enemies = sorted(enemies, key=lambda enemy: enemy.value, reverse=True)
+        enemies = sorted([enemy for enemy in enemies if (not enemy.camo or self.data["camo"])], key=lambda enemy: (enemy.value, enemy.distance_travelled_total), reverse=True)
+        if not enemies:
+            return 0
         angle = round(self.getAngle(enemies[0].rect.center))
         self.image = self.images[angle % 360]
         self.rect = self.image.get_rect(center=self.pos)
         if time.perf_counter() - self.timers["main"] > (
         self.data["main"]["speed"] if not fast_forward else self.data["main"]["speed"] / 3):
-            ProjectileManager.create(self.data["main"], angle, self.rect.center, fast_forward)
+            ProjectileManager.create(self.data["main"], self.data["camo"], angle, self.rect.center, fast_forward)
             self.timers["main"] = time.perf_counter() + random.uniform(-0.01, 0.01)
-            return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["main"]["camo"])
+            return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["camo"])
         return 0
 
     def abilityUpgrades(self, upgrade_name):
         print(upgrade_name)
 
 class Tower(pygame.sprite.Sprite):
-    def __init__(self, data, pos):
+    def __init__(self, data, pos, difficulty_multiplier):
         pygame.sprite.Sprite.__init__(self)
+        self.difficulty_multiplier = difficulty_multiplier
         self.data = data
         self.upgrades = {"path_one":0,"path_two":0}
         self.image = data["icon"]
@@ -169,7 +175,7 @@ class Tower(pygame.sprite.Sprite):
     def attack(self, fast_forward, angle):
         if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
             self.timer = time.perf_counter()
-            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
+            ProjectileManager.create(self.data, self.rect.center, fast_forward)
 
     def upgrade(self, path, money):
         upgrade_info = self.data[path][str(self.upgrades[path]+1)]
@@ -252,6 +258,8 @@ class TowerManager:
         tower_icons = {tower_name: tower_icons[i] for i, tower_name in enumerate(data)}
         for tower_name, tower_info in data.items():
             data[tower_name]["icon"] = tower_icons[tower_name]
+
+        self.difficulty_multiplier = 1.3
         self.tower_dict = data
         self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard}
         self.money = 0
@@ -265,7 +273,7 @@ class TowerManager:
     def create(self):
         if self.placing_tower and self.tower_pos:
             tower_data = {info: (value if isinstance(value, pygame.Surface) else copy.deepcopy(value)) for info, value in self.tower_dict[self.placing_tower].items()}
-            self.sprites.add(self.tower_class_dict[self.placing_tower](tower_data, self.tower_pos))
+            self.sprites.add(self.tower_class_dict[self.placing_tower](tower_data, self.tower_pos, self.difficulty_multiplier))
             self.images.append(self.tower_dict[self.placing_tower]["icon"])
             self.placing_tower = None
             self.placing = False
@@ -303,7 +311,7 @@ class TowerManager:
         self.tower_pos = corrected_mouse if valid else None
 
     def getCost(self):
-        return self.tower_dict[self.placing_tower]["cost"]
+        return round(self.tower_dict[self.placing_tower]["cost"] * self.difficulty_multiplier)
 
     def resetPlacing(self):
         self.placing_tower = None

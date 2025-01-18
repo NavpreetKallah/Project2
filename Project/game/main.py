@@ -50,7 +50,8 @@ class Game:
         self.fast_forward = False
         self.main_menu_option = "play"
         self.map_option = "cornfield"
-        self.difficulty_option = "easy"
+        self.difficulty_option = "hard"
+        self.difficulty_multiplier = 1.3
         self.fps_counter = 0
         self.fps = 60
         self.fps_timer = time.perf_counter()
@@ -94,6 +95,7 @@ class Game:
 
         if not self.hud_initialise and self.difficulty_option and self.map_option:
             Hud.initialiseHud(Renderer.getLayer("HUD"))
+            Hud.setDifficulty(self.difficulty_option)
             Hud.updateMoney(self.money)
             Hud.updateRound(self.round)
             Hud.updateHealth(self.health)
