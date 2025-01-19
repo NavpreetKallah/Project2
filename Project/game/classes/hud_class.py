@@ -48,6 +48,8 @@ class Hud:
 
         self.upgrade_icons = {"range": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/range.png").convert_alpha(),SCALE),
                               "damage": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/damage.png").convert_alpha(),SCALE),
+                              "burst": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/burst.png").convert_alpha(),SCALE),
+                              "stun": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/stun.png").convert_alpha(),SCALE),
                               "speed": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/atk_speed.png").convert_alpha(),SCALE),
                               "camo": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/camo.png").convert_alpha(),SCALE),
                               "pierce": pygame.transform.scale_by(pygame.image.load_extended(f"{path}/upgrade_icons/pierce.png").convert_alpha(),SCALE),
@@ -203,6 +205,7 @@ class Hud:
                 self.sell = False
                 total_cost = round(self.Tower.total_cost * 0.7)
                 self.Tower.kill()
+                self.Tower = None
                 self.upgrade = False
                 return total_cost
         else:
@@ -255,7 +258,7 @@ class Hud:
     def sellClicked(self):
         mouse = pygame.mouse.get_pos()
         sell = pygame.Rect(131*SCALE,90*SCALE,25*SCALE,11*SCALE)
-        if sell.collidepoint(mouse):
+        if sell.collidepoint(mouse) and self.upgrade:
             self.sell = True
             return "sell"
 

@@ -116,7 +116,6 @@ class Game:
         #print(self.clock.get_fps())
         self.fps_counter += self.clock.get_fps()
         if time.perf_counter() - self.fps_timer > 1:
-            #print(self.fps_counter//(self.fps*5))
             self.fps_timer = time.perf_counter()
             self.fps_counter = 0
 

@@ -2,6 +2,7 @@ import json
 import os
 import abc, copy
 import time
+from abc import ABCMeta
 from math import atan2, degrees, pi
 
 import pygame
@@ -37,9 +38,19 @@ class DefaultTower(pygame.sprite.Sprite):
         self.timers = {"main": time.perf_counter(), "secondary": time.perf_counter()}
         self.images = [pygame.transform.rotate(self.image, i) for i in range(1, 361)]
 
-    @abc.abstractmethod
     def action(self, enemies, fast_forward):
-        return
+        for type in ["main", "secondary"]:
+            if self.data[type]["speed"] == 0:
+                return 0
+            enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(
+                pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"] and (
+                                      not enemy.camo or self.data["camo"])]
+            if enemy_info:
+                angle = round(self.getAngle(enemy_info[0].rect.center))
+                self.attack(fast_forward, angle, type)
+                self.image = self.images[angle % 360]
+                self.rect = self.image.get_rect(center=self.pos)
+        return 0
 
     @abc.abstractmethod
     def abilityUpgrades(self, upgrade_name):
@@ -52,6 +63,7 @@ class DefaultTower(pygame.sprite.Sprite):
         if time.perf_counter() - self.timers[type] > ((self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3) * random.uniform(0.9,1.1)):
             self.timers[type] = time.perf_counter()
             ProjectileManager.create(self.data[type], self.data["camo"], angle, self.rect.center, fast_forward)
+
 
     def getAngle(self, target):
         x1, y1 = self.rect.center
@@ -98,49 +110,82 @@ class DefaultTower(pygame.sprite.Sprite):
         self._total_cost += round(upgrade_info["cost"]  * self.difficulty_multiplier)
         return upgrade_info["cost"]
 
-class Wizard(DefaultTower):
+
+
+class Wizard(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "wizard_main"
         data["secondary"]["projectile"] = "wizard_fireball"
 
-    def action(self, enemies, fast_forward):
-        for type in ["main", "secondary"]:
-            if self.data[type]["speed"] == 0:
-                return 0
-            enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"] and (not enemy.camo or self.data["camo"])]
-            if enemy_info:
-                angle = round(self.getAngle(enemy_info[0].rect.center))
-                self.attack(fast_forward, angle, type)
-                self.image = self.images[angle % 360]
-                self.rect = self.image.get_rect(center=self.pos)
-        return 0
 
-    def abilityUpgrades(self, upgrade_name):
-        print(upgrade_name)
+class Druid(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "druid_main"
+        data["secondary"]["projectile"] = "default"
+
+class Dartling(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
+
+class Ice(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "ice_main"
+        data["secondary"]["projectile"] = "default"
+
+
+class Mortar(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
+
+class Ninja(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "ninja_main"
+        data["secondary"]["projectile"] = "default"
+
+class Alchemist(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
+
+class Super(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
+
+class Farm(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
+
+class Village(DefaultTower, metaclass=ABCMeta):
+    def __init__(self, data, pos, difficulty_multiplier):
+        super().__init__(data, pos, difficulty_multiplier)
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
+
 
 class Dart(DefaultTower):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
-        data["projectile_image"] = "default"
-    def action(self, enemies, fast_forward):
-        if self.data["main_atk_speed"] == 0:
-            return
-        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"] + (1*SCALE if enemy.name in ["moab","bfb","zomg"] else 0)]
-        if enemy_info:
-            angle = round(self.getAngle(enemy_info[0].rect.center))
-            self.attack(fast_forward, angle)
-            self.image = self.images[angle % 360]
-            self.rect = self.image.get_rect(center=self.pos)
-        return 0
+        data["main"]["projectile_image"] = "default"
+        data["secondary"]["projectile_image"] = "default"
 
-    def abilityUpgrades(self, upgrade_name):
-        print(upgrade_name)
 
 class Sniper(DefaultTower):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
-        data["main"]["projectile"] = "default"
+        data["main"]["projectile"] = "sniper_main"
 
     def action(self, enemies, fast_forward):
         enemies = sorted([enemy for enemy in enemies if (not enemy.camo or self.data["camo"])], key=lambda enemy: (enemy.value, enemy.distance_travelled_total), reverse=True)
@@ -156,8 +201,6 @@ class Sniper(DefaultTower):
             return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["camo"])
         return 0
 
-    def abilityUpgrades(self, upgrade_name):
-        print(upgrade_name)
 
 class Tower(pygame.sprite.Sprite):
     def __init__(self, data, pos, difficulty_multiplier):
@@ -261,7 +304,7 @@ class TowerManager:
 
         self.difficulty_multiplier = 1.3
         self.tower_dict = data
-        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard}
+        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard, "Druid": Druid, "Ninja": Ninja, "Farm": Farm, "Village": Village, "Super": Super, "Mortar": Mortar, "Dartling": Dartling, "Alchemist": Alchemist, "Ice": Ice}
         self.money = 0
         self.placing = False
         self.placing_tower = None
