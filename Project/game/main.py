@@ -59,7 +59,7 @@ class Game:
         self.running = True
         self.round = 0
         self.health = 100
-        self.money = 100000
+        self.money = 500000
         self.autoplay = False
 
         title = "Balloons"

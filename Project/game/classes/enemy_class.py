@@ -24,6 +24,12 @@ class Enemy(pygame.sprite.Sprite):
         self.properties = properties
         self.camo = properties["camo"]
         self.regen = properties["regen"]
+        self.cooldown_timer = time.perf_counter()
+        self.cooldown_duration = 3
+        self.freezable = True
+        self.freeze_timer = time.perf_counter()
+        self.frozen = False
+        self.freeze_duration = 1
         self.regen_timer = time.perf_counter()
         self.name = data["name"]
         self.speed = data["speed"]
@@ -80,6 +86,18 @@ class Enemy(pygame.sprite.Sprite):
 
 
     def move(self, direction):
+        if self.name not in ["moab", "bfb", "zomg"]:
+            if time.perf_counter() - self.cooldown_timer > self.cooldown_duration:
+                self.freezable = True
+
+            if self.frozen and self.freezable:
+                self.freeze_timer = time.perf_counter()
+                if time.perf_counter() - self.freeze_timer > self.freeze_duration:
+                    self.freezable = False
+                    self.frozen = False
+                    self.cooldown_timer = time.perf_counter() - self.freeze_duration
+                else:
+                    return
         distance = 9 * SCALE
         distance_moved = (distance / self.speed)
         self.distance_travelled += distance_moved
@@ -197,6 +215,8 @@ class Enemy(pygame.sprite.Sprite):
         money = 0
         if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
             return 0
+
+        self.frozen = True
         if self.name in ["moab","bfb","zomg"]:
             damage += extra
         for _ in range(damage):
@@ -346,12 +366,12 @@ class EnemyManager:
                 self.kill_list.append(enemy)
 
             if enemy.dupe:
-                for i in range(enemy.dupe_amount):
+                for _ in range(enemy.dupe_amount):
                     self.sprites.add(self.duplicate(enemy))
                 enemy.setDupe(False)
 
             if enemy.regen:
-                if time.perf_counter() - enemy.regen_timer > 3/ (3 if self.speedup else 1):
+                if time.perf_counter() - enemy.regen_timer > 1/(3 if self.speedup else 1):
                     enemy.regen_timer = time.perf_counter()
                     enemy.heal()
     def update(self, layer, Map):

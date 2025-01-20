@@ -178,8 +178,8 @@ class Village(DefaultTower, metaclass=ABCMeta):
 class Dart(DefaultTower):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
-        data["main"]["projectile_image"] = "default"
-        data["secondary"]["projectile_image"] = "default"
+        data["main"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "default"
 
 
 class Sniper(DefaultTower):
@@ -196,7 +196,9 @@ class Sniper(DefaultTower):
         self.rect = self.image.get_rect(center=self.pos)
         if time.perf_counter() - self.timers["main"] > (
         self.data["main"]["speed"] if not fast_forward else self.data["main"]["speed"] / 3):
-            ProjectileManager.create(self.data["main"], self.data["camo"], angle, self.rect.center, fast_forward)
+            fake_projectile_data = copy.deepcopy(self.data["main"])
+            fake_projectile_data["damage"] = 0
+            ProjectileManager.create(fake_projectile_data, self.data["camo"], angle, self.rect.center, fast_forward)
             self.timers["main"] = time.perf_counter() + random.uniform(-0.01, 0.01)
             return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["camo"])
         return 0
