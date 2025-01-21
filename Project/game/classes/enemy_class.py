@@ -13,11 +13,12 @@ LinkedList = LinkedList()
 
 path = os.path.dirname(os.getcwd()) + "/textures/enemies"
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node, spawn_delay, properties,enemy_number, dupe_values=None):
+    def __init__(self, node, spawn_delay, properties,enemy_number, fast_forward, dupe_values=None):
         pygame.sprite.Sprite.__init__(self)
         self.spawn_delay = spawn_delay
         self.node = node
         data = self.node.data
+        self.fast_forward = fast_forward
         self.number = enemy_number
         self.dupe = False
         self.frozen = False
@@ -25,11 +26,9 @@ class Enemy(pygame.sprite.Sprite):
         self.camo = properties["camo"]
         self.regen = properties["regen"]
         self.cooldown_timer = -10
-        self.cooldown_duration = 3
-        self.freezable = True
         self.freeze_timer = None
         self.frozen = False
-        self.freeze_duration = 1
+        self.freeze_duration = 1 if not self.fast_forward else 1/3
         self.regen_timer = time.perf_counter()
         self.name = data["name"]
         self.speed = data["speed"]
@@ -85,7 +84,18 @@ class Enemy(pygame.sprite.Sprite):
             self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-8 - [0, 1][self.number % 2]))
 
 
+    def check_freeze(self):
+        if self.freeze_timer and time.perf_counter() - self.freeze_timer > self.freeze_duration:
+            self.freeze_timer = None
+            self.frozen = False
+            self.cooldown_timer = time.perf_counter()
+        elif self.frozen:
+            return True
+
     def move(self, direction):
+        if self.check_freeze():
+            return
+
         distance = 9 * SCALE
         distance_moved = (distance / self.speed)
         self.distance_travelled += distance_moved
@@ -199,19 +209,19 @@ class Enemy(pygame.sprite.Sprite):
                 image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
                 return image
 
-    def freeze(self):
+    def freeze(self, projectile):
+
+        cooldown_duration = projectile.data["cooldown"]*3 if self.fast_forward else projectile.data["cooldown"]
+        self.freeze_duration = projectile.data["freeze"]/3 if self.fast_forward else projectile.data["freeze"]
+
+
         if self.name not in ["moab", "bfb", "zomg"]:
-            if time.perf_counter() - self.cooldown_timer > 1 and self.name != "white":
+            if time.perf_counter() - self.cooldown_timer > cooldown_duration and self.name != "white":
                 self.frozen = True
             if self.frozen:
                 if not self.freeze_timer:
                     self.freeze_timer = time.perf_counter()
-                if time.perf_counter() - self.freeze_timer > self.freeze_duration:
-                    self.freeze_timer = None
-                    self.frozen = False
-                    self.cooldown_timer = time.perf_counter()
-                else:
-                    return
+
     def take_damage(self, damage, extra, targets, camo):
         money = 0
         if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
@@ -309,7 +319,7 @@ class EnemyManager:
         while current_node.data != data:
             current_node = current_node.next
         current_node.prev = None
-        self.enemy_list.append(Enemy(current_node, delay, properties, self.number))
+        self.enemy_list.append(Enemy(current_node, delay, properties, self.speedup,self.number))
         self.number += 1
 
     def duplicate(self, original_enemy):
@@ -323,7 +333,7 @@ class EnemyManager:
         distance_travelled_total = copy.deepcopy(original_enemy.distance_travelled_total)
         dupe_values = {"pos":pos, "path": path, "current": current, "distance_travelled": distance_travelled, "distance_travelled_total": distance_travelled_total}
         properties = copy.deepcopy(original_enemy.properties)
-        duplicate = Enemy(original_enemy.node, 0, properties, self.number, dupe_values=dupe_values)
+        duplicate = Enemy(original_enemy.node, 0, properties, self.number, self.speedup,dupe_values=dupe_values)
         return duplicate
 
 

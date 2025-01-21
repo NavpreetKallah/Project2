@@ -18,6 +18,7 @@ path = os.path.dirname(os.getcwd()) + "/textures/projectiles"
 class DefaultProjectile(pygame.sprite.Sprite):
     def __init__(self, data, camo, angle, pos, fast_forward):
         pygame.sprite.Sprite.__init__(self)
+        self.data = data
         self.type = data["type"]
         self.damage = data["damage"]
         self.pierce = data["pierce"]
@@ -71,7 +72,8 @@ class ProjectileManager:
         self.projectile_types = {
             "default": DefaultProjectile,
             "homing": Homing,
-            "explosion": Explosion
+            "explosion": Explosion,
+            "freeze": Freeze
         }
         self.money = 0
 
@@ -150,4 +152,18 @@ class Explosion(DefaultProjectile):
                 self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo)
         return self.money
 
+class Freeze(DefaultProjectile):
+    def __init__(self, data, camo, angle, pos, fast_forward):
+        super().__init__(data, camo, angle, pos, fast_forward)
 
+    def hit(self, enemies):
+        self.money = 0
+        for enemy in enemies:
+            if enemy not in self.collided and (not enemy.camo or self.camo):
+                self.collided.append(enemy)
+                self.pierce -= 1
+                if self.pierce == 0:
+                    self.kill()
+                enemy.freeze(self)
+                self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo)
+        return self.money

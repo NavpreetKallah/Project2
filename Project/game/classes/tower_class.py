@@ -108,9 +108,8 @@ class DefaultTower(pygame.sprite.Sprite):
             self.abilityUpgrades(upgrade_info["name"])
 
         self.upgrades[path] += 1
-        self._total_cost += round(upgrade_info["cost"]  * self.difficulty_multiplier)
+        self._total_cost += round(upgrade_info["cost"] * self.difficulty_multiplier)
         return upgrade_info["cost"]
-
 
 
 class Wizard(DefaultTower, metaclass=ABCMeta):
@@ -126,11 +125,20 @@ class Druid(DefaultTower, metaclass=ABCMeta):
         data["main"]["projectile"] = "druid_main"
         data["secondary"]["projectile"] = "default"
 
+
 class Dartling(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "default"
-        data["secondary"]["projectile"] = "default"
+
+    def action(self, enemies, fast_forward):
+        angle = round(self.getAngle(pygame.mouse.get_pos()))
+        self.image = self.images[angle % 360]
+        self.rect = self.image.get_rect(center=self.pos)
+        angle += random.randint(-self.data["main"]["deviation"], self.data["main"]["deviation"])
+        self.attack(fast_forward, angle, "main")
+        return 0
+
 
 class Ice(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
@@ -145,11 +153,13 @@ class Mortar(DefaultTower, metaclass=ABCMeta):
         data["main"]["projectile"] = "default"
         data["secondary"]["projectile"] = "default"
 
+
 class Ninja(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "ninja_main"
         data["secondary"]["projectile"] = "default"
+
 
 class Alchemist(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
@@ -157,17 +167,20 @@ class Alchemist(DefaultTower, metaclass=ABCMeta):
         data["main"]["projectile"] = "default"
         data["secondary"]["projectile"] = "default"
 
+
 class Super(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "default"
         data["secondary"]["projectile"] = "default"
 
+
 class Farm(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "default"
         data["secondary"]["projectile"] = "default"
+
 
 class Village(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
@@ -217,27 +230,6 @@ class Tower(pygame.sprite.Sprite):
         self.image_copy = self.image
         self.timer = time.perf_counter()
         self.images = [pygame.transform.rotate(self.image, i) for i in range(1, 361)]
-
-    def attack(self, fast_forward, angle):
-        if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
-            self.timer = time.perf_counter()
-            ProjectileManager.create(self.data, self.rect.center, fast_forward)
-
-    def upgrade(self, path, money):
-        upgrade_info = self.data[path][str(self.upgrades[path]+1)]
-        if upgrade_info["cost"] > money:
-            return 0
-
-        print(self.upgrades[path])
-        if upgrade_info["name"] is None:
-            for change in upgrade_info["stat_change"]:
-                if change["type"] == "add":
-                    self.data[change["stat"]] += change["value"]
-                elif change["type"] == "set":
-                    self.data[change["stat"]] = change["value"]
-                else:
-                    self.data[change["stat"]] *= change["value"]
-        return upgrade_info["cost"]
 
     def action(self, enemies, fast_forward):
         if self.data["main_atk"] == "normal":
@@ -307,7 +299,7 @@ class TowerManager:
 
         self.difficulty_multiplier = 1.3
         self.tower_dict = data
-        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard, "Druid": Druid, "Ninja": Ninja, "Farm": Farm, "Village": Village, "Super": Super, "Mortar": Mortar, "Dartling": Dartling, "Alchemist": Alchemist, "Ice": Ice}
+        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard, "Druid": Druid, "Ninja": Ninja, "Farm": Farm, "Village": Village, "Super": Super, "Mortar": Mortar, "Dartling gunner": Dartling, "Alchemist": Alchemist, "Ice": Ice}
         self.money = 0
         self.placing = False
         self.placing_tower = None
