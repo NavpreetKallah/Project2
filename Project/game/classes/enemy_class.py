@@ -24,10 +24,10 @@ class Enemy(pygame.sprite.Sprite):
         self.properties = properties
         self.camo = properties["camo"]
         self.regen = properties["regen"]
-        self.cooldown_timer = time.perf_counter()
+        self.cooldown_timer = -10
         self.cooldown_duration = 3
         self.freezable = True
-        self.freeze_timer = time.perf_counter()
+        self.freeze_timer = None
         self.frozen = False
         self.freeze_duration = 1
         self.regen_timer = time.perf_counter()
@@ -86,18 +86,6 @@ class Enemy(pygame.sprite.Sprite):
 
 
     def move(self, direction):
-        if self.name not in ["moab", "bfb", "zomg"]:
-            if time.perf_counter() - self.cooldown_timer > self.cooldown_duration:
-                self.freezable = True
-
-            if self.frozen and self.freezable:
-                self.freeze_timer = time.perf_counter()
-                if time.perf_counter() - self.freeze_timer > self.freeze_duration:
-                    self.freezable = False
-                    self.frozen = False
-                    self.cooldown_timer = time.perf_counter() - self.freeze_duration
-                else:
-                    return
         distance = 9 * SCALE
         distance_moved = (distance / self.speed)
         self.distance_travelled += distance_moved
@@ -211,12 +199,26 @@ class Enemy(pygame.sprite.Sprite):
                 image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
                 return image
 
+    def freeze(self):
+        if self.name not in ["moab", "bfb", "zomg"]:
+            if time.perf_counter() - self.cooldown_timer > 1 and self.name != "white":
+                self.frozen = True
+            if self.frozen:
+                if not self.freeze_timer:
+                    self.freeze_timer = time.perf_counter()
+                if time.perf_counter() - self.freeze_timer > self.freeze_duration:
+                    self.freeze_timer = None
+                    self.frozen = False
+                    self.cooldown_timer = time.perf_counter()
+                else:
+                    return
     def take_damage(self, damage, extra, targets, camo):
         money = 0
         if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
             return 0
 
-        self.frozen = True
+
+
         if self.name in ["moab","bfb","zomg"]:
             damage += extra
         for _ in range(damage):

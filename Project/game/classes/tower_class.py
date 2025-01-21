@@ -55,6 +55,7 @@ class DefaultTower(pygame.sprite.Sprite):
     @abc.abstractmethod
     def abilityUpgrades(self, upgrade_name):
         return
+
     @property
     def total_cost(self):
         return self._total_cost
