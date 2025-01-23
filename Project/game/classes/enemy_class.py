@@ -13,13 +13,14 @@ LinkedList = LinkedList()
 
 path = os.path.dirname(os.getcwd()) + "/textures/enemies"
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node, spawn_delay, properties,enemy_number, fast_forward, dupe_values=None):
+    def __init__(self, node, spawn_delay, properties, cash_per_layer, enemy_number, fast_forward, dupe_values=None):
         pygame.sprite.Sprite.__init__(self)
         self.spawn_delay = spawn_delay
         self.node = node
         data = self.node.data
         self.fast_forward = fast_forward
         self.number = enemy_number
+        self.cash_per_layer = cash_per_layer
         self.dupe = False
         self.frozen = False
         self.properties = properties
@@ -73,15 +74,15 @@ class Enemy(pygame.sprite.Sprite):
 
     def set_position(self):
         if not self.name in ["moab","bfb","zomg"] and not self.regen:
-            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-4 - [0, 1][self.number % 2]))
+            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-4))
         elif self.regen:
-            self.pos = pygame.Vector2(SCALE * (11 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-5 - [0, 1][self.number % 2]))
+            self.pos = pygame.Vector2(SCALE * (11 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-5))
         elif self.name == "moab":
-            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-7 - [0, 1][self.number % 2]))
+            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-7))
         elif self.name == "bfb":
-            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-10 - [0, 1][self.number % 2]))
+            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-10))
         elif self.name == "zomg":
-            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-8 - [0, 1][self.number % 2]))
+            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-8))
 
 
     def check_freeze(self):
@@ -113,8 +114,7 @@ class Enemy(pygame.sprite.Sprite):
 
             old = copy.deepcopy(self.current)
             self.current = self.path.pop(0)
-            if self.name != "blue":
-                self.distance_travelled = distance - self.distance_travelled
+            self.distance_travelled = distance - self.distance_travelled
             self.distance_travelled = 0
             if old != self.current and self.name in ["moab", "bfb", "zomg"]:
                 self.pos.x, self.pos.y = (self.pos.x // SCALE) * SCALE, (self.pos.y // SCALE) * SCALE
@@ -222,53 +222,61 @@ class Enemy(pygame.sprite.Sprite):
                 if not self.freeze_timer:
                     self.freeze_timer = time.perf_counter()
 
-    def take_damage(self, damage, extra, targets, camo):
+    def take_damage(self, damage, extra, targets, camo, money_modifier=1):
         money = 0
         if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
             return 0
-
-
 
         if self.name in ["moab","bfb","zomg"]:
             damage += extra
         for _ in range(damage):
             self.health -= 1
             if self.health == 0:
-                money += 1
+                money += self.cash_per_layer * money_modifier
                 if not self.node.next:
                     self.kill()
                     return money
                 original_name = copy.deepcopy(self.name)
 
-                self.node = self.node.next if self.name != "rainbow" else self.node.next.next.next
+                if self.name == "rainbow":
+                    self.node = self.node.next.next.next
+                elif self.name == "white":
+                    self.node = self.node.next.next
+                else:
+                    self.node = self.node.next
                 self.new_node()
-                if original_name in ["moab","bfb","zomg","rainbow","ceramic"]:
+                if original_name in ["moab","bfb","zomg","rainbow","ceramic","zebra","black","white"]:
                     return money
 
         return money
 
     def new_node(self):
         self.children()
+        self.fixPositions()
         data = self.node.data
         self.name = data["name"]
         self.speed = data["speed"]
         self.value = data["value"]
         self.colour = data["colour"]
         self.health = data["health"]
-
+        self.image = self.colourIn()
         if self.name in ["moab", "bfb", "zomg"]:
+            self.image_list = [pygame.transform.rotate(self.image, i * 90) for i in range(4)]
             self.image = self.image_list[self.directions.index(self.current)]
-        else:
-            self.image = self.colourIn()
+
+    def fixPositions(self):
+        if self.name in ["moab", "bfb", "zomg"]:
+            pos_differences = {"moab": {"x": 2, "y": 2}, "bfb": {"x": 2, "y": 2}, "zomg": {"x": 0, "y": -2}}
+            self.pos.x += pos_differences[self.name]["x"] * SCALE
+            self.pos.y += pos_differences[self.name]["y"] * SCALE
 
     def getValue(self):
         return self.value
 
     def children(self):
-        if self.name in ["rainbow", "zebra","ceramic","moab","bfb","zomg"]:
-            self.duper = copy.deepcopy(self.name)
+        if self.name in ["rainbow", "zebra", "ceramic","moab","bfb","zomg", "black", "white"]:
             self.dupe = True
-            self.dupe_amount = 1 if self.name in ["rainbow", "zebra", "ceramic"] else 3
+            self.dupe_amount = 1 if self.name in ["rainbow", "zebra", "ceramic", "black", "white"] else 3
 
     def getSpawnDelay(self):
         return self.spawn_delay
@@ -293,10 +301,10 @@ class EnemyManager:
                         "green": {"name": "green", "speed": 24, "value": 3, "health": 1, "colour": (0, 255, 0)},
                         "yellow": {"name": "yellow", "speed": 21, "value": 4, "health": 1, "colour": (255, 215, 0)},
                         "pink": {"name": "pink", "speed": 18, "value": 5, "health": 1, "colour": (255, 136, 136)},
-                        "black": {"name": "black", "speed": 15, "value": 7, "health": 1, "colour": (0, 0, 0)},
-                        "white": {"name": "white", "speed": 15, "value": 7, "health": 1, "colour": (255, 255, 255)},
+                        "black": {"name": "black", "speed": 16, "value": 7, "health": 1, "colour": (0, 0, 0)},
+                        "white": {"name": "white", "speed": 16, "value": 7, "health": 1, "colour": (255, 255, 255)},
                         "zebra": {"name": "zebra", "speed": 12, "value": 8, "health": 1, "colour": "zebra"},
-                        "purple": {"name": "purple", "speed": 15, "value": 9, "health": 1, "colour": (255, 0, 255)},
+                        "purple": {"name": "purple", "speed": 12, "value": 9, "health": 1, "colour": (255, 0, 255)},
                         "lead": {"name": "lead", "speed": 120, "value": 10, "health": 1, "colour": (120, 120, 120)},
                         "rainbow": {"name": "rainbow", "speed": 12, "value": 11, "health": 1, "colour": "rainbow"},
                         "ceramic": {"name": "ceramic", "speed": 9, "value": 12, "health": 8, "colour": (150, 100, 50)},
@@ -311,21 +319,44 @@ class EnemyManager:
         self.enemy_list = []
         self.number = 0
         self.count = 0
+        self.round_number = 0
         self.current = None
         self.initialised = False
 
-    def create(self, data, delay, properties):
+    def create(self, data, delay, properties, round_number):
+        self.round_number = round_number
+        cash_per_layer = self.calculateCash(round_number)
         current_node = LinkedList.head
         while current_node.data != data:
             current_node = current_node.next
         current_node.prev = None
-        self.enemy_list.append(Enemy(current_node, delay, properties, self.speedup,self.number))
+        self.enemy_list.append(Enemy(current_node, delay, properties, cash_per_layer, self.number, self.speedup))
         self.number += 1
+
+    def calculateCash(self, round_number):
+        if round_number > 85:
+            return 0.1
+        elif round_number > 60:
+            return 0.2
+        elif round_number > 50:
+            return 0.5
+        else:
+            return 1
+
+
+
+# self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-4 - [0, 1][self.number % 2]))
+# elif self.name == "moab":
+# self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-7 - [0, 1][self.number % 2]))
+# elif self.name == "bfb":
+# self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-10 - [0, 1][self.number % 2]))
+# elif self.name == "zomg":
+# self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-8 - [0, 1][self.number % 2]))
 
     def duplicate(self, original_enemy):
         self.number += 1
         pos = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
-        pos.x += random.randint(-1,1) * SCALE
+        pos.x += -[-1, 0, 1, 0][original_enemy.number % 4] + random.randint(-1,1) * SCALE
         pos.y += random.randint(-1,1) * SCALE
         path = copy.deepcopy(original_enemy.path)
         current = copy.deepcopy(original_enemy.current)
@@ -333,7 +364,7 @@ class EnemyManager:
         distance_travelled_total = copy.deepcopy(original_enemy.distance_travelled_total)
         dupe_values = {"pos":pos, "path": path, "current": current, "distance_travelled": distance_travelled, "distance_travelled_total": distance_travelled_total}
         properties = copy.deepcopy(original_enemy.properties)
-        duplicate = Enemy(original_enemy.node, 0, properties, self.number, self.speedup,dupe_values=dupe_values)
+        duplicate = Enemy(original_enemy.node, 0, properties, self.calculateCash(self.round_number), self.number, self.speedup, dupe_values=dupe_values)
         return duplicate
 
 

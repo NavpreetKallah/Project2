@@ -3,7 +3,7 @@ import os
 import abc, copy
 import time
 from abc import ABCMeta
-from math import atan2, degrees, pi
+from math import atan2, degrees, pi, sin, cos
 
 import pygame
 import random
@@ -29,8 +29,12 @@ class DefaultTower(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.difficulty_multiplier = difficulty_multiplier
         self.data = data
+        image = data["icon"]
+        self.buffs = {"Village": {}, "Alchemist": {}}
+        self.data["icon"] = None
+        self.unbuffed_data = copy.deepcopy(self.data)
+        self.image = image
         self.upgrades = {"path_one":0,"path_two":0}
-        self.image = data["icon"]
         self._total_cost = data["cost"]
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
@@ -65,6 +69,69 @@ class DefaultTower(pygame.sprite.Sprite):
             self.timers[type] = time.perf_counter()
             ProjectileManager.create(self.data[type], self.data["camo"], angle, self.rect.center, fast_forward)
 
+    def buff(self, buffs, tower):
+        for key, value in buffs.items():
+            if key == "speed":
+                self.buffs[tower][key] = self.buffs[tower][key] if key in self.buffs[tower] and value > self.buffs[tower][key] else value
+            elif key == "camo":
+                self.buffs[tower][key] = value
+            elif key == "targets":
+                self.buffs[tower][key] = self.buffs[tower][key] if key in self.buffs[tower] and len(value) < len(self.buffs[tower][key]) else value
+            else:
+                self.buffs[tower][key] = self.buffs[tower][key] if key in self.buffs[tower] and value < self.buffs[tower][key] else value
+
+    def updateBuffs(self):
+        buff_names = set()
+        buffs = {}
+        alchemist = self.buffs["Alchemist"]
+        village = self.buffs["Village"]
+
+        for tower_buffs in self.buffs.values():
+            for key in tower_buffs.keys():
+                buff_names.add(key)
+
+        for buff in buff_names:
+            if buff in ["range","speed"]:
+                buffs[buff] = (alchemist[buff] if buff in alchemist else 1) * (village[buff] if buff in village else 1)
+            elif buff == "camo":
+                buffs["camo"] = True
+            elif buff == "targets":
+                buffs["targets"] = []
+            else:
+                buffs[buff] = alchemist[buff] if buff in alchemist else 0 + village[buff] if buff in village else 0
+
+        for key, value in buffs.items():
+            if key == "range":
+                self.data[key] = value * self.unbuffed_data[key]
+            elif key == "camo":
+                self.data[key] = value
+            else:
+                for attack in ["main", "secondary"]:
+                    if key == "speed":
+                        self.data[attack][key] = value * self.unbuffed_data[attack][key]
+                    elif key in ["damage", "pierce"]:
+                        self.data[attack][key] = value + self.unbuffed_data[attack][key]
+                    elif key == "targets":
+                        self.data[attack][key] = value
+
+    def removeBuffs(self, buffs, tower):
+
+        print(self.data)
+        for stat in ["main", "secondary"]:
+            if stat in self.unbuffed_data:
+                for key in buffs.keys():
+                    if key not in ["range", "camo"]:
+                        self.data[stat][key] = self.unbuffed_data[stat][key]
+                    else:
+                        self.data[key] = self.unbuffed_data[key]
+        self.buffs[tower] = {}
+
+        print(self.data)
+
+    def sell(self):
+        total_cost = round(self.total_cost * 0.7)
+        self.kill()
+        return total_cost
 
     def getAngle(self, target):
         x1, y1 = self.rect.center
@@ -93,23 +160,30 @@ class DefaultTower(pygame.sprite.Sprite):
                 stat = change["stat"]
                 value = change["value"]
 
-                if change["stat"] == "range":
+                if attack == "buff":
+                    self.data["buffs"][stat] = value
+                elif change["stat"] == "range":
                     self.data[stat] += value
+                    self.unbuffed_data[stat] += value
                 elif change["stat"] == "camo":
                     self.data[stat] = value
+                    self.unbuffed_data[stat] = value
                 elif change["type"] == "add":
                     self.data[attack][stat] += value
+                    self.unbuffed_data[attack][stat] += value
                 elif change["type"] == "set":
                     self.data[attack][stat] = value
+                    self.unbuffed_data[attack][stat] = value
                 else:
                     self.data[attack][stat] *= value
+                    self.unbuffed_data[attack][stat] *= value
 
         if upgrade_info["name"] is not None:
             self.abilityUpgrades(upgrade_info["name"])
 
         self.upgrades[path] += 1
         self._total_cost += round(upgrade_info["cost"] * self.difficulty_multiplier)
-        return upgrade_info["cost"]
+        return round(upgrade_info["cost"] * self.difficulty_multiplier)
 
 
 class Wizard(DefaultTower, metaclass=ABCMeta):
@@ -123,7 +197,7 @@ class Druid(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "druid_main"
-        data["secondary"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "druid_secondary"
 
 
 class Dartling(DefaultTower, metaclass=ABCMeta):
@@ -138,6 +212,11 @@ class Dartling(DefaultTower, metaclass=ABCMeta):
         angle += random.randint(-self.data["main"]["deviation"], self.data["main"]["deviation"])
         self.attack(fast_forward, angle, "main")
         return 0
+
+    def attack(self, fast_forward, angle, type):
+        if time.perf_counter() - self.timers[type] > ((self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3) * random.uniform(0.9,1.1)):
+            self.timers[type] = time.perf_counter()
+            ProjectileManager.create(self.data[type], self.data["camo"], angle, self.rect.center, fast_forward)
 
 
 class Ice(DefaultTower, metaclass=ABCMeta):
@@ -158,15 +237,64 @@ class Ninja(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
         data["main"]["projectile"] = "ninja_main"
-        data["secondary"]["projectile"] = "default"
+        data["secondary"]["projectile"] = "ninja_secondary"
 
 
 class Alchemist(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
-        data["main"]["projectile"] = "default"
-        data["secondary"]["projectile"] = "default"
+        data["main"]["projectile"] = "alchemist_main"
+        data["secondary"]["projectile"] = "alchemist_main"
+        self.buff_timer = time.perf_counter()
+        self.buffed = {}
 
+    def action(self, enemies, fast_forward):
+        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(
+            pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"] and (
+                                  not enemy.camo or self.data["camo"])]
+        if enemy_info:
+            angle = round(self.getAngle(enemy_info[0].rect.center))
+            self.attack(fast_forward, angle, "main")
+            self.image = self.images[angle % 360]
+            self.rect = self.image.get_rect(center=self.pos)
+        self.unbuff()
+        if self.data["buffs"] and time.perf_counter() - self.timers["secondary"] > ((self.data["secondary"]["speed"] if not fast_forward else self.data["secondary"]["speed"] / 3) * random.uniform(0.9,1.1)):
+            self.timers["secondary"] = time.perf_counter()
+            tower_buffed = self.getClosestInRangeUnBuffed()
+            if tower_buffed:
+                angle = round(self.getAngle(tower_buffed.rect.center))
+                ProjectileManager.create(self.data["secondary"], self.data["camo"], angle, self.rect.center, fast_forward)
+                tower_buffed.buff(self.data["buffs"], "Alchemist")
+                tower_buffed.updateBuffs()
+                self.image = self.images[angle % 360]
+                self.rect = self.image.get_rect(center=self.pos)
+        return 0
+
+    def unbuff(self):
+        delete_list = []
+        for tower, timer in self.buffed.items():
+            if time.perf_counter() - timer > self.data["secondary"]["duration"]:
+                tower.removeBuffs(self.data["buffs"], "Alchemist")
+                delete_list.append(tower)
+
+        for tower in delete_list:
+            del(self.buffed[tower])
+
+    def sell(self):
+        total_cost = round(self.total_cost * 0.7)
+        for tower in self.buffed.keys():
+            tower.removeBuffs(self.data["buffs"], "Alchemist")
+        self.kill()
+        return total_cost
+
+    def getClosestInRangeUnBuffed(self):
+        tower_group = self.groups()[0]
+        towers = [tower for tower in tower_group if tower != self and tower.__class__.__name__ not in ["Village", "Farm"] and int(pygame.Vector2(self.rect.center).distance_to(
+            pygame.Vector2(tower.rect.center)) // SCALE) < self.data["range"] and tower not in self.buffed]
+        if towers:
+            tower = sorted(towers, key= lambda tower: pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(tower.rect.center)))[0]
+            self.buffed[tower] = time.perf_counter()
+            return tower
 
 class Super(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
@@ -185,9 +313,28 @@ class Farm(DefaultTower, metaclass=ABCMeta):
 class Village(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
-        data["main"]["projectile"] = "default"
-        data["secondary"]["projectile"] = "default"
+        self.buff_cooldown = time.perf_counter()
 
+    def action(self, enemies, fast_forward):
+        if time.perf_counter() - self.buff_cooldown > 1 if not fast_forward else 1/3:
+            self.buff_cooldown = time.perf_counter()
+            towers_in_range = self.getTowersInRange()
+            for tower in towers_in_range:
+                tower.buff(self.data["buffs"], "Village")
+                tower.updateBuffs()
+        return 0
+
+    def getTowersInRange(self):
+        tower_group = self.groups()[0]
+        towers = [tower for tower in tower_group if tower != self and tower.__class__.__name__ not in ["Village", "Farm"]]
+        return towers
+
+    def sell(self):
+        total_cost = round(self.total_cost * 0.7)
+        for tower in self.getTowersInRange():
+            tower.removeBuffs(self.data["buffs"], "Village")
+        self.kill()
+        return total_cost
 
 class Dart(DefaultTower):
     def __init__(self, data, pos, difficulty_multiplier):
@@ -216,69 +363,6 @@ class Sniper(DefaultTower):
             self.timers["main"] = time.perf_counter() + random.uniform(-0.01, 0.01)
             return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["camo"])
         return 0
-
-
-class Tower(pygame.sprite.Sprite):
-    def __init__(self, data, pos, difficulty_multiplier):
-        pygame.sprite.Sprite.__init__(self)
-        self.difficulty_multiplier = difficulty_multiplier
-        self.data = data
-        self.upgrades = {"path_one":0,"path_two":0}
-        self.image = data["icon"]
-        self.pos = pos
-        self.rect = self.image.get_rect(center=self.pos)
-        self.image_copy = self.image
-        self.timer = time.perf_counter()
-        self.images = [pygame.transform.rotate(self.image, i) for i in range(1, 361)]
-
-    def action(self, enemies, fast_forward):
-        if self.data["main_atk"] == "normal":
-            self.normal_aim(enemies, fast_forward)
-            return 0
-        if self.data["main_atk"] == "mouse":
-            self.mouse_aim(fast_forward)
-            return 0
-        if self.data["main_atk"] == "sniper":
-            return self.sniper(enemies, fast_forward)
-    def sniper(self, enemies, fast_forward):
-        enemies = sorted(enemies, key=lambda enemy: enemy.value, reverse=True)
-        angle = round(self.getAngle(enemies[0].rect.center))
-        self.image = self.images[angle % 360]
-        self.rect = self.image.get_rect(center=self.pos)
-        if time.perf_counter() - self.timer > (self.data["main_atk_speed"] if not fast_forward else self.data["main_atk_speed"] / 3):
-            ProjectileManager.create(self.data, angle, self.rect.center, fast_forward)
-            self.timer = time.perf_counter() + random.uniform(-0.01,0.01)
-            return enemies[0].take_damage(self.data["damage"], self.data["main"]["extra_damage"], self.data["main_atk_targets"], self.data["camo"])
-        return 0
-
-    def mouse_aim(self, fast_forward):
-        angle = round(self.getAngle(pygame.mouse.get_pos()))
-        self.image = self.images[angle % 360]
-        self.rect = self.image.get_rect(center=self.pos)
-        angle += random.randint(-self.data["spread"], self.data["spread"])
-        self.attack(fast_forward, angle)
-
-    def normal_aim(self, enemies, fast_forward):
-        if self.data["main_atk_speed"] == 0:
-            return
-        enemy_info = [enemy for enemy in enemies if int(pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(enemy.rect.center)) // SCALE) < self.data["range"]]
-        if enemy_info:
-            angle = round(self.getAngle(enemy_info[0].rect.center))
-            self.attack(fast_forward, angle)
-            self.image = self.images[angle % 360]
-            self.rect = self.image.get_rect(center=self.pos)
-
-    def getAngle(self, target):
-        x1, y1 = self.rect.center
-        if isinstance(target, type(self.rect)):
-            x2, y2 = target.center
-        else:
-            x2, y2 = target
-        dx = x2 - x1
-        dy = y2 - y1
-        rads = atan2(-dy, dx)
-        rads %= 2 * pi
-        return degrees(rads) + 90
 
 
 json_path = os.path.dirname(os.getcwd()) + "/game/data/tower_data.json"

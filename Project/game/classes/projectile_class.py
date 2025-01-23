@@ -32,8 +32,9 @@ class DefaultProjectile(pygame.sprite.Sprite):
         self.angle = radians(angle)
         self.original_image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{data['projectile']}.png"), SCALE)
         self.image = pygame.transform.rotate(self.original_image, degrees(self.angle)+90)
-
         self.rect = self.image.get_rect(center=pos)
+        self.rect.x += sin(self.angle) * self.image.get_width()//4
+        self.rect.y += cos(self.angle) * self.image.get_height()//4
         self.collided = []
         self.life_timer = time.perf_counter()
 
@@ -73,7 +74,10 @@ class ProjectileManager:
             "default": DefaultProjectile,
             "homing": Homing,
             "explosion": Explosion,
-            "freeze": Freeze
+            "freeze": Freeze,
+            "buff": Buff,
+            "lead": LeadPotion,
+            "gold": MoneyPotion
         }
         self.money = 0
 
@@ -92,16 +96,21 @@ class ProjectileManager:
         self.money = 0
         return temp
 
-    def update(self, enemy_group):
+    def update(self, enemy_group, tower_group):
         for projectile in self.sprites:
             projectile.move(enemy_group)
         collided = pygame.sprite.groupcollide(self.sprites,enemy_group,False,False)
+        collided_towers = pygame.sprite.groupcollide(self.sprites, tower_group, False, False)
         if collided:
             for projectile, enemies in collided.items():
                 if projectile.type == "explosion":
                     self.money += projectile.hit(enemy_group)
-                else:
+                elif projectile.type != "buff":
                     self.money += projectile.hit(enemies)
+        if collided_towers:
+            for projectile, towers in collided_towers.items():
+                if projectile.type == "buff":
+                    projectile.kill()
 
 
 class Homing(DefaultProjectile):
@@ -117,7 +126,7 @@ class Homing(DefaultProjectile):
             self.rect = self.image.get_rect(center=self.rect.center)
 
     def move(self, enemies):
-        if time.perf_counter() - self.life_timer > self.life_time/5:
+        if time.perf_counter() - self.life_timer > self.life_time/10:
             self.homeIn(enemies)
         if time.perf_counter() - self.life_timer > self.life_time:
             self.kill()
@@ -166,4 +175,44 @@ class Freeze(DefaultProjectile):
                     self.kill()
                 enemy.freeze(self)
                 self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo)
+        return self.money
+
+class Buff(DefaultProjectile):
+    def __init__(self, data, camo, angle, pos, fast_forward):
+        super().__init__(data, camo, angle, pos, fast_forward)
+        self.rect.x += sin(self.angle) * self.image.get_width()
+        self.rect.y += cos(self.angle) * self.image.get_height()
+
+class LeadPotion(DefaultProjectile):
+    def __init__(self, data, camo, angle, pos, fast_forward):
+        super().__init__(data, camo, angle, pos, fast_forward)
+
+    def hit(self, enemies):
+        self.money = 0
+        for enemy in enemies:
+            if enemy not in self.collided and (not enemy.camo or self.camo):
+                self.collided.append(enemy)
+                if enemy.name == "lead":
+                    self.kill()
+                    enemy.take_damage(999, self.extra_damage, self.targets, self.camo)
+                    self.money += 50
+                else:
+                    self.pierce -= 1
+                    if self.pierce == 0:
+                        self.kill()
+                    self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo)
+        return self.money
+
+class MoneyPotion(DefaultProjectile):
+    def __init__(self, data, camo, angle, pos, fast_forward):
+        super().__init__(data, camo, angle, pos, fast_forward)
+
+    def hit(self, enemies):
+        for enemy in enemies:
+            if enemy not in self.collided and (not enemy.camo or self.camo):
+                self.collided.append(enemy)
+                self.pierce -= 1
+                if self.pierce == 0:
+                    self.kill()
+                self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo, money_modifier=2)
         return self.money

@@ -59,7 +59,8 @@ class Game:
         self.running = True
         self.round = 0
         self.health = 100
-        self.money = 500000
+        self.money = 75000000
+
         self.autoplay = False
 
         title = "Balloons"
@@ -96,7 +97,7 @@ class Game:
         if not self.hud_initialise and self.difficulty_option and self.map_option:
             Hud.initialiseHud(Renderer.getLayer("HUD"))
             Hud.setDifficulty(self.difficulty_option)
-            Hud.updateMoney(self.money)
+            Hud.updateMoney(round(self.money))
             Hud.updateRound(self.round)
             Hud.updateHealth(self.health)
             Hud.updateHud(Renderer.getLayer("HUD"))
@@ -115,7 +116,8 @@ class Game:
         # self.temp = time.perf_counter()
         #print(self.clock.get_fps())
         self.fps_counter += self.clock.get_fps()
-        if time.perf_counter() - self.fps_timer > 1:
+        if time.perf_counter() - self.fps_timer > 5:
+            #print(self.fps_counter/ (60*5))
             self.fps_timer = time.perf_counter()
             self.fps_counter = 0
 
@@ -124,17 +126,17 @@ class Game:
             tower_chosen = Hud.tower_chosen()
             tower_upgrading = TowerManager.getTowerClicked()
             sell_active = Hud.sellClicked() or Hud.getSell()
-            if not self.round_started:
-                if Hud.fastForward(Renderer.getLayer("HUD")):
-                    EnemyManager.speedChange()
-                    Round.speedChange()
-                    self.fast_forward = not self.fast_forward
-                    Hud.updateHud(Renderer.getLayer("HUD"))
+            #if not self.round_started:
+            if Hud.fastForward(Renderer.getLayer("HUD")):
+                EnemyManager.speedChange()
+                Round.speedChange()
+                self.fast_forward = not self.fast_forward
+                Hud.updateHud(Renderer.getLayer("HUD"))
             if sell_active:
                 sold = Hud.sellMenu()
                 if sold != "main" and sold:
                     self.money += sold
-                    Hud.updateMoney(self.money)
+                    Hud.updateMoney(round(self.money))
                 Hud.updateHud(Renderer.getLayer("HUD"))
             elif tower_chosen:
                 TowerManager.placing = True
@@ -146,7 +148,7 @@ class Game:
                     if option_chosen not in ["main", "sell"]:
                         upgrade_cost = TowerManager.getUpgradingTower().upgrade(option_chosen, self.money)
                         self.money -= upgrade_cost
-                        Hud.updateMoney(self.money)
+                        Hud.updateMoney(round(self.money))
                         Hud.updateHud(Renderer.getLayer("HUD"))
                 else:
                     Hud.setUpgrading(False)
@@ -168,7 +170,7 @@ class Game:
             #     if damaged == "delete":
             #         enemy.kill()
             #     self.money += 1
-            #     Hud.updateMoney(self.money)
+            #     Hud.updateMoney(round(self.money))
             #EnemyManager.fastForward()
 
         #Hud.updateHealth(round(self.clock.get_fps()))
@@ -188,7 +190,7 @@ class Game:
                 if TowerManager.getTowerPos():
                     self.money -= TowerManager.getCost()
                     TowerManager.create()
-                    Hud.updateMoney(self.money)
+                    Hud.updateMoney(round(self.money))
                     Hud.updateHud(Renderer.getLayer("HUD"))
                 else:
                     TowerManager.resetPlacing()
@@ -198,16 +200,16 @@ class Game:
 
         Renderer.clearLayer("enemy")
         TowerManager.getSprites().draw(Renderer.getLayer("tower"))
-        ProjectileManager.update(EnemyManager.getSprites())
+        ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
         money_made = ProjectileManager.getMoneyMade()
         money_made_two = TowerManager.getMoneyMade()
         if money_made:
             self.money += money_made
-            Hud.updateMoney(self.money)
+            Hud.updateMoney(round(self.money))
             Hud.updateHud(Renderer.getLayer("HUD"))
         if money_made_two:
             self.money += money_made_two
-            Hud.updateMoney(self.money)
+            Hud.updateMoney(round(self.money))
             Hud.updateHud(Renderer.getLayer("HUD"))
         ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
         TowerManager.aim(EnemyManager.getSprites(), self.fast_forward)
@@ -216,8 +218,8 @@ class Game:
             EnemyManager.update(Renderer.getLayer("enemy"), self.path[:])
 
         if not EnemyManager.getSprites() and self.round_started and not EnemyManager.getEnemies():
-            self.money += 100 + Round.getCurrent()
-            Hud.updateMoney(self.money)
+            #self.money += 100 + Round.getCurrent()
+            Hud.updateMoney(round(self.money))
             self.round_started = False
             Hud.enableSpeed(Renderer.getLayer("HUD"))
             Hud.updateHud(Renderer.getLayer("HUD"))

@@ -203,8 +203,7 @@ class Hud:
         if main_box.collidepoint(mouse):
             if sell.collidepoint(mouse):
                 self.sell = False
-                total_cost = round(self.Tower.total_cost * 0.7)
-                self.Tower.kill()
+                total_cost = self.Tower.sell()
                 self.Tower = None
                 self.upgrade = False
                 return total_cost
