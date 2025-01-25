@@ -105,7 +105,7 @@ class Enemy(pygame.sprite.Sprite):
         if not self.initialised:
             self.initialised = True
             self.path = direction
-            self.current = self.path.pop(0)
+            self.current = self.path.remove()
 
         if len(self.path) == 0:
             return "delete"
@@ -113,7 +113,7 @@ class Enemy(pygame.sprite.Sprite):
         if self.distance_travelled >= distance:
 
             old = copy.deepcopy(self.current)
-            self.current = self.path.pop(0)
+            self.current = self.path.remove()
             self.distance_travelled = distance - self.distance_travelled
             self.distance_travelled = 0
             if old != self.current and self.name in ["moab", "bfb", "zomg"]:
@@ -287,14 +287,8 @@ class Enemy(pygame.sprite.Sprite):
 
 class EnemyManager:
     def __init__(self):
-        # super().__init__(rect, angle, state, frame, range)
-        # self.distance_travelled = distance_travelled
-        # self.health = health
-        # self.immunities = immunities
-        # self.value = value
         self.speedup = False
         self.timer = time.perf_counter()
-        self.queue = []
         self.kill_list = []
         self.enemies = {"red": {"name": "red", "speed": 30, "value": 1, "health": 1, "colour": (255, 0, 0)},
                         "blue": {"name": "blue", "speed": 25, "value": 2, "health": 1, "colour": (0, 0, 255)},
@@ -320,8 +314,6 @@ class EnemyManager:
         self.number = 0
         self.count = 0
         self.round_number = 0
-        self.current = None
-        self.initialised = False
 
     def create(self, data, delay, properties, round_number):
         self.round_number = round_number
@@ -331,7 +323,7 @@ class EnemyManager:
             current_node = current_node.next
         current_node.prev = None
         self.enemy_list.append(Enemy(current_node, delay, properties, cash_per_layer, self.number, self.speedup))
-        self.number += 1
+        self.number -= 1
 
     def calculateCash(self, round_number):
         if round_number > 85:
@@ -354,7 +346,7 @@ class EnemyManager:
 # self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-8 - [0, 1][self.number % 2]))
 
     def duplicate(self, original_enemy):
-        self.number += 1
+        self.number -= 1
         pos = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
         pos.x += -[-1, 0, 1, 0][original_enemy.number % 4] + random.randint(-1,1) * SCALE
         pos.y += random.randint(-1,1) * SCALE
@@ -420,7 +412,7 @@ class EnemyManager:
     def update(self, layer, Map):
         self.load()
         self.updateEnemies(Map)
-        for sprite in sorted(self.sprites, key=lambda sprite: (sprite.value, sprite.number), reverse=True):
+        for sprite in sorted(self.sprites, key=lambda sprite: (sprite.value, sprite.number)):
             layer.blit(sprite.image, sprite.rect)
 
     def getEnemies(self):

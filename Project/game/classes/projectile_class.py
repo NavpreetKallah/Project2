@@ -1,3 +1,4 @@
+import copy
 import time
 from builtins import int
 import pygame
@@ -16,7 +17,7 @@ import os
 path = os.path.dirname(os.getcwd()) + "/textures/projectiles"
 
 class DefaultProjectile(pygame.sprite.Sprite):
-    def __init__(self, data, camo, angle, pos, fast_forward):
+    def __init__(self, data, camo, angle, range, pos, fast_forward):
         pygame.sprite.Sprite.__init__(self)
         self.data = data
         self.type = data["type"]
@@ -24,6 +25,7 @@ class DefaultProjectile(pygame.sprite.Sprite):
         self.pierce = data["pierce"]
         self.targets = data["targets"]
         self.camo = camo
+        self.range = range
         self.extra_damage = data["extra_damage"]
         self.life_time = data["lifespan"] if not fast_forward else data["lifespan"]/3
         self.speed = data["projectile_speed"] * SCALE
@@ -77,16 +79,17 @@ class ProjectileManager:
             "freeze": Freeze,
             "buff": Buff,
             "lead": LeadPotion,
-            "gold": MoneyPotion
+            "gold": MoneyPotion,
+            "boomerang": Boomerang
         }
         self.money = 0
 
-    def create(self, data, camo,angle, pos, fast_forward):
+    def create(self, data, camo, ranges, angle, pos, fast_forward):
         if "burst" in data:
             for i in range(-data["burst"], data["burst"] + 1):
-                self.sprites.add(self.projectile_types[data["type"]](data, camo, angle + i * 10, pos, fast_forward))
+                self.sprites.add(self.projectile_types[data["type"]](data, camo, angle + i * 10, ranges, pos, fast_forward))
         else:
-            self.sprites.add(self.projectile_types[data["type"]](data, camo, angle, pos, fast_forward))
+            self.sprites.add(self.projectile_types[data["type"]](data, camo, angle, ranges, pos, fast_forward))
 
     def getSprites(self):
         return self.sprites
@@ -114,8 +117,8 @@ class ProjectileManager:
 
 
 class Homing(DefaultProjectile):
-    def __init__(self, data, camo, angle, pos, fast_forward):
-        super().__init__(data, camo, angle, pos, fast_forward)
+    def __init__(self, data, camo, angle, ranges, pos, fast_forward):
+        super().__init__(data, camo, angle, ranges, pos, fast_forward)
         self.image_list = [pygame.transform.rotate(self.original_image, i) for i in range(360)]
     def homeIn(self, enemies):
         enemy_list = [enemy for enemy in enemies if enemy not in self.collided and (not enemy.camo or self.camo)]
@@ -136,8 +139,8 @@ class Homing(DefaultProjectile):
 
 
 class Explosion(DefaultProjectile):
-    def __init__(self, data, camo, angle, pos, fast_forward):
-        super().__init__(data, camo, angle, pos, fast_forward)
+    def __init__(self, data, camo, angle, range, pos, fast_forward):
+        super().__init__(data, camo, angle, range, pos, fast_forward)
         self.explosion_image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/explosion.png"), SCALE)
 
     def hit(self, enemies):
@@ -162,8 +165,8 @@ class Explosion(DefaultProjectile):
         return self.money
 
 class Freeze(DefaultProjectile):
-    def __init__(self, data, camo, angle, pos, fast_forward):
-        super().__init__(data, camo, angle, pos, fast_forward)
+    def __init__(self, data, camo, angle, range, pos, fast_forward):
+        super().__init__(data, camo, angle, range, pos, fast_forward)
 
     def hit(self, enemies):
         self.money = 0
@@ -178,14 +181,14 @@ class Freeze(DefaultProjectile):
         return self.money
 
 class Buff(DefaultProjectile):
-    def __init__(self, data, camo, angle, pos, fast_forward):
-        super().__init__(data, camo, angle, pos, fast_forward)
+    def __init__(self, data, camo, angle, range, pos, fast_forward):
+        super().__init__(data, camo, angle, range, pos, fast_forward)
         self.rect.x += sin(self.angle) * self.image.get_width()
         self.rect.y += cos(self.angle) * self.image.get_height()
 
 class LeadPotion(DefaultProjectile):
-    def __init__(self, data, camo, angle, pos, fast_forward):
-        super().__init__(data, camo, angle, pos, fast_forward)
+    def __init__(self, data, camo, angle, range, pos, fast_forward):
+        super().__init__(data, camo, angle, range, pos, fast_forward)
 
     def hit(self, enemies):
         self.money = 0
@@ -204,8 +207,8 @@ class LeadPotion(DefaultProjectile):
         return self.money
 
 class MoneyPotion(DefaultProjectile):
-    def __init__(self, data, camo, angle, pos, fast_forward):
-        super().__init__(data, camo, angle, pos, fast_forward)
+    def __init__(self, data, camo, angle, range, pos, fast_forward):
+        super().__init__(data, camo, angle, range, pos, fast_forward)
 
     def hit(self, enemies):
         for enemy in enemies:
@@ -216,3 +219,38 @@ class MoneyPotion(DefaultProjectile):
                     self.kill()
                 self.money += enemy.take_damage(self.damage, self.extra_damage, self.targets, self.camo, money_modifier=2)
         return self.money
+
+class Boomerang(DefaultProjectile):
+    def __init__(self, data, camo, angle, ranges, pos, fast_forward):
+        super().__init__(data, camo, angle, ranges, pos, fast_forward)
+
+        self.distance_travelled = pygame.Vector2(self.rect.center)
+        self.old_distance = 1000
+        self.original_x = copy.deepcopy(self.rect.x)
+        self.returning = False
+        self.original_y = copy.deepcopy(self.rect.y)
+        self.counter = 0
+        self.image_list = [pygame.transform.rotate(self.image, 10 * i) for i in range(36)]
+    def move(self, enemies):
+        self.counter += 10
+        self.image = self.image_list[round(self.counter)%36]
+        self.rect = self.image.get_rect(center=self.rect.center)
+        distance = ((self.distance_travelled.x - self.original_x)**2 + (self.distance_travelled.y - self.original_y)**2)**0.5/SCALE
+        if distance < self.range and not self.returning:
+            offset = (-8/(3*self.range))*(0.75*distance - (3*self.range)/8)**2 + (3*self.range)/8
+            self.distance_travelled.x += sin(self.angle) * self.speed
+            self.distance_travelled.y += cos(self.angle) * self.speed
+
+        elif distance < 2 * self.range and distance < self.old_distance:
+            self.old_distance = distance
+            self.returning = True
+            offset = (8/(3*self.range))*(0.75*distance - (3*self.range)/8)**2 - (3*self.range)/8
+            self.distance_travelled.x -= sin(self.angle) * self.speed
+            self.distance_travelled.y -= cos(self.angle) * self.speed
+
+        else:
+            offset = 0
+            self.kill()
+
+        self.rect.x = self.distance_travelled.x + offset * SCALE * cos(self.angle)
+        self.rect.y = self.distance_travelled.y + offset * SCALE * sin(self.angle)

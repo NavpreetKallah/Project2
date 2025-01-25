@@ -53,11 +53,13 @@ class Round:
             return 100
         elif self.current_round < 80:
             return 250
-        else:
+        elif self.current_round < 100:
             return 500
+        else:
+            return 2000
 
     def roundWin(self, manager):
-        for _ in range(20):
+        for _ in range(150):
             self.current_round += 1
             self.increaseDifficulty()
             self.valueLeft = self.current_round * self.calculateValue()

@@ -3,6 +3,7 @@ from builtins import print
 
 import pygame
 import sys
+import copy
 import os
 
 from pygame import K_KP_0, K_PLUS
@@ -126,30 +127,34 @@ class Game:
             tower_chosen = Hud.tower_chosen()
             tower_upgrading = TowerManager.getTowerClicked()
             sell_active = Hud.sellClicked() or Hud.getSell()
-            #if not self.round_started:
             if Hud.fastForward(Renderer.getLayer("HUD")):
                 EnemyManager.speedChange()
                 Round.speedChange()
                 self.fast_forward = not self.fast_forward
                 Hud.updateHud(Renderer.getLayer("HUD"))
+
             if sell_active:
                 sold = Hud.sellMenu()
                 if sold != "main" and sold:
                     self.money += sold
                     Hud.updateMoney(round(self.money))
                 Hud.updateHud(Renderer.getLayer("HUD"))
+
             elif tower_chosen:
                 TowerManager.placing = True
                 TowerManager.placing_tower = tower_chosen
+
             elif Hud.getUpgrading():
                 option_chosen = Hud.upgradeChosen(Renderer.getLayer("HUD"))
                 Hud.updateHud(Renderer.getLayer("HUD"))
+
                 if option_chosen:
                     if option_chosen not in ["main", "sell"]:
                         upgrade_cost = TowerManager.getUpgradingTower().upgrade(option_chosen, self.money)
                         self.money -= upgrade_cost
                         Hud.updateMoney(round(self.money))
                         Hud.updateHud(Renderer.getLayer("HUD"))
+
                 else:
                     Hud.setUpgrading(False)
                     Hud.updateHud(Renderer.getLayer("HUD"))
@@ -159,21 +164,9 @@ class Game:
                 Hud.setUpgrading(True)
                 Hud.updateHud(Renderer.getLayer("HUD"))
 
-
         if TowerManager.getPlacing():
             TowerManager.place(Renderer.getLayer("tower"), Map.getRects(), Map.getMasks(),TowerManager.getPlacingTower())
 
-        # if pygame.mouse.get_pressed()[2] and not self.clicked:
-        #     self.clicked = True
-            # for enemy in EnemyManager.getSprites():
-            #     damaged = enemy.take_damage(2)
-            #     if damaged == "delete":
-            #         enemy.kill()
-            #     self.money += 1
-            #     Hud.updateMoney(round(self.money))
-            #EnemyManager.fastForward()
-
-        #Hud.updateHealth(round(self.clock.get_fps()))
         health_change = EnemyManager.getKilled()
         if health_change:
             if self.health - health_change < 0:
@@ -182,7 +175,6 @@ class Game:
                 self.health = self.health - health_change
             Hud.updateHealth(self.health)
             Hud.updateHud(Renderer.getLayer("HUD"))
-
 
         if not pygame.mouse.get_pressed()[0]:
             self.clicked = False
@@ -197,10 +189,6 @@ class Game:
             else:
                 TowerManager.resetPlacing()
 
-
-        Renderer.clearLayer("enemy")
-        TowerManager.getSprites().draw(Renderer.getLayer("tower"))
-        ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
         money_made = ProjectileManager.getMoneyMade()
         money_made_two = TowerManager.getMoneyMade()
         if money_made:
@@ -211,27 +199,26 @@ class Game:
             self.money += money_made_two
             Hud.updateMoney(round(self.money))
             Hud.updateHud(Renderer.getLayer("HUD"))
-        ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
         TowerManager.aim(EnemyManager.getSprites(), self.fast_forward)
 
         if self.round_started:
-            EnemyManager.update(Renderer.getLayer("enemy"), self.path[:])
+            EnemyManager.update(Renderer.getLayer("enemy"), copy.deepcopy(self.path))
 
         if not EnemyManager.getSprites() and self.round_started and not EnemyManager.getEnemies():
-            #self.money += 100 + Round.getCurrent()
-            Hud.updateMoney(round(self.money))
             self.round_started = False
             Hud.enableSpeed(Renderer.getLayer("HUD"))
             Hud.updateHud(Renderer.getLayer("HUD"))
 
+        ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
+        ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
+        TowerManager.getSprites().draw(Renderer.getLayer("tower"))
+
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 
-
+        Renderer.clearLayer("enemy")
         Renderer.clearLayer("tower")
         Renderer.clearLayer("projectile")
-
-
 
     def update(self):
         self.clock.tick(self.fps)

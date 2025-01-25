@@ -67,7 +67,7 @@ class DefaultTower(pygame.sprite.Sprite):
     def attack(self, fast_forward, angle, type):
         if time.perf_counter() - self.timers[type] > ((self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3) * random.uniform(0.9,1.1)):
             self.timers[type] = time.perf_counter()
-            ProjectileManager.create(self.data[type], self.data["camo"], angle, self.rect.center, fast_forward)
+            ProjectileManager.create(self.data[type], self.data["camo"], self.data["range"] ,angle, self.rect.center, fast_forward)
 
     def buff(self, buffs, tower):
         for key, value in buffs.items():
@@ -115,8 +115,6 @@ class DefaultTower(pygame.sprite.Sprite):
                         self.data[attack][key] = value
 
     def removeBuffs(self, buffs, tower):
-
-        print(self.data)
         for stat in ["main", "secondary"]:
             if stat in self.unbuffed_data:
                 for key in buffs.keys():
@@ -125,8 +123,6 @@ class DefaultTower(pygame.sprite.Sprite):
                     else:
                         self.data[key] = self.unbuffed_data[key]
         self.buffs[tower] = {}
-
-        print(self.data)
 
     def sell(self):
         total_cost = round(self.total_cost * 0.7)
@@ -216,7 +212,7 @@ class Dartling(DefaultTower, metaclass=ABCMeta):
     def attack(self, fast_forward, angle, type):
         if time.perf_counter() - self.timers[type] > ((self.data[type]["speed"] if not fast_forward else self.data[type]["speed"] / 3) * random.uniform(0.9,1.1)):
             self.timers[type] = time.perf_counter()
-            ProjectileManager.create(self.data[type], self.data["camo"], angle, self.rect.center, fast_forward)
+            ProjectileManager.create(self.data[type], self.data["camo"], self.data["range"], angle, self.rect.center, fast_forward)
 
 
 class Ice(DefaultTower, metaclass=ABCMeta):
@@ -226,10 +222,10 @@ class Ice(DefaultTower, metaclass=ABCMeta):
         data["secondary"]["projectile"] = "default"
 
 
-class Mortar(DefaultTower, metaclass=ABCMeta):
+class Boomerang(DefaultTower, metaclass=ABCMeta):
     def __init__(self, data, pos, difficulty_multiplier):
         super().__init__(data, pos, difficulty_multiplier)
-        data["main"]["projectile"] = "default"
+        data["main"]["projectile"] = "boomerang_main"
         data["secondary"]["projectile"] = "default"
 
 
@@ -263,7 +259,7 @@ class Alchemist(DefaultTower, metaclass=ABCMeta):
             tower_buffed = self.getClosestInRangeUnBuffed()
             if tower_buffed:
                 angle = round(self.getAngle(tower_buffed.rect.center))
-                ProjectileManager.create(self.data["secondary"], self.data["camo"], angle, self.rect.center, fast_forward)
+                ProjectileManager.create(self.data["secondary"], self.data["camo"], self.data["range"], angle, self.rect.center, fast_forward)
                 tower_buffed.buff(self.data["buffs"], "Alchemist")
                 tower_buffed.updateBuffs()
                 self.image = self.images[angle % 360]
@@ -287,12 +283,40 @@ class Alchemist(DefaultTower, metaclass=ABCMeta):
         self.kill()
         return total_cost
 
+    def quickSort(self, list, value_list):
+        if len(list) <= 1:
+            return list
+
+        elif len(list) != len(value_list):
+            return "Error"
+
+        middle_item = list[len(list) // 2]
+        middle_value = value_list[list.index(middle_item)]
+
+        left = [element for element in list if value_list[list.index(element)] < middle_value]
+        middle = [element for element in list if value_list[list.index(element)] == middle_value]
+        right = [element for element in list if value_list[list.index(element)] > middle_value]
+
+        return self.quickSort(left, value_list) + middle + self.quickSort(right, value_list)
+
+    def distanceCalculate(self, target):
+        x1, y1 = self.rect.center
+        x2, y2 = target.rect.center
+        distance = ((y2 - y1)**2 + (x2 - x1)**2)**0.5
+        return distance
+
+    def distanceTo(self, targets):
+        if type(targets) == list:
+            return [self.distanceCalculate(target) for target in targets]
+        else:
+            return [self.distanceCalculate(targets)]
+
     def getClosestInRangeUnBuffed(self):
         tower_group = self.groups()[0]
         towers = [tower for tower in tower_group if tower != self and tower.__class__.__name__ not in ["Village", "Farm"] and int(pygame.Vector2(self.rect.center).distance_to(
             pygame.Vector2(tower.rect.center)) // SCALE) < self.data["range"] and tower not in self.buffed]
         if towers:
-            tower = sorted(towers, key= lambda tower: pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(tower.rect.center)))[0]
+            tower = self.quickSort(towers, self.distanceTo(towers))[0]
             self.buffed[tower] = time.perf_counter()
             return tower
 
@@ -359,7 +383,7 @@ class Sniper(DefaultTower):
         self.data["main"]["speed"] if not fast_forward else self.data["main"]["speed"] / 3):
             fake_projectile_data = copy.deepcopy(self.data["main"])
             fake_projectile_data["damage"] = 0
-            ProjectileManager.create(fake_projectile_data, self.data["camo"], angle, self.rect.center, fast_forward)
+            ProjectileManager.create(fake_projectile_data, self.data["camo"], self.data["range"], angle, self.rect.center, fast_forward)
             self.timers["main"] = time.perf_counter() + random.uniform(-0.01, 0.01)
             return enemies[0].take_damage(self.data["main"]["damage"], self.data["main"]["extra_damage"], self.data["main"]["targets"], self.data["camo"])
         return 0
@@ -383,7 +407,7 @@ class TowerManager:
 
         self.difficulty_multiplier = 1.3
         self.tower_dict = data
-        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard, "Druid": Druid, "Ninja": Ninja, "Farm": Farm, "Village": Village, "Super": Super, "Mortar": Mortar, "Dartling gunner": Dartling, "Alchemist": Alchemist, "Ice": Ice}
+        self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard, "Druid": Druid, "Ninja": Ninja, "Farm": Farm, "Village": Village, "Super": Super, "Boomerang": Boomerang, "Dartling gunner": Dartling, "Alchemist": Alchemist, "Ice": Ice}
         self.money = 0
         self.placing = False
         self.placing_tower = None

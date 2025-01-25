@@ -294,60 +294,41 @@
           {"attack":"secondary", "stat": "extra_damage","value": 8,"type": "set"}]}
     }
     },
-    "Mortar": {
+    "Boomerang": {
       "cost": 640,
       "icon": null,
       "locked": false,
       "pos": null,
-      "range": 10,
-      "damage": 2,
-      "pierce": 25,
-      "main_atk_speed": 2,
-    "main_atk_lifespan": 1,
-      "atk_radius": 20,
-      "spread": 0,
+      "range": 21,
       "camo": false,
-      "main_atk": "explosion",
-      "main_atk_targets": [
-        "black"
-      ],
-      "secondary_atk": null,
-      "secondary_atk_targets": [],
+      "main" : {"speed": 1.2, "projectile_speed": 2,"damage": 1,"extra_damage": 0, "lifespan": 10, "pierce": 4, "type": "boomerang","targets": ["white", "lead"]},
+      "secondary" : {"speed": 0, "projectile_speed": 1, "damage": 0,"extra_damage": 0, "lifespan": 0.5, "pierce": 1, "type": null, "targets": []},
     "path_one": {
-      "1": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "2": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "3": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "4": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]}
+      "1": {"name": null,"cost": 170,"stat_change": [
+          {"attack":"main","stat": "pierce","value": 4,"type": "add"}]},
+      "2": {"name": null,"cost": 240,"stat_change": [
+          {"attack":"main","stat": "pierce","value": 5,"type": "add"},
+          {"attack":"main","stat": "projectile_speed","value": 3,"type": "set"}]},
+      "3": {"name": null,"cost": 510,"stat_change":[
+          {"attack":"main","stat": "pierce","value": 17,"type": "add"},
+          {"attack":"main","stat": "type","value": "homing","type": "set"},
+          {"attack":"main","stat": "projectile","value": "glaive","type": "set"},
+          {"attack":"main","stat": "lifespan","value": 2,"type": "set"}]},
+      "4": {"name": null,"cost": 2550,"stat_change": [
+          {"attack":"main","stat": "pierce","value": 80,"type": "set"},
+          {"attack":"main","stat": "speed","value": 0.33,"type": "multiply"}]}
     },
-    "path_two": {
-      "1": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "2": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "3": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "4": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]}
+    "path_two":
+      {"1": {"name": null,"cost": 150,"stat_change": [
+          {"attack":"tower","stat": "range","value": 6,"type": "add"}]},
+      "2": {"name": null,"cost": 210,"stat_change": [
+          {"attack":"main","stat": "speed","value": 0.75,"type": "multiply"}]},
+      "3": {"name": null,"cost": 1000,"stat_change": [
+          {"attack":"main","stat": "speed","value": 0.7,"type": "multiply"}]},
+      "4": {"name": null,"cost": 3000,"stat_change": [
+          {"attack":"main","stat": "damage","value": 3,"type": "set"},
+          {"attack":"main","stat": "speed","value": 0.8,"type": "set"},
+          {"attack":"tower","stat": "range","value": 4,"type": "add"}]}
     }
     },
     "Dartling gunner": {
@@ -487,55 +468,43 @@
       "icon": null,
       "locked": false,
       "pos": null,
-      "range": 50,
-      "damage": 1,
-      "pierce": 1,
-      "main_atk_speed": 0.045,
-    "main_atk_lifespan": 1,
-      "spread": 0,
+      "range": 25,
       "camo": false,
-      "main_atk": "normal",
-      "main_atk_targets": [
-        "frozen",
-        "lead"
-      ],
-      "secondary_atk": null,
-      "secondary_atk_targets": [],
+      "main" : {"speed": 0.045, "projectile_speed": 3,"damage": 1,"extra_damage": 0,  "lifespan": 1, "pierce": 1, "type": "default", "targets": ["frozen", "lead"], "deviation": 12},
+    "secondary" : {"speed": 0, "damage": 0,"extra_damage": 0, "lifespan": 0, "pierce": 0, "type": 0, "targets": []},
     "path_one": {
-      "1": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "2": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "3": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "4": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]}
+      "1": {"name": null,"cost": 1700,"stat_change": [
+          {"attack":"main","stat": "pierce","value": 1,"type": "add"},
+          {"attack":"main","stat": "projectile","value": "laser","type": "set"},
+          {"attack":"main","stat": "targets","value": ["lead", "purple"],"type": "set"}]},
+      "2": {"name": null,"cost": 2125,"stat_change": [
+          {"attack":"main","stat": "speed","value": 0.66,"type": "multiply"},
+          {"attack":"main","stat": "projectile","value": "plasma","type": "set"},
+          {"attack":"main","stat": "targets","value": ["purple"],"type": "set"}]},
+      "3": {"name": "main","cost": 17000,"stat_change":[
+          {"attack":"main","stat": "pierce","value": 6,"type": "set"},
+          {"attack":"main","stat": "projectile","value": "sun","type": "set"},
+          {"attack":"main","stat": "burst","value": 1,"type": "set"}]},
+      "4": {"name": "juggernaut","cost": 50000,"stat_change": [
+          {"attack":"main","stat": "damage","value": 2,"type": "set"},
+          {"attack":"main","stat": "burst","value": 2,"type": "set"}]}
     },
-    "path_two": {
-      "1": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "2": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "3": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]},
-      "4": {"name": null,"cost": 0,"stat_change": [
-          {"stat": "damage","value": 0,"type": "add"},
-          {"stat": "main_atk_speed","value": 0,"type": "add"},
-          {"stat": "range","value": 0,"type": "add"}]}
+    "path_two": {"1": {"name": null,"cost": 100,"stat_change": [
+          {"attack":"tower","stat": "range","value": 4,"type": "add"},
+          {"attack":"main","stat": "lifespan","value": 1.15,"type": "multiply" }]},
+      "2": {"name": null,"cost": 170,"stat_change": [
+          {"attack":"main","stat": "camo","value": true, "type": "set"},
+          {"attack":"tower","stat": "range","value": 1.2,"type": "multiply"}]},
+      "3": {"name": null,"cost": 530,"stat_change": [
+          {"attack":"main","stat": "damage","value": 3,"type": "set"},
+          {"attack":"main","stat": "pierce","value": 1,"type": "add"},
+          {"attack":"main","stat": "speed","value": 0.7,"type": "set" },
+          {"attack":"tower","stat": "range","value": 4,"type": "add"}]},
+      "4": {"name": null,"cost": 1700,"stat_change": [
+          {"attack":"main","stat": "damage","value": 6,"type": "set"},
+          {"attack":"main","stat": "lifespan","value": 1.15,"type": "multiply" },
+          {"attack":"main","stat": "speed","value": 0.6,"type": "set" },
+          {"attack":"tower","stat": "range","value": 2,"type": "add"}]}
     }
     }
   }

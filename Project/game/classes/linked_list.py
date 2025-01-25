@@ -21,3 +21,20 @@ class LinkedList:
 
         current_cell.next = new_cell
         new_cell.prev = current_cell
+
+
+class Queue:
+    def __init__(self):
+        self.items = []
+
+    def add(self, item):
+        self.items.append(item)
+
+    def remove(self):
+        return self.items.pop(0)
+
+    def look(self, position):
+        return self.items[position]
+
+    def __len__(self):
+        return len(self.items)

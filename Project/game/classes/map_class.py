@@ -8,8 +8,8 @@ from game.config import SCALE
 
 json_path = os.path.dirname(os.getcwd()) + "/map/"
 path = os.path.dirname(os.getcwd()) + "/textures"
-print(path)
 
+from game.classes.linked_list import Queue
 
 # current_map_path: list, current_map_start: tuple, current_map_end: tuple, current_map_textures: list, path_length: int
 class Map:
@@ -85,32 +85,32 @@ class Map:
 
     def pathfind(self):
         dict = {}
-        direction = []
+        path = Queue()
+        first = None
         for i, row in enumerate(self.map):
             for j, cell in enumerate(row):
                 if 0 < cell[0] < 90:
                     dict[cell[0]] = (i, j)
 
-                    # y = i * 9 * SCALE + 11 * SCALE
-                    # x = j * 9 * SCALE + SCALE
-                    # layer.blit(pygame.Surface((9*SCALE,9*SCALE)),(x, y))
-                    # temp.append((x,y))
-
         for i in range(1, 42):
             if dict[i][1] + 1 == dict[i + 1][1]:
-                direction.append("R")
+                direction = "R"
             elif dict[i][1] - 1 == dict[i + 1][1]:
-                direction.append("L")
+                direction = "L"
             elif dict[i][0] + 1 == dict[i + 1][0]:
-                direction.append("D")
+                direction = "D"
             elif dict[i][0] - 1 == dict[i + 1][0]:
-                direction.append("U")
-        direction.append(direction[-1])
-        direction.append(direction[-1])
-        direction.insert(0, direction[0])
-        direction.insert(0, direction[0])
+                direction = "U"
+            path.add(direction)
+            if not first:
+                path.add(direction)
+                path.add(direction)
+                first = "Done"
 
-        return direction
+        path.add(path.look(-1))
+        path.add(path.look(-1))
+
+        return path
 
     def adjacent_cells(self, j, i):
         up = self.map[j - 1][i] if j != 0 else None
