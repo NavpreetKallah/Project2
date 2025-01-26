@@ -2,6 +2,10 @@ import time
 from builtins import print
 
 import pygame
+
+pygame.init()
+pygame.font.init()
+
 import sys
 import copy
 import os
@@ -10,6 +14,7 @@ from pygame import K_KP_0, K_PLUS
 from pygame.mixer_music import queue
 
 from game.classes.enemy_class import EnemyManager
+from game.classes.save_manager import SaveManager
 from game.classes.button_class import Button
 from game.classes.enemy_class import Enemy
 from game.classes.entity_class import Entity
@@ -19,7 +24,7 @@ from game.classes.map_class import Map
 from game.classes.renderer_class import Renderer
 from game.classes.round_class import Round
 from game.classes.menu_class import Menu
-from game.classes.textbox_class import Textbox
+from game.classes.textbox_class import TextInput
 
 from game.classes.tower_class import TowerManager, ProjectileManager
 from game.config import SCALE
@@ -38,6 +43,7 @@ Round = Round()
 Hud = Hud()
 EnemyManager = EnemyManager()
 TowerManager = TowerManager()
+SaveManager = SaveManager()
 
 class Game:
     def __init__(self, screen):
@@ -49,45 +55,75 @@ class Game:
         self.round_started = False
         self.clicked = False
         self.fast_forward = False
-        self.main_menu_option = "play"
-        self.map_option = "cornfield"
-        self.difficulty_option = "hard"
+        self.loaded_game = False
+        self.main_menu_option = None
+        self.map_option = None
+        self.difficulty_option = None
+        self.difficulties = ["easy", "medium", "hard"]
         self.difficulty_multiplier = 1.3
         self.fps_counter = 0
         self.fps = 60
+        self.save_data = SaveManager.loadSave()
+        self.continue_game = None
         self.fps_timer = time.perf_counter()
         self.timer = time.perf_counter()
         self.running = True
         self.round = 0
         self.health = 100
         self.money = 75000000
-
         self.autoplay = False
 
         title = "Balloons"
         pygame.init()
         pygame.display.set_caption(title)
 
-    def quit(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
     def reset_display(self):
         self.screen.fill((0, 0, 0))
 
     def game(self):
-        if self.main_menu_option not in ["play", "towers", "quit"]:
-            self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
-        elif self.main_menu_option == "quit":
-            pygame.quit()
-            sys.exit()
-        elif self.main_menu_option == "play":
-            if self.map_option not in ["meadows", "cornfield"]:
-                self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
-            elif self.map_option in ["meadows", "cornfield"]:
-                if self.difficulty_option not in ["easy", "medium", "hard"]:
-                    self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
+        if not self.loaded_game:
+            if self.main_menu_option not in ["play", "towers", "quit"]:
+                self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
+            elif self.main_menu_option == "quit":
+                pygame.quit()
+                sys.exit()
+            elif self.main_menu_option == "play":
+                if not self.save_data:
+
+                    # insert code to bring up the user create menu
+
+                    if self.map_option not in ["meadows", "cornfield"]:
+                        self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
+                    elif self.map_option in ["meadows", "cornfield"]:
+                        if self.difficulty_option not in ["easy", "medium", "hard"]:
+                            self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
+                else:
+                    if self.continue_game not in [True, False]:
+                        self.continue_game = Menu.runMenu("continue", Renderer.getLayer("menu"))
+                    elif self.continue_game:
+
+                        # insert code to bring up login menu
+
+                        data = SaveManager.loadSave()
+                        self.health = data["health"]
+                        self.money = data["money"]
+                        self.round = data["round"]
+                        self.difficulty_option = data["difficulty"]
+                        self.game_mode = data["game_mode"]
+                        self.map_option = data["map"]
+                        TowerManager.loadSave(data["towers"])
+                        self.loaded_game = True
+                    elif not self.continue_game:
+
+                        #insert code to bring up user create menu
+
+                        if self.map_option not in ["meadows", "cornfield"]:
+                            self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
+                        elif self.map_option in ["meadows", "cornfield"]:
+                            if self.difficulty_option not in ["easy", "medium", "hard"]:
+                                self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
+                            else:
+                                self.loaded_game = True
 
         if self.map_option and self.difficulty_option and not self.map_initialise:
             Renderer.deleteLayer("menu")
@@ -102,6 +138,8 @@ class Game:
             Hud.updateRound(self.round)
             Hud.updateHealth(self.health)
             Hud.updateHud(Renderer.getLayer("HUD"))
+            self.difficulty_multiplier = 1 + 0.15 * self.difficulties.index(self.difficulty_option)
+            TowerManager.difficulty_multiplier = self.difficulty_multiplier
             self.hud_initialise = True
 
         if (pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites():
@@ -208,6 +246,8 @@ class Game:
             self.round_started = False
             Hud.enableSpeed(Renderer.getLayer("HUD"))
             Hud.updateHud(Renderer.getLayer("HUD"))
+            SaveManager.updateSave(self.health, self.money, Round.current_round, self.difficulty_option, None, self.map_option, TowerManager.getSprites())
+            SaveManager.saveToFile()
 
         ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
         ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
@@ -220,8 +260,14 @@ class Game:
         Renderer.clearLayer("tower")
         Renderer.clearLayer("projectile")
 
+    def quit(self):
+        for event in self.events:
+            if event.type == pygame.QUIT:
+                self.running = False
     def update(self):
+
         self.clock.tick(self.fps)
+        self.events = pygame.event.get()
         self.quit()
         self.game()
         pygame.display.update()

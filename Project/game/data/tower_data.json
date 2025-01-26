@@ -485,7 +485,7 @@
           {"attack":"main","stat": "pierce","value": 6,"type": "set"},
           {"attack":"main","stat": "projectile","value": "sun","type": "set"},
           {"attack":"main","stat": "burst","value": 1,"type": "set"}]},
-      "4": {"name": "juggernaut","cost": 50000,"stat_change": [
+      "4": {"name": "sungod","cost": 50000,"stat_change": [
           {"attack":"main","stat": "damage","value": 2,"type": "set"},
           {"attack":"main","stat": "burst","value": 2,"type": "set"}]}
     },

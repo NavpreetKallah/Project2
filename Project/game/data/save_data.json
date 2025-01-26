@@ -1,0 +1,21 @@
+{
+    "health": 88,
+    "money": 74999779,
+    "round": 1,
+    "difficulty": "easy",
+    "game_mode": null,
+    "map": "cornfield",
+    "towers": [
+        {
+            "name": "Dart",
+            "pos": [
+                816,
+                176
+            ],
+            "upgrades": {
+                "path_one": 0,
+                "path_two": 0
+            }
+        }
+    ]
+}

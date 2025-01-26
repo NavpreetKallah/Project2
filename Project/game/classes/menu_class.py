@@ -3,20 +3,25 @@ import time
 
 import pygame
 from pygame import K_RIGHT, K_LEFT, K_DOWN, K_UP, K_SPACE, K_RETURN
-
 path = os.path.dirname(os.getcwd()) + "/textures"
 from game.config import SCALE
+from game.classes.textbox_class import TextInput
 
+
+TextInputUsername = TextInput()
+TextInputPassword = TextInput()
 
 class Menu:
     def __init__(self):
         self.time_since_loaded = time.perf_counter()
-
+        self.font = pygame.font.Font(f"{path}/slkscr.ttf", round(17.5*SCALE))
         self.main_menu_selector_locations = []
         self.main_menu_selector_selected = []
         self.main_menu_selector_index = None
         self.main_menu_selector_location = None
         self.selector_images = []
+        self.user_name_completed = False
+        self.password_completed = False
 
         self.start_time = time.perf_counter()
         self.time_since_selector = time.perf_counter()
@@ -32,6 +37,23 @@ class Menu:
             pygame.image.load_extended(f"{path}/main_menu/main_menu_quit.png"), SCALE)
         self.main_menu_selector = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/main_menu/main_menu_selector.png"), SCALE)
+
+
+        self.continue_continue = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/continue/continue.png"), SCALE)
+        self.continue_new_game = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/continue/new_game.png"), SCALE)
+
+        self.user_username = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/user/username.png"), SCALE)
+        self.user_password = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/user/password.png"), SCALE)
+        self.user_textbox = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/user/textbox.png"), SCALE)
+        self.user_create = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/user/create_button.png"), SCALE)
+        self.user_login = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/user/login_button.png"), SCALE)
 
         self.map_menu_cornfield = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/map_menu/map_menu_cornfield.png"), SCALE)
@@ -64,19 +86,19 @@ class Menu:
             if time.perf_counter() - self.time_since_selector > 0.25:
                 self.time_since_selector = time.perf_counter()
                 self.selector_index += 1
-                self.selector_location = self.selector_locations[self.selector_index % 3]
+                self.selector_location = self.selector_locations[self.selector_index % len(self.selector_locations)]
 
         elif keyspressed[K_LEFT] or keyspressed[K_UP]:
             if time.perf_counter() - self.time_since_selector > 0.25:
                 self.time_since_selector = time.perf_counter()
                 self.selector_index += -1
-                self.selector_location = self.selector_locations[self.selector_index % 3]
+                self.selector_location = self.selector_locations[self.selector_index % len(self.selector_locations)]
 
         if colour_change:
-            self.selector_image = self.selector_images[self.selector_index % 3]
+            self.selector_image = self.selector_images[self.selector_index % len(self.selector_locations)]
 
         if keyspressed[K_SPACE] or keyspressed[K_RETURN] and time.perf_counter() - self.time_since_loaded > 1:
-            return self.selector_selected[self.selector_index % 3]
+            return self.selector_selected[self.selector_index % len(self.selector_locations)]
 
         if time.perf_counter() - self.start_time > 0.5 and move:
             self.start_time = time.perf_counter()
@@ -85,7 +107,7 @@ class Menu:
 
         return None
 
-    def runMenu(self, menu, layer):
+    def runMenu(self, menu, layer, events=None):
         if menu == "main":
             if self.initialised != "main":
                 self.selector_image = self.main_menu_selector
@@ -120,6 +142,23 @@ class Menu:
                 self.initialised = "difficulty"
             return self.runDifficultySelect(layer)
 
+        elif menu == "continue":
+            if self.initialised != "continue":
+                self.time_since_loaded = time.perf_counter()
+                self.selector_image = self.main_menu_selector
+                self.selector_locations = [(110 * SCALE, 12 * SCALE), (108 * SCALE, 30 * SCALE)]
+                self.selector_selected = [True, False]
+                self.selector_index = 0
+                self.selector_location = self.selector_locations[0]
+                self.initialised = "continue"
+            return self.runContinueSelect(layer)
+
+        elif menu == "create":
+            return self.runCreate(layer, events)
+
+        elif menu == "login":
+            return self.runLogin(layer)
+
     def runMainMenu(self, layer):
         keyspressed = pygame.key.get_pressed()
         layer.fill(pygame.Color(70, 70, 70))
@@ -127,6 +166,16 @@ class Menu:
         layer.blit(self.selector_image, self.selector_location)
         layer.blit(self.main_menu_towers, (12 * SCALE, 30 * SCALE))
         layer.blit(self.main_menu_quit, (12 * SCALE, 48 * SCALE))
+
+        return self.selector(keyspressed)
+
+    def runContinueSelect(self, layer):
+
+        keyspressed = pygame.key.get_pressed()
+        layer.fill(pygame.Color(70, 70, 70))
+        layer.blit(self.continue_continue, (12 * SCALE, 12 * SCALE))
+        layer.blit(self.selector_image, self.selector_location)
+        layer.blit(self.continue_new_game, (12 * SCALE, 30 * SCALE))
 
         return self.selector(keyspressed)
 
@@ -140,6 +189,43 @@ class Menu:
         layer.blit(self.map_menu_meadows, (4 * SCALE, 49 * SCALE))
 
         return self.selector(keyspressed, move=False)
+
+    def runCreate(self, layer, events):
+        layer.fill(pygame.Color(70, 70, 70))
+        mouse = pygame.mouse.get_pos()
+        layer.blit(self.user_username, (32 * SCALE, 7 * SCALE))
+        layer.blit(self.user_password, (32 * SCALE, 50 * SCALE))
+        layer.blit(self.user_textbox, (7 * SCALE, 26 * SCALE))
+        layer.blit(self.user_textbox, (7 * SCALE, 70 * SCALE))
+        layer.blit(self.user_create, (45 * SCALE, 94 * SCALE))
+
+        if events:
+            if not self.user_name_completed:
+                self.user_name_completed = TextInputUsername.create(events)
+            elif not self.password_completed and self.user_name_completed:
+                self.password_completed = TextInputPassword.create(events)
+        if not self.user_name_completed:
+            self.entered_user_name = self.font.render(TextInputUsername.text, False, (0,0,0))
+        elif self.user_name_completed:
+            self.entered_password = self.font.render(TextInputPassword.text, True, (0,0,0))
+
+        layer.blit(self.entered_user_name, (12 * SCALE, 25 * SCALE))
+        if self.user_name_completed:
+            layer.blit(self.entered_password, (12 * SCALE, 69 * SCALE))
+
+        if self.user_name_completed and self.password_completed:
+            return (self.entered_user_name, self.entered_password)
+
+
+
+    def runLogin(self, layer):
+        mouse = pygame.mouse.get_pos()
+        layer.blit(self.user_username, (32 * SCALE, 7 * SCALE))
+        layer.blit(self.user_password, (32 * SCALE, 50 * SCALE))
+        layer.blit(self.user_textbox, (7 * SCALE, 26 * SCALE))
+        layer.blit(self.user_textbox, (7 * SCALE, 70 * SCALE))
+        layer.blit(self.user_login, (52 * SCALE, 94 * SCALE))
+        return
 
     def runDifficultySelect(self, layer):
         keyspressed = pygame.key.get_pressed()

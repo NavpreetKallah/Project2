@@ -29,6 +29,7 @@ class DefaultTower(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.difficulty_multiplier = difficulty_multiplier
         self.data = data
+        print(data)
         image = data["icon"]
         self.buffs = {"Village": {}, "Alchemist": {}}
         self.data["icon"] = None
@@ -500,6 +501,15 @@ class TowerManager:
             image.blit(sheet, (0, 0), (width * i, 0, width, width))
             images.append(image)
         return images
+
+    def loadSave(self, save):
+        for tower in save:
+            tower_data = {info: (value if isinstance(value, pygame.Surface) else copy.deepcopy(value)) for info, value in self.tower_dict[tower["name"]].items()}
+            tower_created = self.tower_class_dict[tower["name"]](tower_data, tower["pos"], self.difficulty_multiplier)
+            for path in ["path_one", "path_two"]:
+                for _ in range(tower["upgrades"][path]):
+                    tower_created.upgrade(path, 99999999)
+            self.sprites.add(tower_created)
 
     def getUpgradingTower(self):
         return self.upgrading_tower

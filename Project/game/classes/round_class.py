@@ -59,7 +59,7 @@ class Round:
             return 2000
 
     def roundWin(self, manager):
-        for _ in range(150):
+        for _ in range(1):
             self.current_round += 1
             self.increaseDifficulty()
             self.valueLeft = self.current_round * self.calculateValue()
@@ -86,7 +86,8 @@ class Round:
             enemy = self.enemy_creator[colour]["cost"]
             if self.valueLeft - enemy >= 0:
                 self.valueLeft -= enemy
-                manager.create(self.enemies[colour], self.generateDelay(colour), self.generateProperties(colour), self.current_round)
+                manager.create(self.enemies["ceramic"], self.generateDelay(colour), self.generateProperties(colour), self.current_round)
+                return
                 self.generateEnemies(manager)
                 break
 

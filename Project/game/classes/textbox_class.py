@@ -3,14 +3,17 @@ from builtins import int
 import pygame
 
 
-class Textbox:
-    def __init__(self, position: pygame.Vector2, width: int, height: int, border_width: int, border_colour: int, font):
-        self.position = position
-        self.width = width
-        self.height = height
-        self.border_width = border_width
-        self.border_colour = border_colour
-        self.font = font
+class TextInput:
+    def __init__(self):
+        self.text = ""
 
-    def onClick(self):
-        return None
+    def create(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                elif event.unicode.lower() in "abcdefghijklmnopqrstuvwxyz0123456789":
+                    self.text += event.unicode
+                elif event.key == pygame.K_RETURN:
+                    return True
+        return False
