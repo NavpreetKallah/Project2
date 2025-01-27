@@ -13,6 +13,8 @@ import os
 from pygame import K_KP_0, K_PLUS
 from pygame.mixer_music import queue
 
+
+from game.classes.sql_class import Sql
 from game.classes.enemy_class import EnemyManager
 from game.classes.save_manager import SaveManager
 from game.classes.button_class import Button
@@ -25,7 +27,6 @@ from game.classes.renderer_class import Renderer
 from game.classes.round_class import Round
 from game.classes.menu_class import Menu
 from game.classes.textbox_class import TextInput
-
 from game.classes.tower_class import TowerManager, ProjectileManager
 from game.config import SCALE
 
@@ -35,6 +36,8 @@ WIDTH, HEIGHT = 160 * SCALE, 120 * SCALE
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
+Sql = Sql()
+Sql.connect()
 Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
 Menu = Menu()
