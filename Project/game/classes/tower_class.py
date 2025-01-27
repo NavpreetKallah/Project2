@@ -404,8 +404,6 @@ class TowerManager:
         tower_icons = {tower_name: tower_icons[i] for i, tower_name in enumerate(data)}
         for tower_name, tower_info in data.items():
             data[tower_name]["icon"] = tower_icons[tower_name]
-
-        self.difficulty_multiplier = 1.3
         self.tower_dict = data
         self.tower_class_dict = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard, "Druid": Druid, "Ninja": Ninja, "Farm": Farm, "Village": Village, "Super": Super, "Boomerang": Boomerang, "Dartling gunner": Dartling, "Alchemist": Alchemist, "Ice": Ice}
         self.money = 0

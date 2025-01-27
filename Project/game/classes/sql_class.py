@@ -1,4 +1,4 @@
-import sqlite3, os
+import sqlite3, os, random
 
 data = os.getcwd() + "/data/data.db"
 
@@ -7,13 +7,57 @@ class Sql:
         pass
 
 
-    def connect(self):
+    def create(self):
+        with open(f"{data}", "w"):
+            pass
         with sqlite3.connect(f"{data}") as connection:
             cursor = connection.cursor()
-            #cursor.execute("CREATE TABLE Username (UserID INT PRIMARY KEY NOT NULL,username VARCHAR(10));")
-            #cursor.execute("CREATE TABLE Password (PasswordID INT PRIMARY KEY NOT NULL,password VARCHAR(10));")
-            cursor.execute("CREATE TABLE Link (PasswordID INT NOT NULL, UserID INT NOT NULL, FOREIGN KEY (UserID) REFERENCES Username(UserID), FOREIGN KEY (PasswordID) REFERENCES Password(PasswordID));")
+            cursor.execute("CREATE TABLE IF NOT EXISTS Users (UserID INTEGER PRIMARY KEY AUTOINCREMENT,Username TEXT NOT NULL);")
+            cursor.execute("CREATE TABLE IF NOT EXISTS Passwords (PasswordID INTEGER PRIMARY KEY AUTOINCREMENT,Password TEXT NOT NULL);")
+            cursor.execute("CREATE TABLE IF NOT EXISTS Link (UserID INTEGER,PasswordID INTEGER,FOREIGN KEY (UserID) REFERENCES Users(UserID),FOREIGN KEY (PasswordID) REFERENCES Passwords(PasswordID));")
             connection.commit()
+
+    def validate(self, username, password):
+        with sqlite3.connect(f"{data}") as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT Passwords.Password\
+                                FROM Users JOIN Link ON Users.UserID == Link.UserID\
+                                JOIN Passwords ON Link.PasswordID == Passwords.PasswordID\
+                                WHERE Users.Username = (?)", (username,))
+            password_found = cursor.fetchone()
+            if password_found:
+                return password_found[0] == password
+
+    def createUser(self, username, password):
+        with sqlite3.connect(f"{data}") as connection:
+            cursor = connection.cursor()
+
+            if not username or not password:
+                return "empty"
+
+            cursor.execute("SELECT Username FROM Users")
+            existing_users = [info[0] for info in cursor.fetchall()]
+            if username in existing_users:
+                return "username"
+
+            cursor.execute("SELECT UserID FROM Users")
+            existing_user_ids = [info[0] for info in cursor.fetchall()]
+            cursor.execute("SELECT PasswordID FROM Passwords")
+            existing_password_ids = [info[0] for info in cursor.fetchall()]
+
+            user_id = random.randint(1,999999)
+            password_id = random.randint(1,999999)
+            while user_id in existing_user_ids and password_id in existing_password_ids:
+                user_id = random.randint(1,999999)
+                password_id = random.randint(1,999999)
+
+            cursor.execute("INSERT INTO Users (UserID, Username) VALUES (?, ?)", (user_id, username,))
+            cursor.execute("INSERT INTO Passwords (PasswordID, Password) VALUES (?, ?)", (password_id, password,))
+            cursor.execute("INSERT INTO Link (UserID, PasswordID) VALUES (?, ?)", (user_id, password_id))
+            connection.commit()
+            return True
+
+
 
     def reset(self):
         with sqlite3.connect(f"{data}") as connection:

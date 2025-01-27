@@ -35,9 +35,7 @@ WIDTH, HEIGHT = 160 * SCALE, 120 * SCALE
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
 Sql = Sql()
-Sql.connect()
 Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
 Menu = Menu()
@@ -62,11 +60,12 @@ class Game:
         self.main_menu_option = None
         self.map_option = None
         self.difficulty_option = None
+        self.user_validated = False
+        self.user_created = None
+        self.user_login = None
         self.difficulties = ["easy", "medium", "hard"]
-        self.difficulty_multiplier = 1.3
         self.fps_counter = 0
         self.fps = 60
-        self.save_data = SaveManager.loadSave()
         self.continue_game = None
         self.fps_timer = time.perf_counter()
         self.timer = time.perf_counter()
@@ -91,42 +90,68 @@ class Game:
                 pygame.quit()
                 sys.exit()
             elif self.main_menu_option == "play":
-                if not self.save_data:
-
-                    # insert code to bring up the user create menu
-
-                    if self.map_option not in ["meadows", "cornfield"]:
-                        self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
-                    elif self.map_option in ["meadows", "cornfield"]:
-                        if self.difficulty_option not in ["easy", "medium", "hard"]:
-                            self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
-                else:
-                    if self.continue_game not in [True, False]:
-                        self.continue_game = Menu.runMenu("continue", Renderer.getLayer("menu"))
-                    elif self.continue_game:
-
-                        # insert code to bring up login menu
-
-                        data = SaveManager.loadSave()
-                        self.health = data["health"]
-                        self.money = data["money"]
-                        self.round = data["round"]
-                        self.difficulty_option = data["difficulty"]
-                        self.game_mode = data["game_mode"]
-                        self.map_option = data["map"]
-                        TowerManager.loadSave(data["towers"])
-                        self.loaded_game = True
-                    elif not self.continue_game:
-
-                        #insert code to bring up user create menu
-
-                        if self.map_option not in ["meadows", "cornfield"]:
-                            self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
-                        elif self.map_option in ["meadows", "cornfield"]:
-                            if self.difficulty_option not in ["easy", "medium", "hard"]:
-                                self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
-                            else:
+                if self.continue_game not in [True, False]:
+                    self.continue_game = Menu.runMenu("continue", Renderer.getLayer("menu"))
+                elif self.continue_game:
+                    if not self.user_login:
+                        self.user_login = Menu.runMenu("login", Renderer.getLayer("menu"), events=self.events)
+                    else:
+                        if Sql.validate(self.user_login[0], self.user_login[1]):
+                            self.username = self.user_login[0]
+                            data = SaveManager.loadSave(self.user_login[0])
+                            if data:
+                                self.health = data["health"]
+                                self.money = data["money"]
+                                self.round = data["round"]
+                                self.difficulty_option = data["difficulty"]
+                                self.game_mode = data["game_mode"]
+                                self.map_option = data["map"]
+                                self.difficulty_multiplier = 1 + 0.15 * self.difficulties.index(self.difficulty_option)
+                                SaveManager.saveToFile(self.username)
+                                TowerManager.difficulty_multiplier = self.difficulty_multiplier
+                                SaveManager.updateSave(self.health, self.money, Round.current_round,
+                                                       self.difficulty_option, None, self.map_option,
+                                                       TowerManager.getSprites())
+                                TowerManager.loadSave(data["towers"])
                                 self.loaded_game = True
+                            else:
+                                self.continue_game = False
+                                self.user_created = True
+                                self.user_validated = True
+
+                        else:
+                            Menu.clearFields()
+                            Menu.error_message = "password"
+                            self.continue_game = None
+                            self.user_login = False
+                elif not self.continue_game:
+                    if not self.user_created:
+                        self.user_created = Menu.runMenu("create", Renderer.getLayer("menu"), events=self.events)
+                    else:
+                        if not self.user_validated and self.user_created:
+                            valid = Sql.createUser(self.user_created[0], self.user_created[1])
+                            if valid is True:
+                                self.username = self.user_created[0]
+                                self.user_validated = True
+                                Menu.clearFields()
+                            else:
+                                self.continue_game = None
+                                self.user_created = False
+                                Menu.error_message = valid
+                                Menu.clearFields()
+
+                        if self.user_validated == True:
+                            if self.map_option not in ["meadows", "cornfield"]:
+                                self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
+                            elif self.map_option in ["meadows", "cornfield"]:
+                                if self.difficulty_option not in ["easy", "medium", "hard"]:
+                                    self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
+                                else:
+                                    SaveManager.updateSave(self.health, self.money, Round.current_round,
+                                                           self.difficulty_option, None, self.map_option,
+                                                           TowerManager.getSprites())
+                                    SaveManager.saveToFile(self.username)
+                                    self.loaded_game = True
 
         if self.map_option and self.difficulty_option and not self.map_initialise:
             Renderer.deleteLayer("menu")
@@ -147,7 +172,7 @@ class Game:
 
         if (pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites():
             if not self.round_started:
-                self.autoplay = True
+                # self.autoplay = True
                 self.round_started = True
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)
@@ -250,7 +275,7 @@ class Game:
             Hud.enableSpeed(Renderer.getLayer("HUD"))
             Hud.updateHud(Renderer.getLayer("HUD"))
             SaveManager.updateSave(self.health, self.money, Round.current_round, self.difficulty_option, None, self.map_option, TowerManager.getSprites())
-            SaveManager.saveToFile()
+            SaveManager.saveToFile(self.username)
 
         ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
         ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))

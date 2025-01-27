@@ -1,21 +1,20 @@
 {
-    "health": 88,
-    "money": 74999779,
-    "round": 1,
-    "difficulty": "easy",
-    "game_mode": null,
-    "map": "cornfield",
-    "towers": [
-        {
-            "name": "Dart",
-            "pos": [
-                816,
-                176
-            ],
-            "upgrades": {
-                "path_one": 0,
-                "path_two": 0
-            }
-        }
-    ]
+    "navpreet": {
+        "health": 0,
+        "money": 0,
+        "round": 0,
+        "difficulty": null,
+        "game_mode": null,
+        "map": null,
+        "towers": []
+    },
+    "test": {
+        "health": 0,
+        "money": 0,
+        "round": 0,
+        "difficulty": null,
+        "game_mode": null,
+        "map": null,
+        "towers": []
+    }
 }

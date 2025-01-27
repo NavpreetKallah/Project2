@@ -11,11 +11,17 @@ class SaveManager:
         self.game_mode = None
         self.map = None
         self.towers = []
-
-    def loadSave(self):
+        self.others = self.other_users()
+    def other_users(self):
         with open(f"{json_path}", "r") as file:
             data = json.load(file)
         return data
+
+    def loadSave(self, username):
+        with open(f"{json_path}", "r") as file:
+            data = json.load(file)
+            if username in data:
+                return data[username]
 
 
     def createDictionary(self):
@@ -39,11 +45,14 @@ class SaveManager:
         self.map = map
         self.towers = towers
 
-    def saveToFile(self):
-        output = json.dumps(self.createDictionary(), indent=4)
+    def saveToFile(self, username):
+        self.others[username] = self.createDictionary()
+        output = json.dumps(self.others, indent=4)
         with open(f"{json_path}", "w") as file:
             file.write(output)
 
-    def resetSave(self):
+    def resetSave(self, username):
+        self.others[username] = {}
+        output = json.dumps(self.others, indent=4)
         with open(f"{json_path}", "w") as file:
-            file.write(json.dumps({}, indent=4))
+            file.write(output)

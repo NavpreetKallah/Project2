@@ -86,8 +86,7 @@ class Round:
             enemy = self.enemy_creator[colour]["cost"]
             if self.valueLeft - enemy >= 0:
                 self.valueLeft -= enemy
-                manager.create(self.enemies["ceramic"], self.generateDelay(colour), self.generateProperties(colour), self.current_round)
-                return
+                manager.create(self.enemies[colour], self.generateDelay(colour), self.generateProperties(colour), self.current_round)
                 self.generateEnemies(manager)
                 break
 

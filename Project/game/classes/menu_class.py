@@ -6,8 +6,10 @@ from pygame import K_RIGHT, K_LEFT, K_DOWN, K_UP, K_SPACE, K_RETURN
 path = os.path.dirname(os.getcwd()) + "/textures"
 from game.config import SCALE
 from game.classes.textbox_class import TextInput
+from game.classes.sql_class import Sql
 
 
+Sql = Sql()
 TextInputUsername = TextInput()
 TextInputPassword = TextInput()
 
@@ -22,6 +24,7 @@ class Menu:
         self.selector_images = []
         self.user_name_completed = False
         self.password_completed = False
+        self.error_message = None
 
         self.start_time = time.perf_counter()
         self.time_since_selector = time.perf_counter()
@@ -43,6 +46,18 @@ class Menu:
             pygame.image.load_extended(f"{path}/continue/continue.png"), SCALE)
         self.continue_new_game = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/continue/new_game.png"), SCALE)
+        self.continue_username_taken = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/continue/username_taken.png"), SCALE)
+        self.continue_wrong_password = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/continue/wrong_password.png"), SCALE)
+        self.continue_empty_fields = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/continue/empty_fields.png"), SCALE)
+
+        self.error_messages = {
+            "password": self.continue_wrong_password,
+            "username": self.continue_username_taken,
+            "empty": self.continue_empty_fields
+        }
 
         self.user_username = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/user/username.png"), SCALE)
@@ -83,13 +98,13 @@ class Menu:
 
     def selector(self, keyspressed, move=True, colour_change=False):
         if keyspressed[K_RIGHT] or keyspressed[K_DOWN]:
-            if time.perf_counter() - self.time_since_selector > 0.25:
+            if time.perf_counter() - self.time_since_selector > 0.2:
                 self.time_since_selector = time.perf_counter()
                 self.selector_index += 1
                 self.selector_location = self.selector_locations[self.selector_index % len(self.selector_locations)]
 
         elif keyspressed[K_LEFT] or keyspressed[K_UP]:
-            if time.perf_counter() - self.time_since_selector > 0.25:
+            if time.perf_counter() - self.time_since_selector > 0.2:
                 self.time_since_selector = time.perf_counter()
                 self.selector_index += -1
                 self.selector_location = self.selector_locations[self.selector_index % len(self.selector_locations)]
@@ -97,7 +112,7 @@ class Menu:
         if colour_change:
             self.selector_image = self.selector_images[self.selector_index % len(self.selector_locations)]
 
-        if keyspressed[K_SPACE] or keyspressed[K_RETURN] and time.perf_counter() - self.time_since_loaded > 1:
+        if keyspressed[K_SPACE] or keyspressed[K_RETURN] and time.perf_counter() - self.time_since_loaded > 0.3:
             return self.selector_selected[self.selector_index % len(self.selector_locations)]
 
         if time.perf_counter() - self.start_time > 0.5 and move:
@@ -154,10 +169,12 @@ class Menu:
             return self.runContinueSelect(layer)
 
         elif menu == "create":
+            self.initialised = None
             return self.runCreate(layer, events)
 
         elif menu == "login":
-            return self.runLogin(layer)
+            self.initialised = None
+            return self.runLogin(layer, events)
 
     def runMainMenu(self, layer):
         keyspressed = pygame.key.get_pressed()
@@ -176,6 +193,8 @@ class Menu:
         layer.blit(self.continue_continue, (12 * SCALE, 12 * SCALE))
         layer.blit(self.selector_image, self.selector_location)
         layer.blit(self.continue_new_game, (12 * SCALE, 30 * SCALE))
+        if self.error_message:
+            layer.blit(self.error_messages[self.error_message], (12 * SCALE, 98 * SCALE))
 
         return self.selector(keyspressed)
 
@@ -192,7 +211,6 @@ class Menu:
 
     def runCreate(self, layer, events):
         layer.fill(pygame.Color(70, 70, 70))
-        mouse = pygame.mouse.get_pos()
         layer.blit(self.user_username, (32 * SCALE, 7 * SCALE))
         layer.blit(self.user_password, (32 * SCALE, 50 * SCALE))
         layer.blit(self.user_textbox, (7 * SCALE, 26 * SCALE))
@@ -214,18 +232,43 @@ class Menu:
             layer.blit(self.entered_password, (12 * SCALE, 69 * SCALE))
 
         if self.user_name_completed and self.password_completed:
-            return (self.entered_user_name, self.entered_password)
+            return (TextInputUsername.text, TextInputPassword.text)
+
+    def clearFields(self):
+        self.user_name_completed = False
+        self.password_completed = False
+        self.entered_user_name = None
+        self.entered_password = None
+        TextInputPassword.text = ""
+        TextInputUsername.text = ""
 
 
 
-    def runLogin(self, layer):
-        mouse = pygame.mouse.get_pos()
+
+    def runLogin(self, layer, events):
+        layer.fill(pygame.Color(70, 70, 70))
         layer.blit(self.user_username, (32 * SCALE, 7 * SCALE))
         layer.blit(self.user_password, (32 * SCALE, 50 * SCALE))
         layer.blit(self.user_textbox, (7 * SCALE, 26 * SCALE))
         layer.blit(self.user_textbox, (7 * SCALE, 70 * SCALE))
         layer.blit(self.user_login, (52 * SCALE, 94 * SCALE))
-        return
+
+        if events:
+            if not self.user_name_completed:
+                self.user_name_completed = TextInputUsername.create(events)
+            elif not self.password_completed and self.user_name_completed:
+                self.password_completed = TextInputPassword.create(events)
+        if not self.user_name_completed:
+            self.entered_user_name = self.font.render(TextInputUsername.text, False, (0,0,0))
+        elif self.user_name_completed:
+            self.entered_password = self.font.render(TextInputPassword.text, True, (0,0,0))
+
+        layer.blit(self.entered_user_name, (12 * SCALE, 25 * SCALE))
+        if self.user_name_completed:
+            layer.blit(self.entered_password, (12 * SCALE, 69 * SCALE))
+
+        if self.user_name_completed and self.password_completed:
+            return (TextInputUsername.text, TextInputPassword.text)
 
     def runDifficultySelect(self, layer):
         keyspressed = pygame.key.get_pressed()
