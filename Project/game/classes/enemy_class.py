@@ -78,7 +78,7 @@ class Enemy(pygame.sprite.Sprite):
         elif self.regen:
             self.pos = pygame.Vector2(SCALE * (11 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-5))
         elif self.name == "moab":
-            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-7))
+            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-5))
         elif self.name == "bfb":
             self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-10))
         elif self.name == "zomg":

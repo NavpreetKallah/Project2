@@ -53,6 +53,28 @@ class Menu:
         self.continue_empty_fields = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/continue/empty_fields.png"), SCALE)
 
+        self.death_restart_normal = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/death/restart_normal.png"), SCALE)
+        self.death_restart_blink = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/death/restart_blink.png"), SCALE)
+        self.death_quit_blink = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/death/quit_blink.png"), SCALE)
+        self.death_quit_normal = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/death/quit_normal.png"), SCALE)
+        self.death_screen = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/death/screen.png"), SCALE)
+
+        self.win_continue_normal = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/win/continue_normal.png"), SCALE)
+        self.win_continue_blink = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/win/continue_blink.png"), SCALE)
+        self.win_quit_blink = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/win/quit_blink.png"), SCALE)
+        self.win_quit_normal = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/win/quit_normal.png"), SCALE)
+        self.win_screen = pygame.transform.scale_by(
+            pygame.image.load_extended(f"{path}/win/screen.png"), SCALE)
+
         self.error_messages = {
             "password": self.continue_wrong_password,
             "username": self.continue_username_taken,
@@ -96,18 +118,26 @@ class Menu:
         self.difficulty_menu_hard_selector = pygame.transform.scale_by(
             pygame.image.load_extended(f"{path}/difficulty_menu/difficulty_menu_hard_selector.png"), SCALE)
 
-    def selector(self, keyspressed, move=True, colour_change=False):
+    def selector(self, keyspressed, move=True, colour_change=False, blink=False):
         if keyspressed[K_RIGHT] or keyspressed[K_DOWN]:
             if time.perf_counter() - self.time_since_selector > 0.2:
                 self.time_since_selector = time.perf_counter()
                 self.selector_index += 1
                 self.selector_location = self.selector_locations[self.selector_index % len(self.selector_locations)]
+                if blink:
+                    self.selector_image = self.selector_images[
+                        (self.selector_images.index(self.selector_image) + 1) % 2] if self.selector_index % 2 < 1 else \
+                    self.selector_images[((self.selector_images.index(self.selector_image) + 1) % 2 + 2) % 4]
 
         elif keyspressed[K_LEFT] or keyspressed[K_UP]:
             if time.perf_counter() - self.time_since_selector > 0.2:
                 self.time_since_selector = time.perf_counter()
                 self.selector_index += -1
                 self.selector_location = self.selector_locations[self.selector_index % len(self.selector_locations)]
+                if blink:
+                    self.selector_image = self.selector_images[
+                        (self.selector_images.index(self.selector_image) + 1) % 2] if self.selector_index % 2 < 1 else \
+                    self.selector_images[((self.selector_images.index(self.selector_image) + 1) % 2 + 2) % 4]
 
         if colour_change:
             self.selector_image = self.selector_images[self.selector_index % len(self.selector_locations)]
@@ -115,16 +145,22 @@ class Menu:
         if keyspressed[K_SPACE] or keyspressed[K_RETURN] and time.perf_counter() - self.time_since_loaded > 0.3:
             return self.selector_selected[self.selector_index % len(self.selector_locations)]
 
-        if time.perf_counter() - self.start_time > 0.5 and move:
+        if time.perf_counter() - self.start_time > 0.5:
             self.start_time = time.perf_counter()
-            self.direction = -self.direction
-            self.selector_location = (self.selector_location[0] + SCALE * self.direction, self.selector_location[1])
+            if move:
+                self.direction = -self.direction
+                self.selector_location = (self.selector_location[0] + SCALE * self.direction, self.selector_location[1])
+            elif blink:
+                self.selector_image = self.selector_images[(self.selector_images.index(self.selector_image)+1)%2] if self.selector_index%2 < 1 else self.selector_images[((self.selector_images.index(self.selector_image)+1)%2+2)%4]
+
+
 
         return None
 
-    def runMenu(self, menu, layer, events=None):
+    def runMenu(self, menu, layer, events=None, beaten=False):
         if menu == "main":
             if self.initialised != "main":
+                self.time_since_loaded = time.perf_counter()
                 self.selector_image = self.main_menu_selector
                 self.selector_locations = [(64 * SCALE, 12 * SCALE), (90 * SCALE, 30 * SCALE), (62 * SCALE, 48 * SCALE)]
                 self.selector_selected = ["play", "towers", "quit"]
@@ -138,11 +174,11 @@ class Menu:
                 self.time_since_loaded = time.perf_counter()
                 self.selector_image = self.map_menu_selector
                 self.selector_locations = [(3 * SCALE, 55 * SCALE), (56 * SCALE, 55 * SCALE), (109 * SCALE, 55 * SCALE)]
-                self.selector_selected = ["meadows", "cornfield", "locked"]
+                self.selector_selected = ["cornfield", "meadows", "locked"]
                 self.selector_index = 0
                 self.selector_location = self.selector_locations[0]
                 self.initialised = "map"
-            return self.runMap(layer)
+            return self.runMap(layer, beaten)
 
         elif menu == "difficulty":
             if self.initialised != "difficulty":
@@ -169,13 +205,60 @@ class Menu:
             return self.runContinueSelect(layer)
 
         elif menu == "create":
-            self.initialised = None
+            if self.initialised != "create":
+                self.time_since_loaded = time.perf_counter()
+                self.initialised = "create"
             return self.runCreate(layer, events)
 
         elif menu == "login":
-            self.initialised = None
+            if self.initialised != "login":
+                self.time_since_loaded = time.perf_counter()
+                self.initialised = "login"
             return self.runLogin(layer, events)
 
+        elif menu == "death":
+            if self.initialised != "death":
+                layer.fill(pygame.Color(70, 70, 70, 100))
+                self.time_since_loaded = time.perf_counter()
+                self.selector_images = [self.death_restart_normal, self.death_restart_blink,
+                                        self.death_quit_normal, self.death_quit_blink]
+                self.selector_image = self.selector_images[self.selector_index]
+                self.selector_image = self.death_restart_normal
+                self.selector_locations = [(60 * SCALE, 59 * SCALE), (69 * SCALE, 71 * SCALE)]
+                self.selector_selected = ["restart", "quit"]
+                self.selector_index = 0
+                self.selector_location = self.selector_locations[0]
+                self.initialised = "death"
+            return self.runDeath(layer)
+
+        elif menu == "win":
+            if self.initialised != "win":
+                layer.fill(pygame.Color(70, 70, 70, 100))
+                self.time_since_loaded = time.perf_counter()
+                self.selector_images = [self.win_continue_normal, self.win_continue_blink,
+                                        self.win_quit_normal, self.win_quit_blink]
+                self.selector_image = self.selector_images[self.selector_index]
+                self.selector_image = self.win_continue_normal
+                self.selector_locations = [(58 * SCALE, 59 * SCALE), (69 * SCALE, 71 * SCALE)]
+                self.selector_selected = ["continue", "quit"]
+                self.selector_index = 0
+                self.selector_location = self.selector_locations[0]
+                self.initialised = "win"
+            return self.runWin(layer)
+
+    def runDeath(self, layer):
+        keyspressed = pygame.key.get_pressed()
+        layer.blit(self.death_screen, (40 * SCALE,30 * SCALE))
+        layer.blit(self.selector_image, self.selector_location)
+
+        return self.selector(keyspressed, move=False, blink=True)
+
+    def runWin(self, layer):
+        keyspressed = pygame.key.get_pressed()
+        layer.blit(self.win_screen, (40 * SCALE,30 * SCALE))
+        layer.blit(self.selector_image, self.selector_location)
+
+        return self.selector(keyspressed, move=False, blink=True)
     def runMainMenu(self, layer):
         keyspressed = pygame.key.get_pressed()
         layer.fill(pygame.Color(70, 70, 70))
@@ -198,14 +281,17 @@ class Menu:
 
         return self.selector(keyspressed)
 
-    def runMap(self, layer):
+    def runMap(self, layer, beaten):
         keyspressed = pygame.key.get_pressed()
         layer.fill(pygame.Color(70, 70, 70))
         layer.blit(self.selector_image, self.selector_location)
         layer.blit(self.map_menu_select_text, (4 * SCALE, 18 * SCALE))
-        layer.blit(self.map_menu_cornfield, (57 * SCALE, 49 * SCALE))
+        layer.blit(self.map_menu_cornfield, (4 * SCALE, 49 * SCALE))
         layer.blit(self.map_menu_locked, (110 * SCALE, 49 * SCALE))
-        layer.blit(self.map_menu_meadows, (4 * SCALE, 49 * SCALE))
+        if beaten:
+            layer.blit(self.map_menu_meadows, (57 * SCALE, 49 * SCALE))
+        else:
+            layer.blit(self.map_menu_locked, (57 * SCALE, 49 * SCALE))
 
         return self.selector(keyspressed, move=False)
 

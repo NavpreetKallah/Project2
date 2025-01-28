@@ -423,6 +423,9 @@ class TowerManager:
             self.placing = False
             self.tower_pos = None
 
+    def reset(self):
+        self.sprites.empty()
+
     def place(self, layer, paths, path_masks, tower):
         mouse = pygame.mouse.get_pos()
         corrected_mouse = ((mouse[0] // SCALE) * SCALE, (mouse[1] // SCALE) * SCALE)

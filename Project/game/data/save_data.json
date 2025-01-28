@@ -1,43 +1,66 @@
 {
-    "nav": {
+    "test2": {
         "health": 0,
-        "money": 23802.50000000001,
-        "round": 10,
+        "money": 0,
+        "round": 0,
+        "difficulty": null,
+        "game_mode": null,
+        "map": null,
+        "beaten": false,
+        "towers": []
+    },
+    "test7": {
+        "health": 0,
+        "money": 0,
+        "round": 0,
+        "difficulty": null,
+        "game_mode": null,
+        "map": null,
+        "beaten": false,
+        "towers": []
+    },
+    "test8": {
+        "health": 0,
+        "money": 0,
+        "round": 0,
+        "difficulty": null,
+        "game_mode": null,
+        "map": null,
+        "beaten": false,
+        "towers": []
+    },
+    "test9": {
+        "beaten": true
+    },
+    "test10": {
+        "health": 81,
+        "money": 171051,
+        "round": 40,
         "difficulty": "easy",
         "game_mode": null,
         "map": "cornfield",
+        "beaten": true,
         "towers": [
-            {
-                "name": "Alchemist",
-                "pos": [
-                    296,
-                    752
-                ],
-                "upgrades": {
-                    "path_one": 4,
-                    "path_two": 3
-                }
-            },
             {
                 "name": "Super",
                 "pos": [
-                    248,
-                    616
-                ],
-                "upgrades": {
-                    "path_one": 3,
-                    "path_two": 0
-                }
-            },
-            {
-                "name": "Dart",
-                "pos": [
-                    176,
-                    128
+                    512,
+                    520
                 ],
                 "upgrades": {
                     "path_one": 0,
-                    "path_two": 0
+                    "path_two": 4
+                }
+            },
+            {
+                "name": "Village",
+                "pos": [
+                    560,
+                    472
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 3
                 }
             }
         ]

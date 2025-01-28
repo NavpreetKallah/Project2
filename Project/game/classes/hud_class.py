@@ -135,8 +135,11 @@ class Hud:
         self.money = money
         self.money_text = self.createNumber(self.money, 0)
 
-    def updateRound(self, round):
-        self.round += round
+    def updateRound(self, round, set=False):
+        if not set:
+            self.round += round
+        else:
+            self.round = round
         self.round_text = self.createNumber(self.round, 0)
 
     def createBackground(self, surface, color):

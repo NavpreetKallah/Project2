@@ -11,6 +11,7 @@ class SaveManager:
         self.game_mode = None
         self.map = None
         self.towers = []
+        self.beaten = False
         self.others = self.other_users()
     def other_users(self):
         with open(f"{json_path}", "r") as file:
@@ -31,12 +32,13 @@ class SaveManager:
                 "difficulty": self.difficulty,
                 "game_mode": self.game_mode,
                 "map": self.map,
+                "beaten": self.beaten,
                 "towers": [{"name": tower.__class__.__name__,
                             "pos": tower.pos,
                             "upgrades": tower.upgrades} for tower in self.towers]}
         return dict
 
-    def updateSave(self, health, money, round, difficulty, game_mode, map, towers):
+    def updateSave(self, health, money, round, difficulty, game_mode, map, towers, beaten):
         self.health = health
         self.money = money
         self.round = round
@@ -44,6 +46,7 @@ class SaveManager:
         self.game_mode = game_mode
         self.map = map
         self.towers = towers
+        self.beaten = beaten
 
     def saveToFile(self, username):
         self.others[username] = self.createDictionary()
@@ -52,7 +55,7 @@ class SaveManager:
             file.write(output)
 
     def resetSave(self, username):
-        self.others[username] = {}
+        self.others[username] = {"beaten": self.beaten}
         output = json.dumps(self.others, indent=4)
         with open(f"{json_path}", "w") as file:
             file.write(output)

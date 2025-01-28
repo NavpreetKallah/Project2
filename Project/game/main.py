@@ -36,7 +36,7 @@ WIDTH, HEIGHT = 160 * SCALE, 120 * SCALE
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 Sql = Sql()
-Sql.create()
+# Sql.create()
 Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
 Menu = Menu()
@@ -60,10 +60,14 @@ class Game:
         self.loaded_game = False
         self.main_menu_option = None
         self.map_option = None
+        self.win_option = None
         self.difficulty_option = None
         self.user_validated = False
         self.user_created = None
         self.user_login = None
+        self.beaten = False
+        self.dead = False
+        self.pause = False
         self.difficulties = ["easy", "medium", "hard"]
         self.fps_counter = 0
         self.fps = 60
@@ -100,21 +104,29 @@ class Game:
                         if Sql.validate(self.user_login[0], self.user_login[1]):
                             self.username = self.user_login[0]
                             data = SaveManager.loadSave(self.user_login[0])
-                            if data:
+                            if "health" in data:
                                 self.health = data["health"]
                                 self.money = data["money"]
                                 self.round = data["round"]
+                                self.beaten = data["beaten"]
                                 self.difficulty_option = data["difficulty"]
                                 self.game_mode = data["game_mode"]
                                 self.map_option = data["map"]
                                 self.difficulty_multiplier = 1 + 0.15 * self.difficulties.index(self.difficulty_option)
-                                SaveManager.saveToFile(self.username)
                                 TowerManager.difficulty_multiplier = self.difficulty_multiplier
                                 SaveManager.updateSave(self.health, self.money, Round.current_round,
                                                        self.difficulty_option, None, self.map_option,
-                                                       TowerManager.getSprites())
+                                                       TowerManager.getSprites(), self.beaten)
+                                SaveManager.saveToFile(self.username)
                                 TowerManager.loadSave(data["towers"])
                                 self.loaded_game = True
+
+                            elif "beaten" in data:
+                                self.beaten = data["beaten"]
+                                self.continue_game = False
+                                self.user_created = True
+                                self.user_validated = True
+
                             else:
                                 self.continue_game = False
                                 self.user_created = True
@@ -142,152 +154,218 @@ class Game:
                                 Menu.clearFields()
 
                         if self.user_validated == True:
-                            if self.map_option not in ["meadows", "cornfield"]:
-                                self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"))
-                            elif self.map_option in ["meadows", "cornfield"]:
+                            if (self.map_option == "meadows" and not self.beaten) or (self.map_option == "locked") or self.map_option is None:
+                                self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"), beaten=self.beaten)
+                            elif self.map_option == "cornfield" or (self.map_option == "meadows" and self.beaten):
                                 if self.difficulty_option not in ["easy", "medium", "hard"]:
                                     self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
                                 else:
                                     SaveManager.updateSave(self.health, self.money, Round.current_round,
                                                            self.difficulty_option, None, self.map_option,
-                                                           TowerManager.getSprites())
+                                                           TowerManager.getSprites(), self.beaten)
                                     SaveManager.saveToFile(self.username)
                                     self.loaded_game = True
+        elif self.loaded_game:
 
-        if self.map_option and self.difficulty_option and not self.map_initialise:
-            Renderer.deleteLayer("menu")
-            Map.initialiseMap(self.map_option, Renderer.getLayer("map"))
-            self.path = Map.pathfind()
-            self.map_initialise = True
+            if self.map_option and self.difficulty_option and not self.map_initialise:
+                Renderer.clearLayer("menu")
+                Map.initialiseMap(self.map_option, Renderer.getLayer("map"))
+                self.path = Map.pathfind()
+                self.map_initialise = True
 
-        if not self.hud_initialise and self.difficulty_option and self.map_option:
-            Hud.initialiseHud(Renderer.getLayer("HUD"))
-            Hud.setDifficulty(self.difficulty_option)
-            Hud.updateMoney(round(self.money))
-            Hud.updateRound(self.round)
-            Hud.updateHealth(self.health)
-            Hud.updateHud(Renderer.getLayer("HUD"))
-            self.difficulty_multiplier = 1 + 0.15 * self.difficulties.index(self.difficulty_option)
-            TowerManager.difficulty_multiplier = self.difficulty_multiplier
-            self.hud_initialise = True
-
-        if (pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites():
-            if not self.round_started:
-                self.autoplay = True
-                self.round_started = True
-                Round.startRound(EnemyManager)
-                Hud.updateRound(1)
-                Hud.disableSpeed(Renderer.getLayer("HUD"))
+            if not self.hud_initialise and self.difficulty_option and self.map_option:
+                Hud.initialiseHud(Renderer.getLayer("HUD"))
+                Hud.setDifficulty(self.difficulty_option)
+                Hud.updateMoney(round(self.money))
+                Hud.updateRound(self.round)
+                Round.forceRound(self.round)
+                Hud.updateHealth(self.health)
                 Hud.updateHud(Renderer.getLayer("HUD"))
+                self.difficulty_multiplier = 1 + 0.15 * self.difficulties.index(self.difficulty_option)
+                TowerManager.difficulty_multiplier = self.difficulty_multiplier
+                self.hud_initialise = True
 
-        # print(1/(time.perf_counter() - self.temp))
-        # self.temp = time.perf_counter()
-        #print(self.clock.get_fps())
-        self.fps_counter += self.clock.get_fps()
-        if time.perf_counter() - self.fps_timer > 5:
-            #print(self.fps_counter/ (60*5))
-            self.fps_timer = time.perf_counter()
-            self.fps_counter = 0
+            if not self.dead and ((pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites()):
+                if not self.round_started:
+                    self.autoplay = True
+                    self.round_started = True
+                    Round.startRound(EnemyManager)
+                    self.round += 1
+                    Hud.updateRound(1)
+                    Hud.disableSpeed(Renderer.getLayer("HUD"))
+                    Hud.updateHud(Renderer.getLayer("HUD"))
 
-        if pygame.mouse.get_pressed()[0] and not self.clicked:
-            self.clicked = True
-            tower_chosen = Hud.tower_chosen()
-            tower_upgrading = TowerManager.getTowerClicked()
-            sell_active = Hud.sellClicked() or Hud.getSell()
-            if Hud.fastForward(Renderer.getLayer("HUD")):
-                EnemyManager.speedChange()
-                Round.speedChange()
-                self.fast_forward = not self.fast_forward
-                Hud.updateHud(Renderer.getLayer("HUD"))
+            if 41 + self.difficulties.index(self.difficulty_option)*20 == self.round and not self.win_option:
+                self.beaten = True
+                self.win_option = Menu.runMenu("win", Renderer.getLayer("menu"))
+                self.pause = True
+                if self.win_option == "continue":
+                    Renderer.clearLayer("menu")
+                    self.pause = False
+                elif self.win_option == "quit":
+                    SaveManager.resetSave(self.username)
+                    Menu.clearFields()
+                    self.pause = False
+                    self.loaded_game = False
+                    self.win_option = None
+                    self.difficulty_option = None
+                    self.map_option = None
+                    self.continue_game = None
+                    self.username = None
+                    self.user_validated = None
+                    self.main_menu_option = None
+                    self.user_login = None
+                    self.health = 100
+                    self.money = 650
 
-            if sell_active:
-                sold = Hud.sellMenu()
-                if sold != "main" and sold:
-                    self.money += sold
-                    Hud.updateMoney(round(self.money))
-                Hud.updateHud(Renderer.getLayer("HUD"))
 
-            elif tower_chosen:
-                TowerManager.placing = True
-                TowerManager.placing_tower = tower_chosen
+            # print(1/(time.perf_counter() - self.temp))
+            # self.temp = time.perf_counter()
+            #print(self.clock.get_fps())
+            self.fps_counter += self.clock.get_fps()
+            if time.perf_counter() - self.fps_timer > 5:
+                #print(self.fps_counter/ (60*5))
+                self.fps_timer = time.perf_counter()
+                self.fps_counter = 0
 
-            elif Hud.getUpgrading():
-                option_chosen = Hud.upgradeChosen(Renderer.getLayer("HUD"))
-                Hud.updateHud(Renderer.getLayer("HUD"))
+            if pygame.mouse.get_pressed()[0] and not self.clicked and not self.dead and not self.pause:
+                self.clicked = True
+                tower_chosen = Hud.tower_chosen()
+                tower_upgrading = TowerManager.getTowerClicked()
+                sell_active = Hud.sellClicked() or Hud.getSell()
+                if Hud.fastForward(Renderer.getLayer("HUD")):
+                    EnemyManager.speedChange()
+                    Round.speedChange()
+                    self.fast_forward = not self.fast_forward
+                    Hud.updateHud(Renderer.getLayer("HUD"))
 
-                if option_chosen:
-                    if option_chosen not in ["main", "sell"]:
-                        upgrade_cost = TowerManager.getUpgradingTower().upgrade(option_chosen, self.money)
-                        self.money -= upgrade_cost
+                if sell_active:
+                    sold = Hud.sellMenu()
+                    if sold != "main" and sold:
+                        self.money += sold
                         Hud.updateMoney(round(self.money))
+                    Hud.updateHud(Renderer.getLayer("HUD"))
+
+                elif tower_chosen:
+                    TowerManager.placing = True
+                    TowerManager.placing_tower = tower_chosen
+
+                elif Hud.getUpgrading():
+                    option_chosen = Hud.upgradeChosen(Renderer.getLayer("HUD"))
+                    Hud.updateHud(Renderer.getLayer("HUD"))
+
+                    if option_chosen:
+                        if option_chosen not in ["main", "sell"]:
+                            upgrade_cost = TowerManager.getUpgradingTower().upgrade(option_chosen, self.money)
+                            self.money -= upgrade_cost
+                            Hud.updateMoney(round(self.money))
+                            Hud.updateHud(Renderer.getLayer("HUD"))
+
+                    else:
+                        Hud.setUpgrading(False)
                         Hud.updateHud(Renderer.getLayer("HUD"))
 
-                else:
-                    Hud.setUpgrading(False)
+                elif tower_upgrading:
+                    Hud.createTowerUpgrade(tower_upgrading)
+                    Hud.setUpgrading(True)
                     Hud.updateHud(Renderer.getLayer("HUD"))
 
-            elif tower_upgrading:
-                Hud.createTowerUpgrade(tower_upgrading)
-                Hud.setUpgrading(True)
+            if TowerManager.getPlacing():
+                TowerManager.place(Renderer.getLayer("tower"), Map.getRects(), Map.getMasks(),TowerManager.getPlacingTower())
+
+            health_change = EnemyManager.getKilled()
+            if health_change:
+                if self.health - health_change < 0:
+                    self.health = 0
+
+                else:
+                    self.health = self.health - health_change
+                Hud.updateHealth(self.health)
                 Hud.updateHud(Renderer.getLayer("HUD"))
 
-        if TowerManager.getPlacing():
-            TowerManager.place(Renderer.getLayer("tower"), Map.getRects(), Map.getMasks(),TowerManager.getPlacingTower())
-
-        health_change = EnemyManager.getKilled()
-        if health_change:
-            if self.health - health_change < 0:
-                self.health = 0
-            else:
-                self.health = self.health - health_change
-            Hud.updateHealth(self.health)
-            Hud.updateHud(Renderer.getLayer("HUD"))
-
-        if not pygame.mouse.get_pressed()[0]:
-            self.clicked = False
-            if TowerManager.getPlacing():
-                if TowerManager.getTowerPos():
-                    self.money -= TowerManager.getCost()
-                    TowerManager.create()
+            if self.health == 0:
+                SaveManager.resetSave(self.username)
+                self.dead = True
+                self.death_option = Menu.runMenu("death", Renderer.getLayer("menu"))
+                if self.death_option == "quit":
+                    Menu.clearFields()
+                    self.dead = False
+                    self.loaded_game = False
+                    self.death_option = None
+                    self.difficulty_option = None
+                    self.map_option = None
+                    self.continue_game = None
+                    self.username = None
+                    self.user_validated = None
+                    self.main_menu_option = None
+                    self.user_login = None
+                    self.health = 100
+                    self.money = 650
+                elif self.death_option == "restart":
+                    Renderer.clearLayer("menu")
+                    self.round = 0
+                    Round.reset()
+                    self.dead = False
+                    self.health = 100
+                    self.money = 650
+                    TowerManager.reset()
+                    Hud.updateRound(0, "set")
                     Hud.updateMoney(round(self.money))
-                    Hud.updateHud(Renderer.getLayer("HUD"))
+                    Hud.updateHealth(self.health)
+
+            if not pygame.mouse.get_pressed()[0]:
+                self.clicked = False
+                if TowerManager.getPlacing():
+                    if TowerManager.getTowerPos():
+                        self.money -= TowerManager.getCost()
+                        TowerManager.create()
+                        Hud.updateMoney(round(self.money))
+                        Hud.updateHud(Renderer.getLayer("HUD"))
+                    else:
+                        TowerManager.resetPlacing()
                 else:
                     TowerManager.resetPlacing()
-            else:
-                TowerManager.resetPlacing()
 
-        money_made = ProjectileManager.getMoneyMade()
-        money_made_two = TowerManager.getMoneyMade()
-        if money_made:
-            self.money += money_made
-            Hud.updateMoney(round(self.money))
-            Hud.updateHud(Renderer.getLayer("HUD"))
-        if money_made_two:
-            self.money += money_made_two
-            Hud.updateMoney(round(self.money))
-            Hud.updateHud(Renderer.getLayer("HUD"))
-        TowerManager.aim(EnemyManager.getSprites(), self.fast_forward)
+            money_made = ProjectileManager.getMoneyMade()
+            money_made_two = TowerManager.getMoneyMade()
+            if money_made:
+                self.money += money_made
+                Hud.updateMoney(round(self.money))
+                Hud.updateHud(Renderer.getLayer("HUD"))
+            if money_made_two:
+                self.money += money_made_two
+                Hud.updateMoney(round(self.money))
+                Hud.updateHud(Renderer.getLayer("HUD"))
 
-        if self.round_started:
-            EnemyManager.update(Renderer.getLayer("enemy"), copy.deepcopy(self.path))
+            if not self.dead:
+                TowerManager.aim(EnemyManager.getSprites(), self.fast_forward)
 
-        if not EnemyManager.getSprites() and self.round_started and not EnemyManager.getEnemies():
-            self.round_started = False
-            Hud.enableSpeed(Renderer.getLayer("HUD"))
-            Hud.updateHud(Renderer.getLayer("HUD"))
-            SaveManager.updateSave(self.health, self.money, Round.current_round, self.difficulty_option, None, self.map_option, TowerManager.getSprites())
-            SaveManager.saveToFile(self.username)
+            if self.round_started and not self.pause:
+                EnemyManager.update(Renderer.getLayer("enemy"), copy.deepcopy(self.path))
 
-        ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
-        ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
-        TowerManager.getSprites().draw(Renderer.getLayer("tower"))
+            if not EnemyManager.getSprites() and self.round_started and not EnemyManager.getEnemies():
+                self.round_started = False
+                Hud.enableSpeed(Renderer.getLayer("HUD"))
+                Hud.updateHud(Renderer.getLayer("HUD"))
+                SaveManager.updateSave(self.health, self.money, Round.current_round, self.difficulty_option, None, self.map_option, TowerManager.getSprites(), self.beaten)
+                SaveManager.saveToFile(self.username)
+
+            if not self.pause:
+                ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
+            ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
+            TowerManager.getSprites().draw(Renderer.getLayer("tower"))
+
+
 
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
 
-        Renderer.clearLayer("enemy")
-        Renderer.clearLayer("tower")
-        Renderer.clearLayer("projectile")
+        if self.loaded_game:
+            Renderer.clearLayer("enemy")
+            Renderer.clearLayer("tower")
+            Renderer.clearLayer("projectile")
+
+
 
     def quit(self):
         for event in self.events:

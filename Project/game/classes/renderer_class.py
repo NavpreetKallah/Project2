@@ -25,8 +25,6 @@ class Renderer:
         layers = []
         if "map" in self.layers:
             layers.append(self.layers["map"])
-        if "menu" in self.layers:
-            layers.append(self.layers["menu"])
         if "enemy" in self.layers:
             layers.append(self.layers["enemy"])
         if "tower" in self.layers:
@@ -35,6 +33,9 @@ class Renderer:
             layers.append(self.layers["projectile"])
         if "HUD" in self.layers:
             layers.append(self.layers["HUD"])
+
+        if "menu" in self.layers:
+            layers.append(self.layers["menu"])
         return layers
 
     def updateLayer(self, new_layer, old_layer):

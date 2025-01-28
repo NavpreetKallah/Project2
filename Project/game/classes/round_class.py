@@ -58,12 +58,20 @@ class Round:
         else:
             return 2000
 
+    def forceRound(self, round_number):
+        for _ in range(round_number):
+            self.current_round += 1
+            self.increaseDifficulty()
+
     def roundWin(self, manager):
         for _ in range(1):
             self.current_round += 1
             self.increaseDifficulty()
             self.valueLeft = self.current_round * self.calculateValue()
         self.generateEnemies(manager)
+
+    def reset(self):
+        self.current_round = 0
 
     def increaseDifficulty(self):
         max_enemies = len([i for i in self.enemy_spawn_rounds if i <= self.current_round])
