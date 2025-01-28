@@ -36,6 +36,7 @@ WIDTH, HEIGHT = 160 * SCALE, 120 * SCALE
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 Sql = Sql()
+Sql.create()
 Renderer = Renderer(WIDTH, HEIGHT)
 Renderer.clearLayers()
 Menu = Menu()
@@ -72,7 +73,7 @@ class Game:
         self.running = True
         self.round = 0
         self.health = 100
-        self.money = 75000000
+        self.money = 650
         self.autoplay = False
 
         title = "Balloons"
@@ -172,7 +173,7 @@ class Game:
 
         if (pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites():
             if not self.round_started:
-                # self.autoplay = True
+                self.autoplay = True
                 self.round_started = True
                 Round.startRound(EnemyManager)
                 Hud.updateRound(1)

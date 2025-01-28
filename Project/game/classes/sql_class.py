@@ -2,6 +2,16 @@ import sqlite3, os, random
 
 data = os.getcwd() + "/data/data.db"
 
+def hash(user_input):
+    hash_val = 1
+    for index, letter in enumerate(user_input):
+        hash_val *= ord(letter) ** len(user_input) * len(str(hash_val)) + (index+1) * index ** 2
+        if len(hex(int(hash_val))) > 32 or int(hash_val) > 1 * 10*48:
+            hash_val //= 16**(len(hex(int(hash_val)))-34)
+        if len(hex(int(hash_val))) < 24:
+            hash_val = hash_val ** (10)
+    return "".join([x for x in hex(int(hash_val)) if x != "0"])
+
 class Sql:
     def __init__(self):
         pass
@@ -26,7 +36,7 @@ class Sql:
                                 WHERE Users.Username = (?)", (username,))
             password_found = cursor.fetchone()
             if password_found:
-                return password_found[0] == password
+                return password_found[0] == hash(password)
 
     def createUser(self, username, password):
         with sqlite3.connect(f"{data}") as connection:
@@ -52,7 +62,7 @@ class Sql:
                 password_id = random.randint(1,999999)
 
             cursor.execute("INSERT INTO Users (UserID, Username) VALUES (?, ?)", (user_id, username,))
-            cursor.execute("INSERT INTO Passwords (PasswordID, Password) VALUES (?, ?)", (password_id, password,))
+            cursor.execute("INSERT INTO Passwords (PasswordID, Password) VALUES (?, ?)", (password_id, hash(password),))
             cursor.execute("INSERT INTO Link (UserID, PasswordID) VALUES (?, ?)", (user_id, password_id))
             connection.commit()
             return True

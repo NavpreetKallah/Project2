@@ -1,20 +1,45 @@
 {
-    "navpreet": {
+    "nav": {
         "health": 0,
-        "money": 0,
-        "round": 0,
-        "difficulty": null,
+        "money": 23802.50000000001,
+        "round": 10,
+        "difficulty": "easy",
         "game_mode": null,
-        "map": null,
-        "towers": []
-    },
-    "test": {
-        "health": 0,
-        "money": 0,
-        "round": 0,
-        "difficulty": null,
-        "game_mode": null,
-        "map": null,
-        "towers": []
+        "map": "cornfield",
+        "towers": [
+            {
+                "name": "Alchemist",
+                "pos": [
+                    296,
+                    752
+                ],
+                "upgrades": {
+                    "path_one": 4,
+                    "path_two": 3
+                }
+            },
+            {
+                "name": "Super",
+                "pos": [
+                    248,
+                    616
+                ],
+                "upgrades": {
+                    "path_one": 3,
+                    "path_two": 0
+                }
+            },
+            {
+                "name": "Dart",
+                "pos": [
+                    176,
+                    128
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            }
+        ]
     }
 }
