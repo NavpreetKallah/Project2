@@ -64,5 +64,85 @@
                 }
             }
         ]
+    },
+    "archie": {
+        "beaten": false
+    },
+    "opmaster": {
+        "health": 21,
+        "money": 57.89999999997781,
+        "round": 2,
+        "difficulty": "medium",
+        "game_mode": null,
+        "map": "cornfield",
+        "beaten": true,
+        "towers": [
+            {
+                "name": "Dart",
+                "pos": [
+                    488,
+                    528
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            },
+            {
+                "name": "Dart",
+                "pos": [
+                    768,
+                    624
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            },
+            {
+                "name": "Dart",
+                "pos": [
+                    696,
+                    560
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            },
+            {
+                "name": "Dart",
+                "pos": [
+                    472,
+                    664
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            },
+            {
+                "name": "Dart",
+                "pos": [
+                    344,
+                    584
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            },
+            {
+                "name": "Dart",
+                "pos": [
+                    344,
+                    704
+                ],
+                "upgrades": {
+                    "path_one": 0,
+                    "path_two": 0
+                }
+            }
+        ]
     }
 }

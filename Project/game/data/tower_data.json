@@ -106,7 +106,7 @@
     },
     "path_two": {
       "1": {"name": null,"cost": 210,"stat_change": [
-          {"attack":"main","stat": "burst","value": 4,"type": "set"}]},
+          {"attack":"main","stat": "burst","value": 3,"type": "set"}]},
       "2": {"name": null,"cost": 295,"stat_change": [
           {"attack":"main","stat": "pierce","value": 1,"type": "add"}]},
       "3": {"name": null,"cost": 2150,"stat_change": [
@@ -465,11 +465,9 @@
           {"attack":"main","stat": "burst","value": 2,"type": "set"}]}
     },
     "path_two": {"1": {"name": null,"cost": 1275,"stat_change": [
-          {"attack":"tower","stat": "range","value": 5,"type": "add"},
-          {"attack":"main","stat": "pierce","value": 1,"type": "add"}]},
+          {"attack":"tower","stat": "range","value": 5,"type": "add"}]},
       "2": {"name": null,"cost": 1615,"stat_change": [
-          {"attack":"tower","stat": "range","value": 6,"type": "add"},
-          {"attack":"main","stat": "pierce","value": 1,"type": "add"}]},
+          {"attack":"tower","stat": "range","value": 6,"type": "add"}]},
       "3": {"name": null,"cost": 21250,"stat_change": [
           {"attack":"main","stat": "damage","value": 3,"type": "set"},
           {"attack":"main","stat": "projectile","value": "robogreen","type": "set"}]},
