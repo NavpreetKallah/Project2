@@ -220,7 +220,7 @@
       "range": 22,
       "camo": false,
       "main" : {"speed": 2, "projectile_speed": 1, "damage": 1,"extra_damage": 0,  "lifespan": 1, "pierce": 15, "type": "default", "targets": ["frozen", "lead"]},
-      "secondary" : {"speed": 2, "projectile_speed": 1, "damage": 0,"extra_damage": 0,  "lifespan": 1, "pierce": 1, "type": "buff", "targets": ["frozen", "lead"], "duration": 5},
+      "secondary" : {"speed": 10, "projectile_speed": 1, "damage": 0,"extra_damage": 0,  "lifespan": 1, "pierce": 1, "type": "buff", "targets": ["frozen", "lead"], "duration": 5},
       "buffs": {},
     "path_one": {
       "1": {"name": null,"cost": 210,"stat_change": [
@@ -415,27 +415,31 @@
       "locked": false,
       "range": 20,
       "camo": false,
+      "main" : {"speed": 0.5, "projectile_speed": 1,"damage": 0,"extra_damage": 0, "money": 20, "autocollect": false,"lifespan": 30, "pierce": 9999, "type": "banana", "targets": ["frozen", "lead"]},
       "buffs": {"range":1.1},
     "path_one": {
       "1": {"name": null,"cost": 340,"stat_change": [
-          {"attack":"tower","stat": "range","value": 4,"type": "add"}]},
+          {"attack":"tower","stat": "range","value": 10,"type": "add"}]},
       "2": {"name": null,"cost": 1275,"stat_change": [
-          {"attack":"buff","stat": "speed","value": 0.85,"type": "set"}]},
-      "3": {"name": null,"cost": 1125,"stat_change": [
-          {"attack":"buff","stat": "range","value": 1.21,"type": "set"},
-          {"attack":"buff","stat": "pierce","value": 1,"type": "set"}]},
-      "4": {"name": null,"cost": 9625,"stat_change": [
-          {"attack":"buff", "stat": "damage","value": 1,"type": "add"}]}
+          {"attack":"main","stat": "speed","value": 0.85,"type": "set"}]},
+      "3": {"name": null,"cost": 2550,"stat_change": [
+          {"attack":"main","stat": "speed","value": 0.5,"type": "set"}]},
+      "4": {"name": null,"cost": 16150,"stat_change": [
+          {"attack":"main","stat": "speed","value": 4,"type": "multiply"},
+          {"attack":"main","stat": "money","value": 350,"type": "set"},
+          {"attack":"main","stat": "projectile","value": "crate","type": "set"}]}
     },
     "path_two": {
-      "1": {"name": "regen_block","cost": 210,"stat_change": null},
-      "2": {"name": null,"cost": 1700,"stat_change": [
-          {"attack":"buff","stat": "camo","value": true,"type": "set"}]},
-      "3": {"name": "temporary","cost": 6375,"stat_change": [
-          {"attack":"buff","stat": "targets","value": [],"type": "set"}]},
-      "4": {"name": null,"cost": 17000,"stat_change": [
-          {"attack": "buff", "stat": "speed","value": 0.7,"type": "set"},
-          {"attack": "buff", "stat": "pierce","value": 2,"type": "set"}]}
+      "1": {"name": "placeholder","cost": 700,"stat_change": [
+          {"attack":"main","stat": "pierce","value": 1,"type": "add"},
+          {"attack":"main","stat": "money","value": 1.1,"type": "multiply"}]},
+      "2": {"name": null,"cost": 700,"stat_change": [
+          {"attack":"main","stat": "pierce","value": 1,"type": "add"},
+          {"attack":"main","stat": "money","value": 1.1,"type": "multiply"}]},
+      "3": {"name": "temporary","cost": 5000,"stat_change": [
+          {"attack":"main","stat": "autocollect","value": true,"type": "set"}]},
+      "4": {"name": null,"cost": 12750,"stat_change": [
+          {"attack": "main", "stat": "speed","value": 0.7,"type": "set"}]}
     }
     },
     "Super": {
@@ -457,7 +461,7 @@
           {"attack":"main","stat": "projectile","value": "plasma","type": "set"},
           {"attack":"main","stat": "targets","value": ["purple"],"type": "set"}]},
       "3": {"name": "main","cost": 17000,"stat_change":[
-          {"attack":"main","stat": "pierce","value": 6,"type": "set"},
+          {"attack":"main","stat": "pierce","value": 2,"type": "set"},
           {"attack":"main","stat": "projectile","value": "sun","type": "set"},
           {"attack":"main","stat": "burst","value": 1,"type": "set"}]},
       "4": {"name": "sungod","cost": 50000,"stat_change": [

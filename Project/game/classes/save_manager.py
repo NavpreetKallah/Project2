@@ -1,61 +1,69 @@
-import pygame, os, json
-from game.config import SCALE
+import os, json
+from typing import Dict, List, Any, Optional
 
 json_path = os.path.dirname(os.getcwd()) + "/game/data/save_data.json"
+
+
 class SaveManager:
     def __init__(self):
-        self.health = 0
-        self.money = 0
-        self.round = 0
-        self.difficulty = None
-        self.game_mode = None
-        self.map = None
-        self.towers = []
-        self.beaten = False
-        self.others = self.other_users()
-    def other_users(self):
+        self.health: int = 0
+        self.money: int = 0
+        self.round: int = 0
+        self.difficulty: Optional[str] = None
+        self.map: Optional[str] = None
+        self.towers: List[Any] = []
+        self.beaten: bool = False
+        self.others: Dict[str, Any] = self.other_users()
+
+    def other_users(self) -> Dict[str, Any]:
         with open(f"{json_path}", "r") as file:
-            data = json.load(file)
+            data: Dict[str, Any] = json.load(file)
         return data
 
-    def loadSave(self, username):
+    def loadSave(self, username: str) -> Optional[Dict[str, Any]]:
         with open(f"{json_path}", "r") as file:
-            data = json.load(file)
+            data: Dict[str, Any] = json.load(file)
             if username in data:
                 return data[username]
+        return None
 
-
-    def createDictionary(self):
-        dict = {"health": self.health,
-                "money": self.money,
-                "round": self.round,
-                "difficulty": self.difficulty,
-                "game_mode": self.game_mode,
-                "map": self.map,
-                "beaten": self.beaten,
-                "towers": [{"name": tower.__class__.__name__,
-                            "pos": tower.pos,
-                            "upgrades": tower.upgrades} for tower in self.towers]}
+    def createDictionary(self) -> Dict[str, Any]:
+        tower_data = []
+        for tower in self.towers:
+            tower_data.append({
+                "name": tower.__class__.__name__,
+                "pos": tower.pos,
+                "upgrades": tower.upgrades
+            })
+        dict: Dict[str, Any] = {
+            "health": self.health,
+            "money": self.money,
+            "round": self.round,
+            "difficulty": self.difficulty,
+            "map": self.map,
+            "beaten": self.beaten,
+            "towers": tower_data
+        }
         return dict
 
-    def updateSave(self, health, money, round, difficulty, game_mode, map, towers, beaten):
+    def updateSave(self, health: int, money: int, round: int, difficulty: Optional[str], map: Optional[str],
+                   towers: List[Any], beaten: bool):
         self.health = health
         self.money = money
         self.round = round
         self.difficulty = difficulty
-        self.game_mode = game_mode
         self.map = map
         self.towers = towers
         self.beaten = beaten
 
-    def saveToFile(self, username):
+    def saveToFile(self, username: str):
         self.others[username] = self.createDictionary()
-        output = json.dumps(self.others, indent=4)
+        output: str = json.dumps(self.others, indent=4)
         with open(f"{json_path}", "w") as file:
             file.write(output)
 
-    def resetSave(self, username):
+    def resetSave(self, username: str):
         self.others[username] = {"beaten": self.beaten}
-        output = json.dumps(self.others, indent=4)
+        output: str = json.dumps(self.others, indent=4)
         with open(f"{json_path}", "w") as file:
             file.write(output)

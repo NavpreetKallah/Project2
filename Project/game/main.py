@@ -1,38 +1,22 @@
 import time
-from builtins import print
-
 import pygame
-
-pygame.init()
-pygame.font.init()
-
 import sys
 import copy
-import os
-
-from pygame import K_KP_0, K_PLUS
-from pygame.mixer_music import queue
-
-
 from game.classes.sql_class import Sql
 from game.classes.enemy_class import EnemyManager
 from game.classes.save_manager import SaveManager
-from game.classes.button_class import Button
-from game.classes.enemy_class import Enemy
-from game.classes.entity_class import Entity
-from game.classes.explosion_class import Explosion
 from game.classes.hud_class import Hud
 from game.classes.map_class import Map
 from game.classes.renderer_class import Renderer
 from game.classes.round_class import Round
 from game.classes.menu_class import Menu
-from game.classes.textbox_class import TextInput
 from game.classes.tower_class import TowerManager, ProjectileManager
 from game.config import SCALE
+from typing import Optional
 
+pygame.init()
 
 WIDTH, HEIGHT = 160 * SCALE, 120 * SCALE
-
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 Sql = Sql()
@@ -47,47 +31,49 @@ EnemyManager = EnemyManager()
 TowerManager = TowerManager()
 SaveManager = SaveManager()
 
-class Game:
-    def __init__(self, screen):
-        self.temp = time.perf_counter()
-        self.screen = screen
-        self.clock = pygame.time.Clock()
-        self.hud_initialise = False
-        self.map_initialise = False
-        self.round_started = False
-        self.clicked = False
-        self.fast_forward = False
-        self.loaded_game = False
-        self.main_menu_option = None
-        self.map_option = None
-        self.win_option = None
-        self.difficulty_option = None
-        self.user_validated = False
-        self.user_created = None
-        self.user_login = None
-        self.beaten = False
-        self.dead = False
-        self.pause = False
-        self.difficulties = ["easy", "medium", "hard"]
-        self.fps_counter = 0
-        self.fps = 60
-        self.continue_game = None
-        self.fps_timer = time.perf_counter()
-        self.timer = time.perf_counter()
-        self.running = True
-        self.round = 0
-        self.health = 100
-        self.money = 650
-        self.autoplay = False
 
-        title = "Balloons"
+class Game:
+    def __init__(self, screen: pygame.Surface) -> None:
+        self.temp: float = time.perf_counter()
+        self.screen: pygame.Surface = screen
+        self.clock: pygame.time.Clock = pygame.time.Clock()
+        self.hud_initialise: bool = False
+        self.map_initialise: bool = False
+        self.round_started: bool = False
+        self.clicked: bool = False
+        self.fast_forward: bool = False
+        self.loaded_game: bool = False
+        self.username: Optional[str] = None
+        self.main_menu_option: Optional[str] = None
+        self.map_option: Optional[str] = None
+        self.win_option: Optional[str] = None
+        self.difficulty_option: Optional[str] = None
+        self.user_validated: bool = False
+        self.user_created: Optional[tuple] = None
+        self.user_login: Optional[tuple] = None
+        self.beaten: bool = False
+        self.dead: bool = False
+        self.pause: bool = False
+        self.difficulties: list[str] = ["easy", "medium", "hard"]
+        self.fps_counter: int = 0
+        self.fps: int = 60
+        self.continue_game: Optional[bool] = None
+        self.fps_timer: float = time.perf_counter()
+        self.timer: float = time.perf_counter()
+        self.running: bool = True
+        self.round: int = 0
+        self.health: int = 100
+        self.money: int = 650
+        self.autoplay: bool = False
+
+        title: str = "Balloons"
         pygame.init()
         pygame.display.set_caption(title)
 
-    def reset_display(self):
+    def reset_display(self) -> None:
         self.screen.fill((0, 0, 0))
 
-    def game(self):
+    def game(self) -> None:
         if not self.loaded_game:
             if self.main_menu_option not in ["play", "towers", "quit"]:
                 self.main_menu_option = Menu.runMenu("main", Renderer.getLayer("menu"))
@@ -110,12 +96,11 @@ class Game:
                                 self.round = data["round"]
                                 self.beaten = data["beaten"]
                                 self.difficulty_option = data["difficulty"]
-                                self.game_mode = data["game_mode"]
                                 self.map_option = data["map"]
                                 self.difficulty_multiplier = 1 + 0.15 * self.difficulties.index(self.difficulty_option)
                                 TowerManager.difficulty_multiplier = self.difficulty_multiplier
                                 SaveManager.updateSave(self.health, self.money, Round.current_round,
-                                                       self.difficulty_option, None, self.map_option,
+                                                       self.difficulty_option, self.map_option,
                                                        TowerManager.getSprites(), self.beaten)
                                 SaveManager.saveToFile(self.username)
                                 TowerManager.loadSave(data["towers"])
@@ -154,14 +139,15 @@ class Game:
                                 Menu.clearFields()
 
                         if self.user_validated == True:
-                            if (self.map_option == "meadows" and not self.beaten) or (self.map_option == "locked") or self.map_option is None:
+                            if (self.map_option == "meadows" and not self.beaten) or (
+                                    self.map_option == "locked") or self.map_option is None:
                                 self.map_option = Menu.runMenu("map", Renderer.getLayer("menu"), beaten=self.beaten)
                             elif self.map_option == "cornfield" or (self.map_option == "meadows" and self.beaten):
                                 if self.difficulty_option not in ["easy", "medium", "hard"]:
                                     self.difficulty_option = Menu.runMenu("difficulty", Renderer.getLayer("menu"))
                                 else:
                                     SaveManager.updateSave(self.health, self.money, Round.current_round,
-                                                           self.difficulty_option, None, self.map_option,
+                                                           self.difficulty_option, self.map_option,
                                                            TowerManager.getSprites(), self.beaten)
                                     SaveManager.saveToFile(self.username)
                                     self.loaded_game = True
@@ -185,7 +171,8 @@ class Game:
                 TowerManager.difficulty_multiplier = self.difficulty_multiplier
                 self.hud_initialise = True
 
-            if not self.dead and ((pygame.mouse.get_pressed()[0] or self.autoplay) and (Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites()):
+            if not self.dead and ((pygame.mouse.get_pressed()[0] or self.autoplay) and (
+                    Hud.play() or self.autoplay) and not EnemyManager.getEnemies() and not EnemyManager.getSprites()):
                 if not self.round_started:
                     self.autoplay = True
                     self.round_started = True
@@ -195,7 +182,7 @@ class Game:
                     Hud.disableSpeed(Renderer.getLayer("HUD"))
                     Hud.updateHud(Renderer.getLayer("HUD"))
 
-            if 41 + self.difficulties.index(self.difficulty_option)*20 == self.round and not self.win_option:
+            if 41 + self.difficulties.index(self.difficulty_option) * 20 == self.round and not self.win_option:
                 self.beaten = True
                 self.win_option = Menu.runMenu("win", Renderer.getLayer("menu"))
                 self.pause = True
@@ -218,13 +205,12 @@ class Game:
                     self.health = 100
                     self.money = 650
 
-
             # print(1/(time.perf_counter() - self.temp))
             # self.temp = time.perf_counter()
-            #print(self.clock.get_fps())
+            # print(self.clock.get_fps())
             self.fps_counter += self.clock.get_fps()
             if time.perf_counter() - self.fps_timer > 5:
-                #print(self.fps_counter/ (60*5))
+                # print(self.fps_counter/ (60*5))
                 self.fps_timer = time.perf_counter()
                 self.fps_counter = 0
 
@@ -233,7 +219,7 @@ class Game:
                 tower_chosen = Hud.tower_chosen()
                 tower_upgrading = TowerManager.getTowerClicked()
                 sell_active = Hud.sellClicked() or Hud.getSell()
-                if Hud.fastForward(Renderer.getLayer("HUD")):
+                if Hud.fastForward():
                     EnemyManager.speedChange()
                     Round.speedChange()
                     self.fast_forward = not self.fast_forward
@@ -271,7 +257,8 @@ class Game:
                     Hud.updateHud(Renderer.getLayer("HUD"))
 
             if TowerManager.getPlacing():
-                TowerManager.place(Renderer.getLayer("tower"), Map.getRects(), Map.getMasks(),TowerManager.getPlacingTower())
+                TowerManager.place(Renderer.getLayer("tower"), Map.getRects(), Map.getMasks(),
+                                   TowerManager.getPlacingTower())
 
             health_change = EnemyManager.getKilled()
             if health_change:
@@ -347,15 +334,14 @@ class Game:
                 self.round_started = False
                 Hud.enableSpeed(Renderer.getLayer("HUD"))
                 Hud.updateHud(Renderer.getLayer("HUD"))
-                SaveManager.updateSave(self.health, self.money, Round.current_round, self.difficulty_option, None, self.map_option, TowerManager.getSprites(), self.beaten)
+                SaveManager.updateSave(self.health, self.money, Round.current_round, self.difficulty_option,
+                                       self.map_option, TowerManager.getSprites(), self.beaten)
                 SaveManager.saveToFile(self.username)
 
             if not self.pause:
                 ProjectileManager.update(EnemyManager.getSprites(), TowerManager.getSprites())
             ProjectileManager.getSprites().draw(Renderer.getLayer("projectile"))
             TowerManager.getSprites().draw(Renderer.getLayer("tower"))
-
-
 
         for surface in Renderer.getLayers():
             self.screen.blit(surface, (0, 0))
@@ -365,21 +351,19 @@ class Game:
             Renderer.clearLayer("tower")
             Renderer.clearLayer("projectile")
 
-
-
-    def quit(self):
+    def quit(self) -> None:
         for event in self.events:
             if event.type == pygame.QUIT:
                 self.running = False
-    def update(self):
 
+    def update(self) -> None:
         self.clock.tick(self.fps)
         self.events = pygame.event.get()
         self.quit()
         self.game()
         pygame.display.update()
 
-    def run(self):
+    def run(self) -> None:
         while self.running:
             self.update()
         pygame.quit()

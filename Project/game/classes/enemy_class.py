@@ -3,102 +3,104 @@ import copy
 from builtins import range
 
 import pygame
-import random, os
+import random
+import os
 from game.classes.linked_list import LinkedList
 from game.config import SCALE
+from typing import Optional, List, Dict, Any
 
-# , rect: pygame.Vector2, angle: int, state: str, frame: int, range: int,
-#                  distance_travelled: int, health: int, immunities: list, speed: int, value: int,
 LinkedList = LinkedList()
 
 path = os.path.dirname(os.getcwd()) + "/textures/enemies"
+
+
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, node, spawn_delay, properties, cash_per_layer, enemy_number, fast_forward, dupe_values=None):
+    def __init__(self, node: Any, spawn_delay: float, properties: Dict[str, Any], cash_per_layer: float,
+                 enemy_number: int, fast_forward: bool, dupe_values: Optional[Dict[str, Any]] = None) -> None:
         pygame.sprite.Sprite.__init__(self)
-        self.spawn_delay = spawn_delay
-        self.node = node
-        data = self.node.data
-        self.fast_forward = fast_forward
-        self.number = enemy_number
-        self.cash_per_layer = cash_per_layer
-        self.dupe = False
-        self.frozen = False
-        self.properties = properties
-        self.camo = properties["camo"]
-        self.regen = properties["regen"]
-        self.cooldown_timer = -10
-        self.freeze_timer = None
-        self.frozen = False
-        self.freeze_duration = 1 if not self.fast_forward else 1/3
-        self.regen_timer = time.perf_counter()
-        self.name = data["name"]
-        self.speed = data["speed"]
-        self.value = data["value"]
-        self.colour = data["colour"]
-        self.health = data["health"]
-        self.directions = ["D","R","U","L"]
+        self.spawn_delay: float = spawn_delay
+        self.node: Any = node
+        data: Dict[str, Any] = self.node.data
+        self.fast_forward: bool = fast_forward
+        self.number: int = enemy_number
+        self.cash_per_layer: float = cash_per_layer
+        self.dupe: bool = False
+        self.frozen: bool = False
+        self.properties: Dict[str, Any] = properties
+        self.camo: bool = properties["camo"]
+        self.regen: bool = properties["regen"]
+        self.cooldown_timer: float = -10
+        self.freeze_timer: Optional[float] = None
+        self.freeze_duration: float = 1 if not self.fast_forward else 1 / 3
+        self.regen_timer: float = time.perf_counter()
+        self.name: str = data["name"]
+        self.speed: float = data["speed"]
+        self.value: int = data["value"]
+        self.colour: Any = data["colour"]
+        self.health: int = data["health"]
+        self.directions: List[str] = ["D", "R", "U", "L"]
 
         if dupe_values:
             self.duped_enemy(dupe_values)
         else:
-            self.distance_travelled = 0
-            self.distance_travelled_total = 0
-            self.initialised = False
+            self.distance_travelled: float = 0
+            self.distance_travelled_total: float = 0
+            self.initialised: bool = False
             self.set_position()
 
-        self.image = self.colourIn()
+        self.image: pygame.Surface = self.colourIn()
 
-        self.image_list = [pygame.transform.rotate(self.image, i*90) for i in range(4)]
+        self.image_list: List[pygame.Surface] = [pygame.transform.rotate(self.image, i * 90) for i in range(4)]
         if dupe_values and self.name in ["moab", "bfb", "zomg"]:
             self.image = self.image_list[self.directions.index(self.current)]
 
-        self.rect = self.image.get_rect()
+        self.rect: pygame.Rect = self.image.get_rect()
         self.rect.topleft = (self.pos.x, self.pos.y)
 
-    def duped_enemy(self, dupe_values):
+    def duped_enemy(self, dupe_values: Dict[str, Any]) -> None:
         self.initialised = True
         self.distance_travelled_total = dupe_values["distance_travelled_total"]
-        self.path = dupe_values["path"]
+        self.path: Any = dupe_values["path"]
         self.distance_travelled = dupe_values["distance_travelled"]
-        self.current = dupe_values["current"]
-        self.pos = dupe_values["pos"]
+        self.current: str = dupe_values["current"]
+        self.pos: pygame.Vector2 = dupe_values["pos"]
         self.image = self.colourIn()
         if self.name in ["moab", "bfb", "zomg"]:
             self.image_list = [pygame.transform.rotate(self.image, i * 90) for i in range(4)]
             self.image = self.image_list[self.directions.index(self.current)]
 
-    def heal(self):
+    def heal(self) -> None:
         if self.node.prev:
             self.node = self.node.prev
             self.new_node()
 
-    def set_position(self):
-        if not self.name in ["moab","bfb","zomg"] and not self.regen:
-            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-4))
+    def set_position(self) -> None:
+        if not self.name in ["moab", "bfb", "zomg"] and not self.regen:
+            self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-4))
         elif self.regen:
-            self.pos = pygame.Vector2(SCALE * (11 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-5))
+            self.pos = pygame.Vector2(SCALE * (11 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-5))
         elif self.name == "moab":
-            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-5))
+            self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-5))
         elif self.name == "bfb":
-            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-10))
+            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-10))
         elif self.name == "zomg":
-            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]),SCALE * (-8))
+            self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-8))
 
-
-    def check_freeze(self):
+    def check_freeze(self) -> bool:
         if self.freeze_timer and time.perf_counter() - self.freeze_timer > self.freeze_duration:
             self.freeze_timer = None
             self.frozen = False
             self.cooldown_timer = time.perf_counter()
         elif self.frozen:
             return True
+        return False
 
-    def move(self, direction):
+    def move(self, direction: Any) -> Optional[str]:
         if self.check_freeze():
             return
 
-        distance = 9 * SCALE
-        distance_moved = (distance / self.speed)
+        distance: float = 9 * SCALE
+        distance_moved: float = (distance / self.speed)
         self.distance_travelled += distance_moved
         self.distance_travelled_total += distance_moved
 
@@ -111,8 +113,7 @@ class Enemy(pygame.sprite.Sprite):
             return "delete"
 
         if self.distance_travelled >= distance:
-
-            old = copy.deepcopy(self.current)
+            old: str = copy.deepcopy(self.current)
             self.current = self.path.remove()
             self.distance_travelled = distance - self.distance_travelled
             self.distance_travelled = 0
@@ -132,7 +133,7 @@ class Enemy(pygame.sprite.Sprite):
             self.pos.x += distance_moved
         self.rect.topleft = (self.pos.x, self.pos.y)
 
-    def colourIn(self):
+    def colourIn(self) -> pygame.Surface:
 
         if self.name in ["moab", "bfb", "zomg"]:
             image = pygame.transform.scale_by(pygame.image.load_extended(f"{path}/{self.name}.png").convert_alpha(),SCALE)
@@ -209,11 +210,9 @@ class Enemy(pygame.sprite.Sprite):
                 image.fill(self.colour, (2 * SCALE, SCALE * 4, SCALE, SCALE))
                 return image
 
-    def freeze(self, projectile):
-
-        cooldown_duration = projectile.data["cooldown"]*3 if self.fast_forward else projectile.data["cooldown"]
-        self.freeze_duration = projectile.data["freeze"]/3 if self.fast_forward else projectile.data["freeze"]
-
+    def freeze(self, projectile: Any) -> None:
+        cooldown_duration: float = projectile.data["cooldown"] * 3 if self.fast_forward else projectile.data["cooldown"]
+        self.freeze_duration: float = projectile.data["freeze"] / 3 if self.fast_forward else projectile.data["freeze"]
 
         if self.name not in ["moab", "bfb", "zomg"]:
             if time.perf_counter() - self.cooldown_timer > cooldown_duration and self.name != "white":
@@ -222,12 +221,12 @@ class Enemy(pygame.sprite.Sprite):
                 if not self.freeze_timer:
                     self.freeze_timer = time.perf_counter()
 
-    def take_damage(self, damage, extra, targets, camo, money_modifier=1):
-        money = 0
+    def take_damage(self, damage: int, extra: int, targets: List[str], camo: bool, money_modifier: float = 1) -> int:
+        money: int = 0
         if self.name in targets or (self.frozen and "frozen" in targets) or (self.camo and not camo):
             return 0
 
-        if self.name in ["moab","bfb","zomg"]:
+        if self.name in ["moab", "bfb", "zomg"]:
             damage += extra
         for _ in range(damage):
             self.health -= 1
@@ -236,7 +235,7 @@ class Enemy(pygame.sprite.Sprite):
                 if not self.node.next:
                     self.kill()
                     return money
-                original_name = copy.deepcopy(self.name)
+                original_name: str = copy.deepcopy(self.name)
 
                 if self.name == "rainbow":
                     self.node = self.node.next.next.next
@@ -245,87 +244,93 @@ class Enemy(pygame.sprite.Sprite):
                 else:
                     self.node = self.node.next
                 self.new_node()
-                if original_name in ["moab","bfb","zomg","rainbow","ceramic","zebra","black","white"]:
+                if original_name in ["moab", "bfb", "zomg", "rainbow", "ceramic", "zebra", "black", "white"]:
                     return money
 
         return money
 
-    def new_node(self):
+    def new_node(self) -> None:
         self.children()
         self.fixPositions()
-        data = self.node.data
-        self.name = data["name"]
-        self.speed = data["speed"]
-        self.value = data["value"]
-        self.colour = data["colour"]
-        self.health = data["health"]
-        self.image = self.colourIn()
+        data: Dict[str, Any] = self.node.data
+        self.name: str = data["name"]
+        self.speed: float = data["speed"]
+        self.value: int = data["value"]
+        self.colour: Any = data["colour"]
+        self.health: int = data["health"]
+        self.image: pygame.Surface = self.colourIn()
         if self.name in ["moab", "bfb", "zomg"]:
             self.image_list = [pygame.transform.rotate(self.image, i * 90) for i in range(4)]
             self.image = self.image_list[self.directions.index(self.current)]
 
-    def fixPositions(self):
+    def fixPositions(self) -> None:
         if self.name in ["moab", "bfb", "zomg"]:
-            pos_differences = {"moab": {"x": 2, "y": 2}, "bfb": {"x": 2, "y": 2}, "zomg": {"x": 0, "y": -2}}
+            pos_differences: Dict[str, Dict[str, int]] = {
+                "moab": {"x": 2, "y": 2},
+                "bfb": {"x": 2, "y": 2},
+                "zomg": {"x": 0, "y": -2}
+            }
             self.pos.x += pos_differences[self.name]["x"] * SCALE
             self.pos.y += pos_differences[self.name]["y"] * SCALE
 
-    def getValue(self):
+    def getValue(self) -> int:
         return self.value
 
-    def children(self):
-        if self.name in ["rainbow", "zebra", "ceramic","moab","bfb","zomg", "black", "white"]:
+    def children(self) -> None:
+        if self.name in ["rainbow", "zebra", "ceramic", "moab", "bfb", "zomg", "black", "white"]:
             self.dupe = True
-            self.dupe_amount = 1 if self.name in ["rainbow", "zebra", "ceramic", "black", "white"] else 3
+            self.dupe_amount: int = 1 if self.name in ["rainbow", "zebra", "ceramic", "black", "white"] else 3
 
-    def getSpawnDelay(self):
+    def getSpawnDelay(self) -> float:
         return self.spawn_delay
 
-    def setDupe(self, value):
+    def setDupe(self, value: bool) -> None:
         self.dupe = value
 
 
 class EnemyManager:
-    def __init__(self):
-        self.speedup = False
-        self.timer = time.perf_counter()
-        self.kill_list = []
-        self.enemies = {"red": {"name": "red", "speed": 30, "value": 1, "health": 1, "colour": (255, 0, 0)},
-                        "blue": {"name": "blue", "speed": 25, "value": 2, "health": 1, "colour": (0, 0, 255)},
-                        "green": {"name": "green", "speed": 24, "value": 3, "health": 1, "colour": (0, 255, 0)},
-                        "yellow": {"name": "yellow", "speed": 21, "value": 4, "health": 1, "colour": (255, 215, 0)},
-                        "pink": {"name": "pink", "speed": 18, "value": 5, "health": 1, "colour": (255, 136, 136)},
-                        "black": {"name": "black", "speed": 14, "value": 7, "health": 1, "colour": (0, 0, 0)},
-                        "white": {"name": "white", "speed": 14, "value": 7, "health": 1, "colour": (255, 255, 255)},
-                        "zebra": {"name": "zebra", "speed": 12, "value": 8, "health": 1, "colour": "zebra"},
-                        "purple": {"name": "purple", "speed": 12, "value": 9, "health": 1, "colour": (255, 0, 255)},
-                        "lead": {"name": "lead", "speed": 120, "value": 10, "health": 1, "colour": (120, 120, 120)},
-                        "rainbow": {"name": "rainbow", "speed": 12, "value": 11, "health": 1, "colour": "rainbow"},
-                        "ceramic": {"name": "ceramic", "speed": 9, "value": 12, "health": 8, "colour": (150, 100, 50)},
-                        "moab": {"name": "moab", "speed": 120, "value": 13, "health": 200, "colour": "moab"},
-                        "bfb": {"name": "bfb", "speed": 150, "value": 14, "health": 700, "colour": "bfb"},
-                        "zomg": {"name": "zomg", "speed": 180, "value": 15, "health": 4000, "colour": "zomg"}}
+    def __init__(self) -> None:
+        self.speedup: bool = False
+        self.timer: float = time.perf_counter()
+        self.kill_list: List[Enemy] = []
+        self.enemies: Dict[str, any] = {
+            "red": {"name": "red", "speed": 30, "value": 1, "health": 1, "colour": (255, 0, 0)},
+            "blue": {"name": "blue", "speed": 25, "value": 2, "health": 1, "colour": (0, 0, 255)},
+            "green": {"name": "green", "speed": 24, "value": 3, "health": 1, "colour": (0, 255, 0)},
+            "yellow": {"name": "yellow", "speed": 21, "value": 4, "health": 1, "colour": (255, 215, 0)},
+            "pink": {"name": "pink", "speed": 18, "value": 5, "health": 1, "colour": (255, 136, 136)},
+            "black": {"name": "black", "speed": 14, "value": 7, "health": 1, "colour": (0, 0, 0)},
+            "white": {"name": "white", "speed": 14, "value": 7, "health": 1, "colour": (255, 255, 255)},
+            "zebra": {"name": "zebra", "speed": 12, "value": 8, "health": 1, "colour": "zebra"},
+            "purple": {"name": "purple", "speed": 12, "value": 9, "health": 1, "colour": (255, 0, 255)},
+            "lead": {"name": "lead", "speed": 120, "value": 10, "health": 1, "colour": (120, 120, 120)},
+            "rainbow": {"name": "rainbow", "speed": 12, "value": 11, "health": 1, "colour": "rainbow"},
+            "ceramic": {"name": "ceramic", "speed": 9, "value": 12, "health": 8, "colour": (150, 100, 50)},
+            "moab": {"name": "moab", "speed": 120, "value": 13, "health": 200, "colour": "moab"},
+            "bfb": {"name": "bfb", "speed": 150, "value": 14, "health": 700, "colour": "bfb"},
+            "zomg": {"name": "zomg", "speed": 180, "value": 15, "health": 4000, "colour": "zomg"}
+        }
 
-        self.sprites = pygame.sprite.Group()
+        self.sprites: pygame.sprite.Group = pygame.sprite.Group()
         for data in reversed(self.enemies.values()):
             LinkedList.add(data)
 
-        self.enemy_list = []
-        self.number = 0
-        self.count = 0
-        self.round_number = 0
+        self.enemy_list: List[Enemy] = []
+        self.number: int = 0
+        self.count: int = 0
+        self.round_number: int = 0
 
-    def create(self, data, delay, properties, round_number):
+    def create(self, data: str, delay: float, properties: Dict[str, any], round_number: int) -> None:
         self.round_number = round_number
-        cash_per_layer = self.calculateCash(round_number)
-        current_node = LinkedList.head
+        cash_per_layer: float = self.calculateCash(round_number)
+        current_node: LinkedList.Node = LinkedList.head
         while current_node.data != data:
             current_node = current_node.next
         current_node.prev = None
         self.enemy_list.append(Enemy(current_node, delay, properties, cash_per_layer, self.number, self.speedup))
         self.number -= 1
 
-    def calculateCash(self, round_number):
+    def calculateCash(self, round_number: int) -> float:
         if round_number > 85:
             return 0.1
         elif round_number > 60:
@@ -333,69 +338,61 @@ class EnemyManager:
         elif round_number > 50:
             return 0.5
         else:
-            return 1
+            return 1.0
 
-
-
-# self.pos = pygame.Vector2(SCALE * (12 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-4 - [0, 1][self.number % 2]))
-# elif self.name == "moab":
-# self.pos = pygame.Vector2(SCALE * (10 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-7 - [0, 1][self.number % 2]))
-# elif self.name == "bfb":
-# self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-10 - [0, 1][self.number % 2]))
-# elif self.name == "zomg":
-# self.pos = pygame.Vector2(SCALE * (8 + [-1, 0, 1, 0][self.number % 4]), SCALE * (-8 - [0, 1][self.number % 2]))
-
-    def duplicate(self, original_enemy):
+    def duplicate(self, original_enemy: Enemy) -> Enemy:
         self.number -= 1
-        pos = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
-        pos.x += -[-1, 0, 1, 0][original_enemy.number % 4] + random.randint(-1,1) * SCALE
-        pos.y += random.randint(-1,1) * SCALE
-        path = copy.deepcopy(original_enemy.path)
-        current = copy.deepcopy(original_enemy.current)
-        distance_travelled = copy.deepcopy(original_enemy.distance_travelled)
-        distance_travelled_total = copy.deepcopy(original_enemy.distance_travelled_total)
-        dupe_values = {"pos":pos, "path": path, "current": current, "distance_travelled": distance_travelled, "distance_travelled_total": distance_travelled_total}
-        properties = copy.deepcopy(original_enemy.properties)
-        duplicate = Enemy(original_enemy.node, 0, properties, self.calculateCash(self.round_number), self.number, self.speedup, dupe_values=dupe_values)
+        pos: pygame.Vector2 = copy.deepcopy(pygame.Vector2(original_enemy.pos.x, original_enemy.pos.y))
+        pos.x += -[-1, 0, 1, 0][original_enemy.number % 4] + random.randint(-1, 1) * SCALE
+        pos.y += random.randint(-1, 1) * SCALE
+        path: List[pygame.Vector2] = copy.deepcopy(original_enemy.path)
+        current: Optional[pygame.Vector2] = copy.deepcopy(original_enemy.current)
+        distance_travelled: float = copy.deepcopy(original_enemy.distance_travelled)
+        distance_travelled_total: float = copy.deepcopy(original_enemy.distance_travelled_total)
+        dupe_values: Dict[str, any] = {"pos": pos, "path": path, "current": current,
+                                       "distance_travelled": distance_travelled,
+                                       "distance_travelled_total": distance_travelled_total}
+        properties: Dict[str, any] = copy.deepcopy(original_enemy.properties)
+        duplicate = Enemy(original_enemy.node, 0, properties, self.calculateCash(self.round_number), self.number,
+                          self.speedup, dupe_values=dupe_values)
         return duplicate
 
-
-    def getEnemyStats(self):
+    def getEnemyStats(self) -> Dict[str, Dict[str, any]]:
         return self.enemies
 
-    def getSpeedState(self):
+    def getSpeedState(self) -> bool:
         return self.speedup
 
-    def speedChange(self):
-        speed = 3 if self.speedup else 1 / 3
+    def speedChange(self) -> None:
+        speed: float = 3 if self.speedup else 1 / 3
         self.speedup = not self.speedup
         for info in self.enemies.values():
             info["speed"] = round(info["speed"] * speed)
 
-    def slowDown(self):
+    def slowDown(self) -> None:
         for info in self.enemies.values():
             info["speed"] = info["speed"] * 3
 
-    def move(self, path):
+    def move(self, path: List[pygame.Vector2]) -> None:
         for enemy in self.sprites:
             if enemy.move(path) == "delete":
                 self.kill_list.append(enemy)
 
-    def load(self):
+    def load(self) -> None:
         if self.enemy_list and time.perf_counter() - self.timer > self.enemy_list[0].getSpawnDelay():
             self.timer = time.perf_counter()
             enemy = self.enemy_list.pop(0)
             self.sprites.add(enemy)
 
-    def getKilled(self):
-        health = 0
+    def getKilled(self) -> int:
+        health: int = 0
         for enemy in self.kill_list:
             health += enemy.getValue()
             self.kill_list.remove(enemy)
             enemy.kill()
         return health
 
-    def updateEnemies(self, path):
+    def updateEnemies(self, path: List[pygame.Vector2]) -> None:
         for enemy in self.sprites:
             if enemy.move(path) == "delete":
                 self.kill_list.append(enemy)
@@ -406,29 +403,30 @@ class EnemyManager:
                 enemy.setDupe(False)
 
             if enemy.regen:
-                if time.perf_counter() - enemy.regen_timer > 1/(3 if self.speedup else 1):
+                if time.perf_counter() - enemy.regen_timer > 1 / (3 if self.speedup else 1):
                     enemy.regen_timer = time.perf_counter()
                     enemy.heal()
-    def update(self, layer, Map):
+
+    def update(self, layer: pygame.Surface, Map: List[pygame.Vector2]) -> None:
         self.load()
         self.updateEnemies(Map)
         for sprite in sorted(self.sprites, key=lambda sprite: (sprite.value, sprite.number)):
             layer.blit(sprite.image, sprite.rect)
 
-    def getEnemies(self):
+    def getEnemies(self) -> List[Enemy]:
         return self.enemy_list
 
-    def getSprites(self):
+    def getSprites(self) -> pygame.sprite.Group:
         return self.sprites
 
-    def towersInRange(self, int):
+    def towersInRange(self, radius: int) -> Optional[List[Enemy]]:
         return None
 
-    def enemiesInRange(self, int):
+    def enemiesInRange(self, radius: int) -> Optional[List[Enemy]]:
         return None
 
-    def stun(self, towers_in_range, delta_time):
+    def stun(self, towers_in_range: List[Enemy], delta_time: float) -> None:
         return None
 
-    def speedBoost(self, enemies_in_range, delta_time):
+    def speedBoost(self, enemies_in_range: List[Enemy], delta_time: float) -> None:
         return None
