@@ -372,6 +372,7 @@
       "2": {"name": null,"cost": 810,"stat_change": [
           {"attack":"main", "stat": "speed","value": 0.66,"type": "multiply"}]},
       "3": {"name": null,"cost": 4080,"stat_change": [
+          {"attack":"main", "stat": "damage","value": 2,"type": "set"},
           {"attack":"main", "stat": "projectile","value": "rocket","type": "set"}]},
       "4": {"name": null,"cost": 8190,"stat_change": [
           {"attack":"main", "stat": "damage","value": 3,"type": "set"},

@@ -422,6 +422,9 @@ class EnemyManager:
     def towersInRange(self, radius: int) -> Optional[List[Enemy]]:
         return None
 
+    def reset(self):
+        self.sprites.empty()
+
     def enemiesInRange(self, radius: int) -> Optional[List[Enemy]]:
         return None
 

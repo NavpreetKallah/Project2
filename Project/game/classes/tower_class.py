@@ -444,7 +444,7 @@ class TowerManager:
         self.tower_class_dict: Dict[str, type[DefaultTower]] = {"Dart": Dart, "Sniper": Sniper, "Wizard": Wizard,
                                                                 "Druid": Druid, "Ninja": Ninja, "Farm": Farm,
                                                                 "Village": Village, "Super": Super,
-                                                                "Boomerang": Boomerang, "Dartling": Dartling,
+                                                                "Boomerang": Boomerang, "Dartling": Dartling,"Dartling gunner": Dartling,
                                                                 "Alchemist": Alchemist, "Ice": Ice}
         self.money: int = 0
         self.placing: bool = False
@@ -553,6 +553,8 @@ class TowerManager:
                 info: (value if isinstance(value, pygame.Surface) else copy.deepcopy(value)) for info, value in
                 self.tower_dict[tower["name"]].items()}
             tower_created = self.tower_class_dict[tower["name"]](tower_data, tower["pos"], self.difficulty_multiplier)
+            if tower["name"] == "Dartling":
+                tower["name"] = "Dartling gunner"
             self.images.append(self.tower_dict[tower["name"]]["icon"])
             for path in ["path_one", "path_two"]:
                 for _ in range(tower["upgrades"][path]):

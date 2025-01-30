@@ -276,6 +276,7 @@ class Game:
                 self.death_option = Menu.runMenu("death", Renderer.getLayer("menu"))
                 if self.death_option == "quit":
                     Menu.clearFields()
+                    EnemyManager.reset()
                     self.dead = False
                     self.loaded_game = False
                     self.death_option = None
